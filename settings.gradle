@@ -1,0 +1,3 @@
+include 'dashpay'
+include 'examples'
+include ':platform-core'
