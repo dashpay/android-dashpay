@@ -573,6 +573,29 @@ class BlockchainIdentity {
         //throw exception or return false
     }
 
+    suspend fun monitorForBlockchainIdentityWithRetryCount(retryCount: Int, delayMillis: Long, retryDelayType: RetryDelayType): String? {
+
+        val identityResult = platform.identities.get(uniqueIdString)
+
+        if (identityResult != null) {
+            identity = identityResult
+            registrationStatus = RegistrationStatus.REGISTERED
+            save()
+            return uniqueIdString
+        } else {
+            if (retryCount > 0) {
+                val nextDelay = delayMillis * when (retryDelayType) {
+                    RetryDelayType.SLOW20 -> 5 / 4
+                    RetryDelayType.SLOW50 -> 3 / 2
+                    else -> 1
+                }
+                kotlinx.coroutines.delay(nextDelay)
+                monitorForBlockchainIdentityWithRetryCount(retryCount - 1, nextDelay, retryDelayType)
+            }
+        }
+        return null
+    }
+
     //should this have a callback or let the client handle the end
     fun monitorForDPNSPreorderSaltedDomainHashes(saltedDomainHashes: Map<String, ByteArray>,
                                                  retryCount: Int,
