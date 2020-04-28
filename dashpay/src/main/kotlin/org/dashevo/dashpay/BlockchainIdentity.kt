@@ -9,6 +9,7 @@ package org.dashevo.dashpay
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.MoreExecutors
+import kotlinx.coroutines.delay
 import org.bitcoinj.core.*
 import org.bitcoinj.crypto.ChildNumber
 import org.bitcoinj.crypto.KeyCrypter
@@ -224,197 +225,6 @@ class BlockchainIdentity {
 
     // MARK: - Full Registration agglomerate
 
-    /*fun registerOnNetwork:(DSBlockchainIdentityRegistrationStep)steps withFundingAccount:(DSAccount*)fundingAccount forTopupAmount:(uint64_t)topupDuffAmount stepCompletion:(void (^ _Nullable)(DSBlockchainIdentityRegistrationStep stepCompleted))stepCompletion completion:(void (^ _Nullable)(DSBlockchainIdentityRegistrationStep stepsCompleted, NSError * error))completion {
-        __block DSBlockchainIdentityRegistrationStep stepsCompleted = DSBlockchainIdentityRegistrationStep_None;
-        if (![self hasBlockchainIdentityExtendedPublicKeys]) {
-            if (completion) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    completion(stepsCompleted, [NSError errorWithDomain:@"DashSync" code:500 userInfo:@{NSLocalizedDescriptionKey: DSLocalizedString(@"The blockchain identity extended public keys need to be registered before you can register a blockchain identity.", nil)}]);
-                });
-            }
-            return;
-        }
-        if (!(steps & DSBlockchainIdentityRegistrationStep_FundingTransactionCreation)) {
-            if (completion) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    completion(stepsCompleted, nil);
-                });
-            }
-            return;
-        }
-        NSString * creditFundingRegistrationAddress = [self registrationFundingAddress];
-        [self fundingTransactionForTopupAmount:topupDuffAmount toAddress:creditFundingRegistrationAddress fundedByAccount:fundingAccount completion:^(DSCreditFundingTransaction * _Nonnull fundingTransaction) {
-            if (!fundingTransaction) {
-                if (completion) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        completion(stepsCompleted, [NSError errorWithDomain:@"DashSync" code:500 userInfo:@{NSLocalizedDescriptionKey: DSLocalizedString(@"Funding transaction could not be created", nil)}]);
-                    });
-                }
-                return;
-            }
-            [fundingAccount signTransaction:fundingTransaction withPrompt:@"Would you like to create this user?" completion:^(BOOL signedTransaction, BOOL cancelled) {
-            if (!signedTransaction) {
-                if (completion) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        completion(stepsCompleted, cancelled?nil:[NSError errorWithDomain:@"DashSync" code:500 userInfo:@{NSLocalizedDescriptionKey: DSLocalizedString(@"Transaction could not be signed", nil)}]);
-                    });
-                }
-            }
-            if (stepCompletion) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    stepCompletion(DSBlockchainIdentityRegistrationStep_FundingTransactionCreation);
-                });
-            }
-            stepsCompleted |= DSBlockchainIdentityRegistrationStep_FundingTransactionCreation;
-            if (!(steps & DSBlockchainIdentityRegistrationStep_FundingTransactionPublishing)) {
-            if (completion) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    completion(stepsCompleted, nil);
-                });
-            }
-            return;
-        }
-
-            //In wallet registration occurs now
-
-            if (!(steps & DSBlockchainIdentityRegistrationStep_LocalInWalletPersistence)) {
-            if (completion) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    completion(stepsCompleted, nil);
-                });
-            }
-            return;
-        }
-            [self registerInWalletForRegistrationFundingTransaction:fundingTransaction];
-            if (stepCompletion) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    stepCompletion(DSBlockchainIdentityRegistrationStep_LocalInWalletPersistence);
-                });
-            }
-            stepsCompleted |= DSBlockchainIdentityRegistrationStep_LocalInWalletPersistence;
-
-            dispatch_semaphore_t sem = dispatch_semaphore_create(0);
-            __block BOOL transactionSuccessfullyPublished = FALSE;
-
-            __block id observer = [[NSNotificationCenter defaultCenter] addObserverForName:DSTransactionManagerTransactionStatusDidChangeNotification object:nil
-                    queue:nil usingBlock:^(NSNotification *note) {
-            DSTransaction *tx = [note.userInfo objectForKey:DSTransactionManagerNotificationTransactionKey];
-            if ([tx isEqual:fundingTransaction]) {
-                NSDictionary * changes = [note.userInfo objectForKey:DSTransactionManagerNotificationTransactionChangesKey];
-                if (changes) {
-                    NSNumber * accepted = [changes objectForKey:DSTransactionManagerNotificationInstantSendTransactionAcceptedStatusKey];
-                    NSNumber * lockVerified = [changes objectForKey:DSTransactionManagerNotificationInstantSendTransactionLockVerifiedKey];
-                    if ([accepted boolValue] || [lockVerified boolValue]) {
-                        transactionSuccessfullyPublished = TRUE;
-                        dispatch_semaphore_signal(sem);
-                    }
-                }
-            }
-        }];
-
-            [self.chain.chainManager.transactionManager publishTransaction:fundingTransaction completion:^(NSError * _Nullable error) {
-            if (error) {
-                [[NSNotificationCenter defaultCenter] removeObserver:observer];
-                if (completion) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        completion(stepsCompleted, error);
-                    });
-                }
-                return;
-            }
-
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0),^{
-
-                dispatch_semaphore_wait(sem, dispatch_time(DISPATCH_TIME_NOW, 30 * NSEC_PER_SEC));
-
-                [[NSNotificationCenter defaultCenter] removeObserver:observer];
-
-                if (!transactionSuccessfullyPublished) {
-                    if (completion) {
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            completion(stepsCompleted, [NSError errorWithDomain:@"DashSync" code:500 userInfo:@{NSLocalizedDescriptionKey:DSLocalizedString(@"Timeout while waiting for funding transaction to be accepted by network", nil)}]);
-                        });
-                    }
-                    return;
-                }
-
-                if (stepCompletion) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        stepCompletion(DSBlockchainIdentityRegistrationStep_FundingTransactionPublishing);
-                    });
-                }
-                stepsCompleted |= DSBlockchainIdentityRegistrationStep_FundingTransactionPublishing;
-
-                if (!(steps & DSBlockchainIdentityRegistrationStep_Identity)) {
-                if (completion) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        completion(stepsCompleted, nil);
-                    });
-                }
-                return;
-            }
-
-
-                [self createAndPublishRegistrationTransitionWithCompletion:^(NSDictionary * _Nullable successInfo, NSError * _Nullable error) {
-                if (error) {
-                    if (completion) {
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            completion(stepsCompleted, error);
-                        });
-                    }
-                    return;
-                }
-                if (stepCompletion) {
-                    stepCompletion(DSBlockchainIdentityRegistrationStep_Identity);
-                }
-                stepsCompleted |= DSBlockchainIdentityRegistrationStep_Identity;
-
-                if (!(steps & DSBlockchainIdentityRegistrationStep_Username)) {
-                if (completion) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        completion(stepsCompleted, nil);
-                    });
-                }
-                return;
-            }
-
-                [self registerUsernamesWithCompletion:^(BOOL success, NSError * _Nonnull error) {
-                if (!success) {
-                    if (completion) {
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            completion(stepsCompleted, error);
-                        });
-                    }
-                    return;
-                }
-                if (stepCompletion) {
-                    stepCompletion(DSBlockchainIdentityRegistrationStep_Username);
-                }
-                stepsCompleted |= DSBlockchainIdentityRegistrationStep_Username;
-
-                if (!(steps & DSBlockchainIdentityRegistrationStep_Profile)) {
-                if (completion) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        completion(stepsCompleted, nil);
-                    });
-                }
-                return;
-            }
-                //todo:we need to still do profile
-                if (completion) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        completion(stepsCompleted, nil);
-                    });
-                }
-
-            }];
-            }];
-            });
-        }];
-        }];
-        }];
-    }*/
-
     /*
         not sure if this method works.  The app may create its own tx, broadcast it, then start the process at registerIdentity()
      */
@@ -472,84 +282,7 @@ class BlockchainIdentity {
 
 
     // MARK: Registering
-/*
-    fun registerUsernamesWithCompletion() {
-        [self registerUsernamesAtStage:UserNameStatus.Initial completion:completion];
-    }
-
-    fun registerUsernamesAtStage:(DSBlockchainIdentityUsernameStatus)blockchainIdentityUsernameStatus completion:(void (^ _Nullable)(BOOL success, NSError * error))completion {
-        DSDLog(@"registerUsernamesAtStage %lu",(unsigned long)blockchainIdentityUsernameStatus);
-        switch (blockchainIdentityUsernameStatus) {
-            case UserNameStatus.Initial:
-            {
-                NSArray * usernames = [self usernamesWithStatus:UserNameStatus.Initial];
-                if (usernames.count) {
-                    [self registerPreorderedSaltedDomainHashesForUsernames:usernames completion:^(BOOL success, NSError * error) {
-                        if (success) {
-                            [self registerUsernamesAtStage:UserNameStatus.PreorderRegistrationPending completion:completion];
-                        } else {
-                            if (completion) {
-                                completion(NO,error);
-                            }
-                        }
-                    }];
-                } else {
-                    [self registerUsernamesAtStage:UserNameStatus.PreorderRegistrationPending completion:completion];
-                }
-                break;
-            }
-            case UserNameStatus.PreorderRegistrationPending:
-            {
-                NSArray * usernames = [self usernamesWithStatus:UserNameStatus.PreorderRegistrationPending];
-                NSDictionary<NSString*,NSData *>* saltedDomainHashes = [self saltedDomainHashesForUsernames:usernames];
-                if (saltedDomainHashes.count) {
-                    [self monitorForDPNSPreorderSaltedDomainHashes:saltedDomainHashes withRetryCount:2 completion:^(BOOL allFound, NSError * error) {
-                        if (allFound) {
-                            [self registerUsernamesAtStage:UserNameStatus.Preordered completion:completion];
-                        } else {
-                            if (completion) {
-                                completion(NO,error);
-                            }
-                        }
-                    }];
-                } else {
-                    [self registerUsernamesAtStage:UserNameStatus.Preordered completion:completion];
-                }
-                break;
-            }
-            case UserNameStatus.Preordered:
-            {
-                NSArray * usernames = [self usernamesWithStatus:UserNameStatus.Preordered];
-                if (usernames.count) {
-                    [self registerUsernameDomainsForUsernames:usernames completion:^(BOOL success, NSError * error) {
-                        if (success) {
-                            [self saveUsernames:usernames toStatus:UserNameStatus.RegistrationPending];
-                            [self registerUsernamesAtStage:UserNameStatus.RegistrationPending completion:completion];
-                        } else {
-                            if (completion) {
-                                completion(NO,error);
-                            }
-                        }
-                    }];
-                } else {
-                    [self registerUsernamesAtStage:UserNameStatus.RegistrationPending completion:completion];
-                }
-                break;
-            }
-            case UserNameStatus.RegistrationPending:
-            {
-                NSArray * usernames = [self usernamesWithStatus:UserNameStatus.RegistrationPending];
-                if (usernames.count) {
-                    [self monitorForDPNSUsernames:usernames withRetryCount:2 completion:completion];
-                }
-                break;
-            }
-            default:
-            break;
-        }
-    }
-*/
-//Preorder stage
+    //Preorder stage
     fun registerPreorderedSaltedDomainHashesForUsernames(usernames: List<String>) {
         val transition = preorderTransitionForUnregisteredUsernames(usernames)
         if (transition == null) {
@@ -733,6 +466,8 @@ class BlockchainIdentity {
         }
         return null
     }
+
+    // multiple keys are not yet supported
 
     private fun privateKeyAtIndex(index: Int, type: IdentityPublicKey.TYPES): ECKey? {
         if (isLocal) {
