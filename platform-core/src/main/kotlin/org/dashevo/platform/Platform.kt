@@ -52,7 +52,7 @@ class Platform(val params: NetworkParameters) {
         } else if(params.id.contains("mobile")){
             apps["dpns"] = ContractInfo("ForwNrvKy8jdyoCNTYBK4gcV6o15n79DmFQio2gGac5p")
             apps["dashpay"] = ContractInfo("FW2BGfVdTLgGWGkJRjC838MPpEcL2cSfkNkwao8ooxm5")
-            client = DapiClient(MobileDevNetParams.MASTERNODES[1], true)
+            client = DapiClient(RandomMasternode(MobileDevNetParams.MASTERNODES), true, true)
 
         }
     }
