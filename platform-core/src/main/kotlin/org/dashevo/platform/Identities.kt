@@ -15,21 +15,27 @@ import org.dashevo.dpp.toHexString
 
 class Identities(val platform: Platform) {
 
-    fun register(identityType: Identity.IdentityType = Identity.IdentityType.USER, signedLockTransaction: CreditFundingTransaction): String
-    {
+    fun register(
+        identityType: Identity.IdentityType = Identity.IdentityType.USER,
+        signedLockTransaction: CreditFundingTransaction
+    ): String {
         val identityHDPrivateKey = signedLockTransaction.creditBurnPublicKey
 
         try {
             val outPoint = signedLockTransaction.lockedOutpoint.toStringBase64()
             // FIXME (this will be fixed later, for now add one to the actual index)
+            // This will be fixed in DPP 0.12
             val publicKeyId = signedLockTransaction.usedDerivationPathIndex + 1
 
-            val identityPublicKeyModel = IdentityPublicKey(publicKeyId,
+            val identityPublicKeyModel = IdentityPublicKey(
+                publicKeyId,
                 IdentityPublicKey.TYPES.ECDSA_SECP256K1,
                 identityHDPrivateKey.pubKey.toBase64(),
-                true)
+                true
+            )
 
-            val identityCreateTransition = IdentityCreateTransition(identityType, outPoint, listOf(identityPublicKeyModel))
+            val identityCreateTransition =
+                IdentityCreateTransition(identityType, outPoint, listOf(identityPublicKeyModel))
 
             identityCreateTransition.sign(identityPublicKeyModel, identityHDPrivateKey.privateKeyAsHex)
 

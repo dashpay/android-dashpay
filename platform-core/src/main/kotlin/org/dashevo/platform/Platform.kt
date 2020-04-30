@@ -46,10 +46,10 @@ class Platform(val params: NetworkParameters) {
     lateinit var client: DapiClient
 
     init {
-        if(params.id.contains("evonet")) {
+        if (params.id.contains("evonet")) {
             apps["dpns"] = ContractInfo("77w8Xqn25HwJhjodrHW133aXhjuTsTv9ozQaYpSHACE3")
             client = DapiClient(EvoNetParams.MASTERNODES[1], true)
-        } else if(params.id.contains("mobile")){
+        } else if (params.id.contains("mobile")) {
             apps["dpns"] = ContractInfo("ForwNrvKy8jdyoCNTYBK4gcV6o15n79DmFQio2gGac5p")
             apps["dashpay"] = ContractInfo("FW2BGfVdTLgGWGkJRjC838MPpEcL2cSfkNkwao8ooxm5")
             client = DapiClient(RandomMasternode(MobileDevNetParams.MASTERNODES), true, true)

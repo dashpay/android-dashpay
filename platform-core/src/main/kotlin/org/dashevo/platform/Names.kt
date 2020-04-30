@@ -19,14 +19,13 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.lang.Thread.sleep
 
-class Names (val platform: Platform) {
+class Names(val platform: Platform) {
 
     companion object {
         const val DEFAULT_PARENT_DOMAIN = "dash"
     }
 
-    fun register(name: String, identity: Identity, identityHDPrivateKey: ECKey): Document
-    {
+    fun register(name: String, identity: Identity, identityHDPrivateKey: ECKey): Document {
         val dpp = platform.dpp
 
         val identityType = if (identity.type.value == 2) "application" else "user"
@@ -38,9 +37,9 @@ class Names (val platform: Platform) {
 
         val nameSlice = name.indexOf('.')
         val normalizedParentDomainName =
-            if(nameSlice == -1) "dash" else name.slice(nameSlice + 1 .. name.length)
+            if (nameSlice == -1) "dash" else name.slice(nameSlice + 1..name.length)
 
-        val label = if(nameSlice == -1) name else name.slice(0 .. nameSlice)
+        val label = if (nameSlice == -1) name else name.slice(0..nameSlice)
 
         val normalizedLabel = label.toLowerCase();
         val fullDomainName = "$normalizedLabel.$normalizedParentDomainName";
@@ -72,7 +71,7 @@ class Names (val platform: Platform) {
             "dpns.preorder",
             identity,
             map
-            )
+        )
 
         println("preorder:" + preorderDocument.toJSON().toString())
         val preorderTransition = dpp.document.createStateTransition(listOf(preorderDocument))
@@ -82,7 +81,7 @@ class Names (val platform: Platform) {
         // @ts-ignore
         platform.client.applyStateTransition(preorderTransition)
 
-        sleep(1000*60)
+        sleep(1000 * 60)
 
         val fields = HashMap<String, Any?>(6);
         fields["nameHash"] = "5620$nameHashHex"
@@ -113,6 +112,7 @@ class Names (val platform: Platform) {
         return domainDocument;
 
     }
+
     fun register2(name: String, identity: Identity, identityHDPrivateKey: ECKey): Document? {
         val entropy = Entropy.generate()
         val document = preorder(name, identity, identityHDPrivateKey, entropy)
@@ -180,7 +180,7 @@ class Names (val platform: Platform) {
 
     private fun getLabel(name: String): String {
         val nameSlice = name.indexOf('.')
-        return if(nameSlice == -1) name else name.slice(0 .. nameSlice)
+        return if (nameSlice == -1) name else name.slice(0..nameSlice)
     }
 
     fun getSaltedDomainHashString(
@@ -223,7 +223,13 @@ class Names (val platform: Platform) {
         return Sha256Hash.twiceOf(fullDomainName.toByteArray())
     }
 
-    fun registerName(name: String, identity: Identity, identityHDPrivateKey: ECKey, preorderSaltBase58: String, preorder: Document): Document? {
+    fun registerName(
+        name: String,
+        identity: Identity,
+        identityHDPrivateKey: ECKey,
+        preorderSaltBase58: String,
+        preorder: Document
+    ): Document? {
         val domainDocument = createDomainDocument(identity, name, preorderSaltBase58)
 
         println(domainDocument.toJSON())
@@ -284,9 +290,9 @@ class Names (val platform: Platform) {
 
     fun get(name: String, parentDomain: String): Document? {
 
-        try{
+        try {
             val documents = platform.documents.get("dpns.domain", getDocumentQuery(name, parentDomain));
-            return if(documents != null && documents.isNotEmpty()) documents[0] else null;
+            return if (documents != null && documents.isNotEmpty()) documents[0] else null;
         } catch (e: Exception) {
             throw e;
         }

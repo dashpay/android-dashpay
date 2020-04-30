@@ -25,14 +25,13 @@ class Documents(val platform: Platform) {
             val split = typeLocator.split('.')
             appName = split[0]
             fieldType = split[1]
-        }
-        else {
+        } else {
             appName = appNames.first()
             fieldType = typeLocator
         }
 
 
-        if(!platform.apps.containsKey(appName)){
+        if (!platform.apps.containsKey(appName)) {
             throw Exception("Cannot find contractId for $appName")
         }
 
@@ -43,7 +42,7 @@ class Documents(val platform: Platform) {
             identity.id,
             fieldType,
             opts as Map<String, Any>
-            )
+        )
     }
 
     fun get(typeLocator: String, opts: DocumentQuery): List<Document> {
@@ -57,8 +56,7 @@ class Documents(val platform: Platform) {
             val split = typeLocator.split('.')
             appName = split[0]
             fieldType = split[1]
-        }
-        else {
+        } else {
             appName = appNames.first()
             fieldType = typeLocator
         }
@@ -81,7 +79,7 @@ class Documents(val platform: Platform) {
                     val doc = platform.dpp.document.createFromSerialized(rawData, Factory.Options(true))
                     documents.add(doc);
                 } catch (e: Exception) {
-                    println("Document creation: failure: "+ e);
+                    println("Document creation: failure: " + e);
                 }
             }
             return documents

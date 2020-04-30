@@ -10,7 +10,7 @@ import org.dashevo.dpp.contract.Contract
 import org.dashevo.dpp.identity.Identity
 import java.util.*
 
-class Contracts (val platform: Platform) {
+class Contracts(val platform: Platform) {
     fun create(documentDefinitions: MutableMap<String, Any?>, identity: Identity): Contract {
         return platform.dpp.dataContract.create(identity.id, documentDefinitions)
     }

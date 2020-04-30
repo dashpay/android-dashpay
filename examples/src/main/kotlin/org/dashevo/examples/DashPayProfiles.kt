@@ -36,9 +36,11 @@ class DashPayProfiles {
                     requests += 1;
 
                     for (doc in documents) {
-                        println("displayName: " + doc.data["displayName"] +
-                                " (avatar: " + doc.data["avatarUrl"] +
-                                ") Identity: " + doc.userId)
+                        println(
+                            "displayName: " + doc.data["displayName"] +
+                                    " (avatar: " + doc.data["avatarUrl"] +
+                                    ") Identity: " + doc.userId
+                        )
                         println("-> publicMessage: " + doc.data["publicMessage"])
                     }
 

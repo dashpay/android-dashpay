@@ -36,9 +36,11 @@ class RegisteredNames {
                     requests += 1;
 
                     for (doc in documents) {
-                        println("Name: " + doc.data["label"] +
-                                " (domain: " + doc.data["normalizedParentDomainName"] +
-                                ") Identity: " + doc.userId)
+                        println(
+                            "Name: " + doc.data["label"] +
+                                    " (domain: " + doc.data["normalizedParentDomainName"] +
+                                    ") Identity: " + doc.userId
+                        )
                     }
 
                     startAt += 100;

@@ -22,7 +22,7 @@ class DisplayContracts {
             val platform = sdk.platform
             sdk.isReady();
 
-            for(app in platform.apps) {
+            for (app in platform.apps) {
                 try {
                     val contract = platform.contracts.get(app.value.contractId)
 

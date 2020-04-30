@@ -36,8 +36,10 @@ class PreorderdNames {
                     requests += 1;
 
                     for (doc in documents) {
-                        println("Salted domain hash: " + doc.data["saltedDomainHash"] +
-                                " Identity: " + doc.userId)
+                        println(
+                            "Salted domain hash: " + doc.data["saltedDomainHash"] +
+                                    " Identity: " + doc.userId
+                        )
                     }
 
                     startAt += 100;
