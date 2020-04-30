@@ -23,97 +23,18 @@ class Names(val platform: Platform) {
 
     companion object {
         const val DEFAULT_PARENT_DOMAIN = "dash"
+        const val DPNS_DOMAIN_DOCUMENT = "dpns.domain"
+        const val DPNS_PREORDER_DOCUMENT = "dpns.preorder"
+
+        // 5620 (hex) is the prefix for a hash that is used
+        // in DPNS related documents (preorder, domain)
+        // 56 = SHA256D
+        // 20 = 32 bytes
+        val HASH_PREFIX_BYTES = byteArrayOf(56, 20)
+        const val HASH_PREFIX_STRING = "5620"
     }
 
-    fun register(name: String, identity: Identity, identityHDPrivateKey: ECKey): Document {
-        val dpp = platform.dpp
-
-        val identityType = if (identity.type.value == 2) "application" else "user"
-
-        // @ts-ignore
-
-        val records = HashMap<String, Any?>(1)
-        records["dashIdentity"] = identity.id
-
-        val nameSlice = name.indexOf('.')
-        val normalizedParentDomainName =
-            if (nameSlice == -1) "dash" else name.slice(nameSlice + 1..name.length)
-
-        val label = if (nameSlice == -1) name else name.slice(0..nameSlice)
-
-        val normalizedLabel = label.toLowerCase();
-        val fullDomainName = "$normalizedLabel.$normalizedParentDomainName";
-
-        val nameHash = Sha256Hash.twiceOf(fullDomainName.toByteArray())
-        val nameHashHex = nameHash.toString()
-
-        val preorderSaltBase58 = Entropy.generate();
-        val preOrderSaltRaw = Base58.decode(preorderSaltBase58)
-
-        val baos = ByteArrayOutputStream(preOrderSaltRaw.size + nameHash.bytes.size)
-        baos.write(preOrderSaltRaw)
-        baos.write(0x56)
-        baos.write(0x20)
-        baos.write(nameHash.bytes)
-
-        val saltedDomainHash = Sha256Hash.twiceOf(baos.toByteArray()).toString()
-
-        if (platform.apps["dpns"] == null) {
-            throw Error("DPNS is required to register a new name.")
-        }
-        // 1. Create preorder document
-
-        //val client = DapiClient(EvoNetParams.MASTERNODES[0])
-
-        val map = JSONObject("{saltedDomainHash: \"5620$saltedDomainHash\"}").toMap()
-
-        val preorderDocument = platform.documents.create(
-            "dpns.preorder",
-            identity,
-            map
-        )
-
-        println("preorder:" + preorderDocument.toJSON().toString())
-        val preorderTransition = dpp.document.createStateTransition(listOf(preorderDocument))
-        preorderTransition.sign(identity.getPublicKeyById(1)!!, identityHDPrivateKey.privateKeyAsHex);
-
-        val isValid = preorderTransition.verifySignature(identity.getPublicKeyById(1)!!)
-        // @ts-ignore
-        platform.client.applyStateTransition(preorderTransition)
-
-        sleep(1000 * 60)
-
-        val fields = HashMap<String, Any?>(6);
-        fields["nameHash"] = "5620$nameHashHex"
-        fields["label"] = label
-        fields["normalizedLabel"] = normalizedLabel
-        fields["normalizedParentDomainName"] = normalizedParentDomainName
-        fields["preorderSalt"] = preorderSaltBase58
-        fields["records"] = records
-
-        // 3. Create domain document
-        val domainDocument = platform.documents.create(
-            "dpns.domain",
-            identity,
-            fields
-        );
-
-        println(domainDocument.toJSON())
-
-        // 4. Create and send domain state transition
-        val domainTransition = dpp.document.createStateTransition(listOf(domainDocument));
-        domainTransition.sign(identity.getPublicKeyById(1)!!, identityHDPrivateKey.privateKeyAsHex);
-
-        println(domainTransition.toJSON())
-
-        // @ts-ignore
-        platform.client.applyStateTransition(domainTransition)
-
-        return domainDocument;
-
-    }
-
-    fun register2(name: String, identity: Identity, identityHDPrivateKey: ECKey): Document? {
+    fun register(name: String, identity: Identity, identityHDPrivateKey: ECKey): Document? {
         val entropy = Entropy.generate()
         val document = preorder(name, identity, identityHDPrivateKey, entropy)
         return if (document != null) {
@@ -157,10 +78,10 @@ class Names(val platform: Platform) {
         saltedDomainHash: Sha256Hash,
         identity: Identity
     ): Document {
-        val map = JSONObject("{saltedDomainHash: \"5620$saltedDomainHash\"}").toMap()
+        val map = JSONObject("{saltedDomainHash: \"$HASH_PREFIX_STRING$saltedDomainHash\"}").toMap()
 
         val preorderDocument = platform.documents.create(
-            "dpns.preorder",
+            DPNS_PREORDER_DOCUMENT,
             identity,
             map
         )
@@ -170,7 +91,7 @@ class Names(val platform: Platform) {
     fun normalizedNames(name: String): Pair<String, String> {
         val nameSlice = name.indexOf('.')
         val normalizedParentDomainName =
-            if (nameSlice == -1) "dash" else name.slice(nameSlice + 1..name.length)
+            if (nameSlice == -1) DEFAULT_PARENT_DOMAIN else name.slice(nameSlice + 1..name.length)
 
         val label = if (nameSlice == -1) name else name.slice(0..nameSlice)
 
@@ -210,8 +131,8 @@ class Names(val platform: Platform) {
     ): Sha256Hash {
         val baos = ByteArrayOutputStream(preOrderSaltRaw.size + nameHash.bytes.size)
         baos.write(preOrderSaltRaw)
-        baos.write(0x56)
-        baos.write(0x20)
+        // Add prefix bytes for a hash
+        baos.write(HASH_PREFIX_BYTES)
         baos.write(nameHash.bytes)
 
         return Sha256Hash.twiceOf(baos.toByteArray())
@@ -240,7 +161,6 @@ class Names(val platform: Platform) {
 
         println(domainTransition.toJSON())
 
-        // @ts-ignore
         platform.client.applyStateTransition(domainTransition)
 
         return domainDocument;
@@ -261,7 +181,7 @@ class Names(val platform: Platform) {
         val nameHashHex = nameHash.toString()
 
         val fields = HashMap<String, Any?>(6);
-        fields["nameHash"] = "5620$nameHashHex"
+        fields["nameHash"] = "$HASH_PREFIX_STRING$nameHashHex"
         fields["label"] = getLabel(name)
         fields["normalizedLabel"] = normalizedLabel
         fields["normalizedParentDomainName"] = normalizedParentDomainName
@@ -270,7 +190,7 @@ class Names(val platform: Platform) {
 
         // 3. Create domain document
         val domainDocument = platform.documents.create(
-            "dpns.domain",
+            DPNS_DOMAIN_DOCUMENT,
             identity,
             fields
         )
@@ -291,7 +211,7 @@ class Names(val platform: Platform) {
     fun get(name: String, parentDomain: String): Document? {
 
         try {
-            val documents = platform.documents.get("dpns.domain", getDocumentQuery(name, parentDomain));
+            val documents = platform.documents.get(DPNS_DOMAIN_DOCUMENT, getDocumentQuery(name, parentDomain));
             return if (documents != null && documents.isNotEmpty()) documents[0] else null;
         } catch (e: Exception) {
             throw e;
