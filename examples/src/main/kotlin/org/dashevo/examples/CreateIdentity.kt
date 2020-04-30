@@ -14,18 +14,21 @@ import org.dashevo.Client
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identity.Identity
+import org.dashevo.dpp.toBase64
 import org.json.JSONObject
 import java.lang.Thread.sleep
 
 /*
 
     DeterministicKey{
-        pub HEX=0249f14d4997b555bd3d602a0410c0de78e8df60cf13952ea202ff725080e7c06c,
-        priv HEX=b0f11761b975ff53d9c4345da1b436dcbad7b689aa6af8526753f920b3f6f106,
-        priv WIF=cTWeqyVmbZz8CnNcShQwLyHFLr1Fr9UcKUR3sy5Sz5ApLcJon4wB,
-        isEncrypted=false, isPubKeyOnly=false
-        }
-        addr:yguaDwEnR8aJHW7PX8EbQvbKcYieqWxjnG  hash160:e1d6d0811d500e6ad194121ac4d927a04aef7227  (M/9H/1H/12H/0, external)
+        pub HEX=02af0cfc16fa8778ce6fd64694bfb9f9853cb2e51217fe77af487d1c1a44d50da7,
+        priv HEX=7c8922c88449e483fe95901216d8116e3c2098e7cff8fa2cc75eaa8031a7a405,
+        priv WIF=cRknMQ5W2bPaFo4X9PYAb7HzhJthukunWBy6MDzGmWbhBeCVKAC3,
+        isEncrypted=false,
+        isPubKeyOnly=false
+    }
+    addr:yasppWBy7doW4amAGmNsr9JkZviqFNXRSZ
+    hash160:9fb169770f24e7e1173f6b194a96feed17665eae  (M/9H/1H/12H/1, internal)
 
     b12b1064de1a8310c394528cbd26a4ef78876ef9d76669a40d77d78dda28e810
       updated: 2020-04-06T16:12:25Z
@@ -48,8 +51,8 @@ class CreateIdentity {
     companion object {
         val sdk = Client("mobile")
 
-        const val publicKeyHex = "0249f14d4997b555bd3d602a0410c0de78e8df60cf13952ea202ff725080e7c06c"
-        const val privateKeyHex = "b0f11761b975ff53d9c4345da1b436dcbad7b689aa6af8526753f920b3f6f106"
+        const val publicKeyHex = "02af0cfc16fa8778ce6fd64694bfb9f9853cb2e51217fe77af487d1c1a44d50da7"
+        const val privateKeyHex = "7c8922c88449e483fe95901216d8116e3c2098e7cff8fa2cc75eaa8031a7a405"
         val publicKey = Utils.HEX.decode(publicKeyHex)
         val privateKey = Utils.HEX.decode(privateKeyHex)
         val creditBurnTx =
@@ -78,6 +81,10 @@ class CreateIdentity {
                     sleep(10000)
                     identity = platform.identities.get(cftx.creditBurnIdentityIdentifier.toString())
                 }
+
+                // check that the identity public key matches our public key information
+                if(identity!!.publicKeys[0].data == publicKey.toBase64())
+                    println("Identity public key verified")
 
                 // display information
                 println("Identity Created: ${cftx.creditBurnIdentityIdentifier.toStringBase58()}")
