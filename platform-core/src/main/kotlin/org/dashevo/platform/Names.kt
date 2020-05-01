@@ -30,7 +30,7 @@ class Names(val platform: Platform) {
         // in DPNS related documents (preorder, domain)
         // 56 = SHA256D
         // 20 = 32 bytes
-        val HASH_PREFIX_BYTES = byteArrayOf(56, 20)
+        val HASH_PREFIX_BYTES = byteArrayOf(0x56, 0x20)
         const val HASH_PREFIX_STRING = "5620"
     }
 
@@ -64,7 +64,7 @@ class Names(val platform: Platform) {
         val preorderDocument = createPreorderDocument(saltedDomainHash, identity)
 
         val preorderTransition = platform.dpp.document.createStateTransition(listOf(preorderDocument))
-        preorderTransition.sign(identity.getPublicKeyById(1)!!, identityHDPrivateKey.privateKeyAsHex);
+        preorderTransition.sign(identity.getPublicKeyById(1)!!, identityHDPrivateKey.privateKeyAsHex)
 
         return try {
             platform.client.applyStateTransition(preorderTransition)
@@ -95,7 +95,7 @@ class Names(val platform: Platform) {
 
         val label = if (nameSlice == -1) name else name.slice(0..nameSlice)
 
-        val normalizedLabel = label.toLowerCase();
+        val normalizedLabel = label.toLowerCase()
         return Pair(normalizedParentDomainName, normalizedLabel)
     }
 
@@ -156,14 +156,14 @@ class Names(val platform: Platform) {
         println(domainDocument.toJSON())
 
         // 4. Create and send domain state transition
-        val domainTransition = platform.dpp.document.createStateTransition(listOf(domainDocument));
-        domainTransition.sign(identity.getPublicKeyById(1)!!, identityHDPrivateKey.privateKeyAsHex);
+        val domainTransition = platform.dpp.document.createStateTransition(listOf(domainDocument))
+        domainTransition.sign(identity.getPublicKeyById(1)!!, identityHDPrivateKey.privateKeyAsHex)
 
         println(domainTransition.toJSON())
 
         platform.client.applyStateTransition(domainTransition)
 
-        return domainDocument;
+        return domainDocument
     }
 
     fun createDomainDocument(
@@ -180,7 +180,7 @@ class Names(val platform: Platform) {
         val nameHash = Sha256Hash.twiceOf(fullDomainName.toByteArray())
         val nameHashHex = nameHash.toString()
 
-        val fields = HashMap<String, Any?>(6);
+        val fields = HashMap<String, Any?>(6)
         fields["nameHash"] = "$HASH_PREFIX_STRING$nameHashHex"
         fields["label"] = getLabel(name)
         fields["normalizedLabel"] = normalizedLabel
@@ -211,10 +211,10 @@ class Names(val platform: Platform) {
     fun get(name: String, parentDomain: String): Document? {
 
         try {
-            val documents = platform.documents.get(DPNS_DOMAIN_DOCUMENT, getDocumentQuery(name, parentDomain));
-            return if (documents != null && documents.isNotEmpty()) documents[0] else null;
+            val documents = platform.documents.get(DPNS_DOMAIN_DOCUMENT, getDocumentQuery(name, parentDomain))
+            return if (documents != null && documents.isNotEmpty()) documents[0] else null
         } catch (e: Exception) {
-            throw e;
+            throw e
         }
     }
 }
