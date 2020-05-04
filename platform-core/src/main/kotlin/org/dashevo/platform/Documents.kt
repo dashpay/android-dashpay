@@ -16,20 +16,8 @@ class Documents(val platform: Platform) {
         val dpp = platform.dpp
 
         val appNames = platform.apps.keys
-        //We can either provide of type `dashpay.profile` or if only one schema provided, of type `profile`.
-        var appName: String
-        var fieldType: String
 
-        if (typeLocator.contains('.')) {
-
-            val split = typeLocator.split('.')
-            appName = split[0]
-            fieldType = split[1]
-        } else {
-            appName = appNames.first()
-            fieldType = typeLocator
-        }
-
+        val (appName, fieldType) = getAppnameAndType(typeLocator, appNames)
 
         if (!platform.apps.containsKey(appName)) {
             throw Exception("Cannot find contractId for $appName")
@@ -45,14 +33,20 @@ class Documents(val platform: Platform) {
         )
     }
 
-    fun get(typeLocator: String, opts: DocumentQuery): List<Document> {
-        val appNames = platform.apps.keys
-        //We can either provide of type `dashpay.profile` or if only one schema provided, of type `profile`.
+    /**
+     * Takes a document name in the form of "appname.document_type" and returns
+     * "appname" and "document_type"
+     * @param typeLocator String
+     * @param appNames MutableSet<String>
+     * @return Pair<String, String>
+     */
+    private fun getAppnameAndType(
+        typeLocator: String,
+        appNames: MutableSet<String>
+    ): Pair<String, String> {
         var appName: String
         var fieldType: String
-
         if (typeLocator.contains('.')) {
-
             val split = typeLocator.split('.')
             appName = split[0]
             fieldType = split[1]
@@ -60,7 +54,13 @@ class Documents(val platform: Platform) {
             appName = appNames.first()
             fieldType = typeLocator
         }
+        return Pair(appName, fieldType)
+    }
 
+    fun get(typeLocator: String, opts: DocumentQuery): List<Document> {
+        val appNames = platform.apps.keys
+
+        val (appName, fieldType) = getAppnameAndType(typeLocator, appNames)
 
         if (!platform.apps.containsKey(appName)) {
             throw Exception("No app named $appName specified.")
