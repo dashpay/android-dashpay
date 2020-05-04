@@ -65,11 +65,11 @@ class BlockchainIdentity {
     enum class UsernameStatus(val value: Int) {
         NOT_PRESENT(0),
         INITIAL(1),
-        PREORDER_REGISTRATION_PENDING(1),
-        PREORDERED(2),
-        REGISTRATION_PENDING(3),
-        CONFIRMED(4),
-        TAKEN_ON_NETWORK(5);
+        PREORDER_REGISTRATION_PENDING(2),
+        PREORDERED(3),
+        REGISTRATION_PENDING(4),
+        CONFIRMED(5),
+        TAKEN_ON_NETWORK(6);
 
         companion object {
             private val values = values()
