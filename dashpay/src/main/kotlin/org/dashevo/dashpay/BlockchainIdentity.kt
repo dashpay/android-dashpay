@@ -370,7 +370,7 @@ class BlockchainIdentity {
 
     // MARK: Documents
 
-    fun preorderDocumentsForUnregisteredUsernames(unregisteredUsernames: List<String>): List<Document> {
+    fun createPreorderDocuments(unregisteredUsernames: List<String>): List<Document> {
         val usernamePreorderDocuments = ArrayList<Document>()
         for (saltedDomainHash in saltedDomainHashesForUsernames(unregisteredUsernames).values) {
             val document = platform.names.createPreorderDocument(Sha256Hash.wrap(saltedDomainHash), identity!!)
@@ -379,7 +379,7 @@ class BlockchainIdentity {
         return usernamePreorderDocuments;
     }
 
-    fun domainDocumentsForUnregisteredUsernames(unregisteredUsernames: List<String>): List<Document> {
+    fun createDomainDocuments(unregisteredUsernames: List<String>): List<Document> {
         val usernameDomainDocuments = ArrayList<Document>()
         for (username in saltedDomainHashesForUsernames(unregisteredUsernames).keys) {
             val document =
@@ -391,14 +391,14 @@ class BlockchainIdentity {
 
     // MARK: Transitions
 
-    fun preorderTransitionForUnregisteredUsernames(unregisteredUsernames: List<String>): DocumentsStateTransition? {
-        val usernamePreorderDocuments = preorderDocumentsForUnregisteredUsernames(unregisteredUsernames)
+    fun createPreorderTransition(unregisteredUsernames: List<String>): DocumentsStateTransition? {
+        val usernamePreorderDocuments = createPreorderDocuments(unregisteredUsernames)
         if (usernamePreorderDocuments.isEmpty()) return null
         return platform.dpp.document.createStateTransition(usernamePreorderDocuments);
     }
 
-    fun domainTransitionForUnregisteredUsernames(unregisteredUsernames: List<String>): DocumentsStateTransition? {
-        val usernamePreorderDocuments = domainDocumentsForUnregisteredUsernames(unregisteredUsernames)
+    fun createDomainTransition(unregisteredUsernames: List<String>): DocumentsStateTransition? {
+        val usernamePreorderDocuments = createDomainDocuments(unregisteredUsernames)
         if (usernamePreorderDocuments.isEmpty()) return null
         return platform.dpp.document.createStateTransition(usernamePreorderDocuments);
     }
@@ -572,8 +572,17 @@ class BlockchainIdentity {
     }
 
 
-    //should this have a callback or let the client handle the end
-    fun monitorForBlockchainIdentityWithRetryCount(
+    /**
+     * This method will determine if the associated identity exists by making a platform query
+     * the specified number of times with the specified delay between attempts.  If the identity
+     * exists, then the onSuccess method of the callback is invoked.  Otherwise the onTimeout method
+     * is invoked.
+     * @param retryCount Int The number of times to try to determine if an identity exists
+     * @param delayMillis Long The delay between attempts to determine if an identity exists
+     * @param retryDelayType RetryDelayType
+     * @param callback RegisterIdentityCallback
+     */
+    fun watchIdentity(
         retryCount: Int,
         delayMillis: Long,
         retryDelayType: RetryDelayType,
@@ -595,14 +604,14 @@ class BlockchainIdentity {
                         RetryDelayType.SLOW50 -> 3 / 2
                         else -> 1
                     }
-                    monitorForBlockchainIdentityWithRetryCount(retryCount - 1, nextDelay, retryDelayType, callback)
+                    watchIdentity(retryCount - 1, nextDelay, retryDelayType, callback)
                 }, delayMillis)
             } else callback.onTimeout()
         }
         //throw exception or return false
     }
 
-    suspend fun monitorForBlockchainIdentityWithRetryCount(
+    suspend fun watchIdentity(
         retryCount: Int,
         delayMillis: Long,
         retryDelayType: RetryDelayType
@@ -623,14 +632,24 @@ class BlockchainIdentity {
                     else -> 1
                 }
                 kotlinx.coroutines.delay(nextDelay)
-                monitorForBlockchainIdentityWithRetryCount(retryCount - 1, nextDelay, retryDelayType)
+                watchIdentity(retryCount - 1, nextDelay, retryDelayType)
             }
         }
         return null
     }
 
-    //should this have a callback or let the client handle the end
-    fun monitorForDPNSPreorderSaltedDomainHashes(
+    /**
+     * This method will determine if the given preordered names exist by making a platform query
+     * the specified number of times with the specified delay between attempts.  If the preorders
+     * exist, then the onSuccess method of the callback is invoked.  Otherwise the onTimeout method
+     * is invoked.
+     * @param saltedDomainHashes Map<String, ByteArray> Map of usernames and salted domain hashes
+     * @param retryCount Int
+     * @param delayMillis Long
+     * @param retryDelayType RetryDelayType
+     * @param callback RegisterPreorderCallback
+     */
+    fun watchPreorder(
         saltedDomainHashes: Map<String, ByteArray>,
         retryCount: Int,
         delayMillis: Long,
@@ -667,7 +686,7 @@ class BlockchainIdentity {
                         RetryDelayType.SLOW50 -> 3 / 2
                         else -> 1
                     }
-                    monitorForDPNSPreorderSaltedDomainHashes(
+                    watchPreorder(
                         saltedDomainHashesLeft,
                         retryCount - 1,
                         nextDelay,
@@ -689,7 +708,7 @@ class BlockchainIdentity {
                         RetryDelayType.SLOW50 -> 3 / 2
                         else -> 1
                     }
-                    monitorForDPNSPreorderSaltedDomainHashes(
+                    watchPreorder(
                         saltedDomainHashes,
                         retryCount - 1,
                         nextDelay,
@@ -701,7 +720,6 @@ class BlockchainIdentity {
                 callback.onTimeout(saltedDomainHashes.keys.toList())
             }
         }
-        //throw exception or return false
     }
 
     fun monitorForDPNSUsernames(
@@ -740,7 +758,7 @@ class BlockchainIdentity {
                         RetryDelayType.SLOW50 -> 3 / 2
                         else -> 1
                     }
-                    monitorForDPNSUsernames(usernamesLeft, retryCount - 1, nextDelay, retryDelayType, callback)
+                    watchUsernames(usernamesLeft, retryCount - 1, nextDelay, retryDelayType, callback)
                 }, delayMillis)
             } else if (usernamesLeft.size > 0) {
                 callback.onTimeout(usernamesLeft)
@@ -755,13 +773,12 @@ class BlockchainIdentity {
                         RetryDelayType.SLOW50 -> 3 / 2
                         else -> 1
                     }
-                    monitorForDPNSUsernames(usernames, retryCount - 1, nextDelay, retryDelayType, callback)
+                    watchUsernames(usernames, retryCount - 1, nextDelay, retryDelayType, callback)
                 }, delayMillis)
             } else {
                 callback.onTimeout(usernames)
             }
         }
-        //throw exception or return false
     }
 
 }

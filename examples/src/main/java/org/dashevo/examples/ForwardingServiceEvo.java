@@ -7,7 +7,6 @@
 
 package org.dashevo.examples;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -337,7 +336,7 @@ public class ForwardingServiceEvo {
             System.out.println("Identity created: " + lastIdentityId);
 */
         //sleep(30*1000);
-        lastBlockchainIdentity.monitorForBlockchainIdentityWithRetryCount(1, 1000, BlockchainIdentity.RetryDelayType.LINEAR,
+        lastBlockchainIdentity.watchIdentity(1, 1000, BlockchainIdentity.RetryDelayType.LINEAR,
                 new RegisterIdentityCallback() {
                     @Override
                     public void onComplete(@NotNull String uniqueId) {
@@ -424,7 +423,7 @@ public class ForwardingServiceEvo {
             lastBlockchainIdentity.registerPreorderedSaltedDomainHashesForUsernames(set);
 
             Map<String, byte[]> saltedDomainHashes = lastBlockchainIdentity.saltedDomainHashesForUsernames(set);
-            lastBlockchainIdentity.monitorForDPNSPreorderSaltedDomainHashes(saltedDomainHashes, 10, 1000, BlockchainIdentity.RetryDelayType.LINEAR, new RegisterPreorderCallback() {
+            lastBlockchainIdentity.watchPreorder(saltedDomainHashes, 10, 1000, BlockchainIdentity.RetryDelayType.LINEAR, new RegisterPreorderCallback() {
                 @Override
                 public void onComplete(@NotNull List<String> names) {
                     lastBlockchainIdentity.registerUsernameDomainsForUsernames(set);
