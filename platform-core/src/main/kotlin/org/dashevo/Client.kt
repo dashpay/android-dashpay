@@ -14,6 +14,14 @@ class Client(network: String) {
     val platform = Platform(if (network == "testnet") EvoNetParams.get() else MobileDevNetParams.get())
 
     fun isReady(): Boolean {
+        // TODO: determine that there are several valid nodes to connect to
+        // A method should be added to the Platform class to query several nodes
+        // with GetStatus to determine that each is online and is updated to
+        // the correct version of DPP that this library supports.  Platform
+        // should then use those nodes for future calls.  If later as the app
+        // runs a particular node is found to be offline, then Platform should
+        // find another node to replace it.  This methodology is similar to the way
+        // that dashj handles connections to peers.
         return true
     }
 }
