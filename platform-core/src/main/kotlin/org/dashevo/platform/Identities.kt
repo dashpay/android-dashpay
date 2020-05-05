@@ -6,38 +6,69 @@
  */
 package org.dashevo.platform
 
+import org.bitcoinj.core.ECKey
+import org.bitcoinj.core.TransactionOutPoint
+import org.bitcoinj.crypto.KeyCrypter
 import org.bitcoinj.evolution.CreditFundingTransaction
+import org.bouncycastle.crypto.params.KeyParameter
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.identity.IdentityCreateTransition
 import org.dashevo.dpp.identity.IdentityPublicKey
 import org.dashevo.dpp.toBase64
-import org.dashevo.dpp.toHexString
 
 class Identities(val platform: Platform) {
 
     fun register(
         identityType: Identity.IdentityType = Identity.IdentityType.USER,
+        signedLockTransaction: CreditFundingTransaction,
+        keyCrypter: KeyCrypter?,
+        keyParameter: KeyParameter?
+    ): String {
+        val identityPrivateKey = signedLockTransaction.creditBurnPublicKey.decrypt(keyCrypter, keyParameter)
+        return register(
+            identityType,
+            signedLockTransaction.lockedOutpoint,
+            identityPrivateKey,
+            signedLockTransaction.usedDerivationPathIndex
+        )
+    }
+
+    fun register(
+        identityType: Identity.IdentityType = Identity.IdentityType.USER,
         signedLockTransaction: CreditFundingTransaction
     ): String {
-        val identityHDPrivateKey = signedLockTransaction.creditBurnPublicKey
+        return register(
+            identityType,
+            signedLockTransaction.lockedOutpoint,
+            signedLockTransaction.creditBurnPublicKey,
+            signedLockTransaction.usedDerivationPathIndex
+        )
+    }
+
+    fun register(
+        identityType: Identity.IdentityType,
+        lockedOutpoint: TransactionOutPoint,
+        creditBurnKey: ECKey,
+        usedDerivationPathIndex: Int
+    ): String {
 
         try {
-            val outPoint = signedLockTransaction.lockedOutpoint.toStringBase64()
+            val outPoint = lockedOutpoint.toStringBase64()
             // FIXME (this will be fixed later, for now add one to the actual index)
             // This will be fixed in DPP 0.12
-            val publicKeyId = signedLockTransaction.usedDerivationPathIndex + 1
+            val publicKeyId = usedDerivationPathIndex + 1
 
             val identityPublicKeyModel = IdentityPublicKey(
                 publicKeyId,
                 IdentityPublicKey.TYPES.ECDSA_SECP256K1,
-                identityHDPrivateKey.pubKey.toBase64(),
+                creditBurnKey.pubKey.toBase64(),
                 true
             )
 
             val identityCreateTransition =
                 IdentityCreateTransition(identityType, outPoint, listOf(identityPublicKeyModel))
 
-            identityCreateTransition.sign(identityPublicKeyModel, identityHDPrivateKey.privateKeyAsHex)
+            identityCreateTransition.sign(identityPublicKeyModel, creditBurnKey.privateKeyAsHex)
 
             platform.client.applyStateTransition(identityCreateTransition);
             return identityCreateTransition.identityId
