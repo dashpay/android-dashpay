@@ -8,15 +8,14 @@ package org.dashevo.dashpay
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
-import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.coroutines.delay
 import org.bitcoinj.core.*
 import org.bitcoinj.crypto.ChildNumber
-import org.bitcoinj.crypto.KeyCrypter
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
+import org.bouncycastle.crypto.params.KeyParameter
 import org.dashevo.dashpay.callback.RegisterIdentityCallback
 import org.dashevo.dashpay.callback.RegisterNameCallback
 import org.dashevo.dashpay.callback.RegisterPreorderCallback
@@ -31,11 +30,11 @@ import org.dashevo.dpp.toBase64
 import org.dashevo.dpp.toHexString
 import org.dashevo.dpp.util.Cbor
 import org.dashevo.dpp.util.Entropy
+import org.dashevo.platform.Names
 import org.slf4j.LoggerFactory
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
-import kotlin.collections.HashSet
 import kotlin.concurrent.timerTask
 
 class BlockchainIdentity {
@@ -137,7 +136,7 @@ class BlockchainIdentity {
     lateinit var keyInfo: MutableMap<Long, MutableMap<String, Any>>
     var currentMainKeyIndex: Int = 0
     var currentMainKeyType: IdentityPublicKey.TYPES = IdentityPublicKey.TYPES.ECDSA_SECP256K1
-    lateinit var creditFundingTransaction: CreditFundingTransaction
+    var creditFundingTransaction: CreditFundingTransaction? = null
     lateinit var registrationFundingPrivateKey: ECKey
 
 
@@ -238,39 +237,47 @@ class BlockchainIdentity {
     /*
         not sure if this method works.  The app may create its own tx, broadcast it, then start the process at registerIdentity()
      */
-    fun sendCreditFundingTransaction(credits: Coin) {
+    fun createCreditFundingTransaction(credits: Coin, keyParameter: KeyParameter?): CreditFundingTransaction {
         Preconditions.checkState(type != Identity.IdentityType.UNKNOWN, "The identity type must be USER or APPLICATION")
         Preconditions.checkState(creditFundingTransaction == null, "The credit funding transaction must not exist")
         Preconditions.checkState(
-            registrationStatus == RegistrationStatus.NOT_REGISTERED,
+            registrationStatus == RegistrationStatus.UNKNOWN,
             "The identity must not be registered"
         )
-        val privateKey = wallet!!.blockchainIdentityFundingKeyChain.currentAuthenticationKey()
+        Preconditions.checkArgument(if (wallet!!.isEncrypted) keyParameter != null else true)
+        val privateKey = wallet!!.blockchainIdentityFundingKeyChain.currentAuthenticationKey() as ECKey
         val request = SendRequest.creditFundingTransaction(wallet!!.params, privateKey, credits)
-
-        val sendResult = wallet!!.sendCoins(request)
-        sendResult.broadcastComplete.addListener(Runnable {
-            creditFundingTransaction = request.tx as CreditFundingTransaction
-        }, MoreExecutors.directExecutor())
+        request.aesKey = keyParameter
+        return wallet!!.sendCoinsOffline(request) as CreditFundingTransaction
     }
 
-    fun registerIdentity() {
+    fun initializeCreditFundingTransaction(creditFundingTransaction: CreditFundingTransaction) {
+        this.creditFundingTransaction = creditFundingTransaction
+        registrationStatus = RegistrationStatus.NOT_REGISTERED
+    }
+
+    fun registerIdentity(keyParameter: KeyParameter?) {
         Preconditions.checkState(type != Identity.IdentityType.UNKNOWN, "The identity type must be USER or APPLICATION")
         Preconditions.checkState(
             registrationStatus == RegistrationStatus.NOT_REGISTERED,
             "The identity must not be registered"
         )
-        Preconditions.checkNotNull(creditFundingTransaction, "The credit funding transaction must exist")
+        Preconditions.checkState(creditFundingTransaction != null, "The credit funding transaction must exist")
 
-        platform.identities.register(type, creditFundingTransaction)
+        if(wallet!!.isEncrypted) {
+            platform.identities.register(type, creditFundingTransaction!!, wallet!!.keyCrypter, keyParameter!!)
+        } else {
+            platform.identities.register(type, creditFundingTransaction!!)
+        }
 
         registrationStatus = RegistrationStatus.REGISTERED
 
-        finalizeIdentityRegistration(creditFundingTransaction.creditBurnIdentityIdentifier)
+        finalizeIdentityRegistration(creditFundingTransaction!!)
     }
 
     fun finalizeIdentityRegistration(fundingTransaction: CreditFundingTransaction) {
         this.creditFundingTransaction = fundingTransaction;
+        this.registrationFundingPrivateKey = fundingTransaction.creditBurnPublicKey
         this.lockedOutpoint = fundingTransaction.lockedOutpoint;
         finalizeIdentityRegistration(fundingTransaction.creditBurnIdentityIdentifier);
     }
@@ -299,12 +306,12 @@ class BlockchainIdentity {
 
     // MARK: Registering
     //Preorder stage
-    fun registerPreorderedSaltedDomainHashesForUsernames(usernames: List<String>) {
-        val transition = preorderTransitionForUnregisteredUsernames(usernames)
+    fun registerPreorderedSaltedDomainHashesForUsernames(usernames: List<String>, keyParameter: KeyParameter?) {
+        val transition = createPreorderTransition(usernames)
         if (transition == null) {
             return;
         }
-        signStateTransition(transition)
+        signStateTransition(transition, keyParameter)
 
         platform.client.applyStateTransition(transition)
 
@@ -319,12 +326,12 @@ class BlockchainIdentity {
         saveUsernames(usernames, UsernameStatus.PREORDER_REGISTRATION_PENDING)
     }
 
-    fun registerUsernameDomainsForUsernames(usernames: List<String>) {
-        val transition = domainTransitionForUnregisteredUsernames(usernames)
+    fun registerUsernameDomainsForUsernames(usernames: List<String>, keyParameter: KeyParameter?) {
+        val transition = createDomainTransition(usernames)
         if (transition == null) {
             return;
         }
-        signStateTransition(transition!!)
+        signStateTransition(transition!!, keyParameter)
 
         platform.client.applyStateTransition(transition)
 
@@ -459,17 +466,19 @@ class BlockchainIdentity {
         transition: StateTransition,
         keyIndex: Int,
         signingAlgorithm: IdentityPublicKey.TYPES,
-        keyCrypter: KeyCrypter? = null
+        keyParameter: KeyParameter? = null
     ) {
 
-        val privateKey = privateKeyAtIndex(keyIndex, signingAlgorithm)
+        var privateKey = privateKeyAtIndex(keyIndex, signingAlgorithm)
+        if(privateKey!!.isEncrypted)
+            privateKey = privateKey.decrypt(wallet!!.keyCrypter, keyParameter)
         Preconditions.checkState(privateKey != null, "The private key should exist");
 
         val identityPublicKey = IdentityPublicKey(keyIndex + 1, signingAlgorithm, privateKey!!.pubKey.toBase64(), true)
         transition.sign(identityPublicKey, privateKey!!.privateKeyAsHex)
     }
 
-    fun signStateTransition(transition: StateTransition) {
+    fun signStateTransition(transition: StateTransition, keyParameter: KeyParameter?) {
         /*if (keysCreated == 0) {
             uint32_t index
             [self createNewKeyOfType:DEFAULT_SIGNING_ALGORITH returnIndex:&index];
@@ -477,7 +486,8 @@ class BlockchainIdentity {
         return signStateTransition(
             transition,
             identity!!.publicKeys[0].id - 1/* currentMainKeyIndex*/,
-            currentMainKeyType
+            currentMainKeyType,
+            keyParameter
         )
     }
 
@@ -722,7 +732,90 @@ class BlockchainIdentity {
         }
     }
 
-    fun monitorForDPNSUsernames(
+    suspend fun watchPreorder(
+        saltedDomainHashes: Map<String, ByteArray>,
+        retryCount: Int,
+        delayMillis: Long,
+        retryDelayType: RetryDelayType
+    ) : Pair<Boolean, List<String>> {
+
+        val query = DocumentQuery.Builder()
+            .where(listOf("saltedDomainHash", "in", saltedDomainHashes.map { "${Names.HASH_PREFIX_STRING}${it.value.toHexString()}" })).build()
+        val preorderDocuments = platform.documents.get(Names.DPNS_PREORDER_DOCUMENT, query)
+
+        if (preorderDocuments != null && preorderDocuments.isNotEmpty()) {
+            val usernamesLeft = HashMap(saltedDomainHashes)
+            for (username in saltedDomainHashes.keys) {
+                val saltedDomainHashData = saltedDomainHashes[username] as ByteArray
+                val saltedDomainHashString = "${Names.HASH_PREFIX_STRING}${saltedDomainHashData.toHexString()}"
+                for (preorderDocument in preorderDocuments) {
+                    if (preorderDocument.data["saltedDomainHash"] == saltedDomainHashString) {
+                        var usernameStatus = if (usernameStatuses.containsKey(username))
+                            usernameStatuses[username] as MutableMap<String, Any>
+                        else HashMap()
+                        usernameStatus[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.PREORDERED
+                        usernameStatuses[username] = usernameStatus
+                        saveUsername(username, UsernameStatus.PREORDERED, null, true)
+                        usernamesLeft.remove(username)
+                    }
+                }
+            }
+            if (usernamesLeft.size > 0 && retryCount > 0) {
+                val saltedDomainHashesLeft = saltedDomainHashes.filter { usernamesLeft.containsKey(it.key) }
+
+                val nextDelay = delayMillis * when (retryDelayType) {
+                    RetryDelayType.SLOW20 -> 5 / 4
+                    RetryDelayType.SLOW50 -> 3 / 2
+                    else -> 1
+                }
+                delay(nextDelay)
+                watchPreorder(
+                    saltedDomainHashesLeft,
+                    retryCount - 1,
+                    nextDelay,
+                    retryDelayType
+                )
+
+            } else if (usernamesLeft.size > 0) {
+                val saltedDomainHashesLeft = saltedDomainHashes.filter { usernamesLeft.containsKey(it.key) }
+                return Pair(false, saltedDomainHashesLeft.keys.toList())
+            } else {
+                return Pair(true, saltedDomainHashes.keys.toList())
+            }
+        } else {
+            if (retryCount > 0) {
+                val nextDelay = delayMillis * when (retryDelayType) {
+                    RetryDelayType.SLOW20 -> 5 / 4
+                    RetryDelayType.SLOW50 -> 3 / 2
+                    else -> 1
+                }
+                delay(nextDelay)
+                watchPreorder(
+                    saltedDomainHashes,
+                    retryCount - 1,
+                    nextDelay,
+                    retryDelayType
+                )
+            } else {
+                return Pair(false, saltedDomainHashes.keys.toList())
+            }
+        }
+        //throw exception or return false
+        return Pair(false, saltedDomainHashes.keys.toList())
+    }
+
+    /**
+     * This method will determine if the given usernames exist by making a platform query
+     * the specified number of times with the specified delay between attempts.  If the usernames
+     * exist, then the onSuccess method of the callback is invoked.  Otherwise the onTimeout method
+     * is invoked.
+     * @param usernames List<String>
+     * @param retryCount Int
+     * @param delayMillis Long
+     * @param retryDelayType RetryDelayType
+     * @param callback RegisterNameCallback
+     */
+    fun watchUsernames(
         usernames: List<String>,
         retryCount: Int,
         delayMillis: Long,
@@ -731,7 +824,7 @@ class BlockchainIdentity {
     ) {
 
         val query = DocumentQuery.Builder()
-            .where("normalizedParentDomainName", "==", "dash")
+            .where("normalizedParentDomainName", "==", Names.DEFAULT_PARENT_DOMAIN)
             .where(listOf("normalizedLabel", "in", usernames.map { "${it.toLowerCase()}" })).build()
         val nameDocuments = platform.documents.get("dpns.domain", query)
 
@@ -779,6 +872,64 @@ class BlockchainIdentity {
                 callback.onTimeout(usernames)
             }
         }
+    }
+
+    suspend fun watchUsernames(
+        usernames: List<String>,
+        retryCount: Int,
+        delayMillis: Long,
+        retryDelayType: RetryDelayType
+    ) : Pair<Boolean, List<String>> {
+
+        val query = DocumentQuery.Builder()
+            .where("normalizedParentDomainName", "==", Names.DEFAULT_PARENT_DOMAIN)
+            .where(listOf("normalizedLabel", "in", usernames.map { "${it.toLowerCase()}" })).build()
+        val nameDocuments = platform.documents.get(Names.DPNS_DOMAIN_DOCUMENT, query)
+
+        if (nameDocuments != null && nameDocuments.isNotEmpty()) {
+            val usernamesLeft = ArrayList(usernames)
+            for (username in usernames) {
+                val normalizedName = username.toLowerCase()
+                for (nameDocument in nameDocuments) {
+                    if (nameDocument.data["normalizedLabel"] == normalizedName) {
+                        var usernameStatus = if (usernameStatuses.containsKey(username))
+                            usernameStatuses[username] as MutableMap<String, Any>
+                        else HashMap()
+                        usernameStatus[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.CONFIRMED
+                        usernameStatuses[username] = usernameStatus
+                        saveUsername(username, UsernameStatus.CONFIRMED, null, true)
+                        usernamesLeft.remove(username)
+                    }
+                }
+            }
+            if (usernamesLeft.size > 0 && retryCount > 0) {
+                val nextDelay = delayMillis * when (retryDelayType) {
+                        RetryDelayType.SLOW20 -> 5 / 4
+                        RetryDelayType.SLOW50 -> 3 / 2
+                        else -> 1
+                }
+                delay(nextDelay)
+                watchUsernames(usernamesLeft, retryCount - 1, nextDelay, retryDelayType)
+            } else if (usernamesLeft.size > 0) {
+                return Pair(false, usernamesLeft)
+            } else {
+                return Pair(true, usernames)
+            }
+        } else {
+            if (retryCount > 0) {
+                val nextDelay = delayMillis * when (retryDelayType) {
+                    RetryDelayType.SLOW20 -> 5 / 4
+                    RetryDelayType.SLOW50 -> 3 / 2
+                    else -> 1
+                }
+                delay(nextDelay)
+                watchUsernames(usernames, retryCount - 1, nextDelay, retryDelayType)
+            } else {
+                return Pair(false, usernames)
+            }
+        }
+        //throw exception or return false
+        return Pair(false, usernames)
     }
 
 }
