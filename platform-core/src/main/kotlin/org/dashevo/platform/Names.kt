@@ -78,7 +78,8 @@ class Names(val platform: Platform) {
         saltedDomainHash: Sha256Hash,
         identity: Identity
     ): Document {
-        val map = JSONObject("{saltedDomainHash: \"$HASH_PREFIX_STRING$saltedDomainHash\"}").toMap()
+        val map = HashMap<String, Any?>(1)
+        map["saltedDomainHash"] = "$HASH_PREFIX_STRING$saltedDomainHash"
 
         val preorderDocument = platform.documents.create(
             DPNS_PREORDER_DOCUMENT,
