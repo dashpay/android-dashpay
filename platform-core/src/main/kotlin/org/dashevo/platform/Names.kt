@@ -22,7 +22,7 @@ import java.lang.Thread.sleep
 class Names(val platform: Platform) {
 
     companion object {
-        const val DEFAULT_PARENT_DOMAIN = "dash"
+        const val DEFAULT_PARENT_DOMAIN = "" //normally should be "dash", but for mobile devnet ""
         const val DPNS_DOMAIN_DOCUMENT = "dpns.domain"
         const val DPNS_PREORDER_DOCUMENT = "dpns.preorder"
 
