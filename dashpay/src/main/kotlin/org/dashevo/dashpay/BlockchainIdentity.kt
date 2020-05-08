@@ -15,6 +15,7 @@ import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
+import org.bitcoinj.wallet.ZeroConfCoinSelector
 import org.bouncycastle.crypto.params.KeyParameter
 import org.dashevo.dashpay.callback.RegisterIdentityCallback
 import org.dashevo.dashpay.callback.RegisterNameCallback
@@ -248,6 +249,7 @@ class BlockchainIdentity {
         val privateKey = wallet!!.blockchainIdentityFundingKeyChain.currentAuthenticationKey() as ECKey
         val request = SendRequest.creditFundingTransaction(wallet!!.params, privateKey, credits)
         request.aesKey = keyParameter
+        request.coinSelector = ZeroConfCoinSelector.get()
         return wallet!!.sendCoinsOffline(request) as CreditFundingTransaction
     }
 
@@ -417,6 +419,7 @@ class BlockchainIdentity {
         val map = HashMap<String, UsernameStatus>()
         map[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.INITIAL
         usernameStatuses[username] = map
+        currentUsername = username
 
         if (save) {
             saveNewUsername(username, UsernameStatus.INITIAL)
