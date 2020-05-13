@@ -9,15 +9,11 @@ package org.dashevo.platform
 import org.bitcoinj.core.Base58
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Sha256Hash
-import org.bitcoinj.params.EvoNetParams
-import org.dashevo.dapiclient.DapiClient
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.util.Entropy
-import org.json.JSONObject
 import java.io.ByteArrayOutputStream
-import java.lang.Thread.sleep
 
 class Names(val platform: Platform) {
 
@@ -205,10 +201,21 @@ class Names(val platform: Platform) {
             .build()
     }
 
+    /**
+     * Gets the document for the given name if it exists under the default parent domain
+     * @param name String
+     * @return Document? The document for the given name or null if the name does not exist
+     */
     fun get(name: String): Document? {
         return get(name, DEFAULT_PARENT_DOMAIN)
     }
 
+    /**
+     * Gets the document for the given name if it exists
+     * @param name String
+     * @param parentDomain String
+     * @return Document? The document for the given name or null if the name does not exist
+     */
     fun get(name: String, parentDomain: String): Document? {
 
         try {
@@ -217,5 +224,38 @@ class Names(val platform: Platform) {
         } catch (e: Exception) {
             throw e
         }
+    }
+
+    /**
+     * Searches for and returns a list of all name documents that match the given name based
+     * on these criteria: starts with.  Contains is not supported
+     * @param text String
+     * @param parentDomain String
+     * @param startAt Int
+     * @return List<Documents>
+     */
+    fun search(text: String, parentDomain: String, retrieveAll: Boolean, startAt: Int = 0): List<Document> {
+        val documentQuery = DocumentQuery.Builder()
+            .where(listOf("normalizedParentDomainName", "==", parentDomain))
+            .orderBy(listOf("normalizedLabel", "asc"))
+            .where(listOf("normalizedLabel", "startsWith", text.toLowerCase()))
+
+        var startAt = startAt
+        var documents = ArrayList<Document>()
+        var requests = 0
+
+        do {
+            try {
+                val documentList = platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.startAt(startAt).build())
+                requests += 1
+                startAt += Documents.DOCUMENT_LIMIT
+                if(documentList.isNotEmpty())
+                    documents.addAll(documentList)
+            } catch (e: Exception) {
+                throw e
+            }
+        } while ((requests == 0 || documents!!.size >= Documents.DOCUMENT_LIMIT) && retrieveAll)
+
+        return documents
     }
 }
