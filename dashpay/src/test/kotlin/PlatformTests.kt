@@ -48,7 +48,7 @@ purpose: UNKNOWN
                 )
             )
 
-            println(result.toJSON())
+            println(result?.toJSON())
         } catch (e: StatusRuntimeException) {
             println(e)
             println(e.trailers)
