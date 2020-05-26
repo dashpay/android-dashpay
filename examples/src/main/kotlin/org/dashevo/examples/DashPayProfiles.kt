@@ -47,9 +47,9 @@ class DashPayProfiles {
                     startAt += 100;
                 } catch (e: Exception) {
                     println("\nError retrieving results (startAt =  $startAt)")
-                    println(e.message);
+                    println(e.message)
                 }
-            } while (requests == 0 || documents!!.size >= 100);
+            } while (requests == 0 || documents!!.size >= 100)
         }
     }
 }
