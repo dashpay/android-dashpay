@@ -12,6 +12,10 @@ import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identity.Identity
 
 class Documents(val platform: Platform) {
+
+    companion object {
+        const val DOCUMENT_LIMIT = 100
+    }
     fun create(typeLocator: String, identity: Identity, opts: MutableMap<String, Any?>): Document {
         val dpp = platform.dpp
 
