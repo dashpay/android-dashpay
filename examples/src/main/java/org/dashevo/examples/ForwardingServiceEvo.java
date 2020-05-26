@@ -7,6 +7,7 @@
 
 package org.dashevo.examples;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -237,7 +238,7 @@ public class ForwardingServiceEvo {
 
             List<String> names = ImmutableList.of("test1", "test2");
 
-            blockchainIdentity.monitorForDPNSUsernames(names, 10, 1000, BlockchainIdentity.RetryDelayType.LINEAR,
+            blockchainIdentity.watchUsernames(names, 10, 1000, BlockchainIdentity.RetryDelayType.LINEAR,
                     new RegisterNameCallback() {
                         @Override
                         public void onComplete(@NotNull List<String> uniqueId) {
@@ -309,7 +310,7 @@ public class ForwardingServiceEvo {
     private static void registerIdentity() {
         //this is a base64 id, which is not used by dapi-client
         //lastIdentityId = platform.getIdentities().register(Identity.IdentityType.USER, lastTx);
-        lastBlockchainIdentity.registerIdentity();
+        lastBlockchainIdentity.registerIdentity(null);
         //System.out.println("Identity created: " + lastIdentityId);
         //this is the base58 id
         lastIdentityId = lastTx.getCreditBurnIdentityIdentifier().toStringBase58();
@@ -420,14 +421,14 @@ public class ForwardingServiceEvo {
             lastBlockchainIdentity.addUsername(name + 3, true);
 
             List<String> set = lastBlockchainIdentity.getUnregisteredUsernames();
-            lastBlockchainIdentity.registerPreorderedSaltedDomainHashesForUsernames(set);
+            lastBlockchainIdentity.registerPreorderedSaltedDomainHashesForUsernames(set, null);
 
             Map<String, byte[]> saltedDomainHashes = lastBlockchainIdentity.saltedDomainHashesForUsernames(set);
             lastBlockchainIdentity.watchPreorder(saltedDomainHashes, 10, 1000, BlockchainIdentity.RetryDelayType.LINEAR, new RegisterPreorderCallback() {
                 @Override
                 public void onComplete(@NotNull List<String> names) {
-                    lastBlockchainIdentity.registerUsernameDomainsForUsernames(set);
-                    lastBlockchainIdentity.monitorForDPNSUsernames(set, 10, 1000, BlockchainIdentity.RetryDelayType.LINEAR, new RegisterNameCallback() {
+                    lastBlockchainIdentity.registerUsernameDomainsForUsernames(set, null);
+                    lastBlockchainIdentity.watchUsernames(set, 10, 1000, BlockchainIdentity.RetryDelayType.LINEAR, new RegisterNameCallback() {
                         @Override
                         public void onComplete(@NotNull List<String> names) {
                             System.out.println("Name Register Complete: " + names);
