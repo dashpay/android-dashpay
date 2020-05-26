@@ -54,16 +54,16 @@ class SearchNames {
                         )
                     }
 
-                    if(documents.isEmpty()) {
+                    if (documents.isEmpty()) {
                         println("No names found starting with $text")
                     }
 
                     startAt += 100;
                 } catch (e: Exception) {
                     println("\nError retrieving results (startAt =  $startAt)")
-                    println(e.message);
+                    println(e.message)
                 }
-            } while (requests == 0 || documents!!.size >= Documents.DOCUMENT_LIMIT);
+            } while (requests == 0 || documents!!.size >= Documents.DOCUMENT_LIMIT)
         }
     }
 }
