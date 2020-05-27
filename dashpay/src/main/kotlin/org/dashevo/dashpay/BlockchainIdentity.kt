@@ -179,7 +179,7 @@ class BlockchainIdentity {
 
     constructor(type: Identity.IdentityType, transaction: CreditFundingTransaction, wallet: Wallet) :
             this(type, transaction.usedDerivationPathIndex, transaction.lockedOutpoint, wallet) {
-        Preconditions.checkArgument(!transaction.creditBurnPublicKey.isPubKeyOnly)
+        Preconditions.checkArgument(!transaction.creditBurnPublicKey.isPubKeyOnly || transaction.creditBurnPublicKey.isEncrypted)
         creditFundingTransaction = transaction
         registrationFundingPrivateKey = transaction.creditBurnPublicKey
 
@@ -277,7 +277,25 @@ class BlockchainIdentity {
         finalizeIdentityRegistration(creditFundingTransaction!!)
     }
 
-    fun finalizeIdentityRegistration(fundingTransaction: CreditFundingTransaction) {
+    fun recoverIdentity(creditFundingTransaction: CreditFundingTransaction) : Boolean {
+        Preconditions.checkState(type != Identity.IdentityType.UNKNOWN, "The identity type must be USER or APPLICATION")
+        Preconditions.checkState(
+            registrationStatus == RegistrationStatus.UNKNOWN,
+            "The identity must not be registered"
+        )
+        Preconditions.checkState(creditFundingTransaction != null, "The credit funding transaction must exist")
+
+        identity =
+            platform.identities.get(creditFundingTransaction.creditBurnIdentityIdentifier.toStringBase58()) ?: return false
+
+        registrationStatus = RegistrationStatus.REGISTERED
+
+        finalizeIdentityRegistration(creditFundingTransaction)
+
+        return true
+    }
+
+    private fun finalizeIdentityRegistration(fundingTransaction: CreditFundingTransaction) {
         this.creditFundingTransaction = fundingTransaction;
         this.registrationFundingPrivateKey = fundingTransaction.creditBurnPublicKey
         this.lockedOutpoint = fundingTransaction.lockedOutpoint;
@@ -348,6 +366,40 @@ class BlockchainIdentity {
         saveUsernames(usernames, BlockchainIdentity.UsernameStatus.REGISTRATION_PENDING)
 
     }
+
+    fun recoverPreorders() {
+        Preconditions.checkState(registrationStatus == RegistrationStatus.REGISTERED, "Identity must be registered before recovering usernames")
+
+        val nameDocuments = platform.names.getPreordersByUserId(uniqueIdString)
+        val usernames = ArrayList<String>()
+
+        for (nameDocument in nameDocuments) {
+            val username = nameDocument.data["normalizedLabel"] as String
+            var usernameStatusDictionary = HashMap<String, Any>()
+            usernameStatusDictionary[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.PREORDERED
+            usernameStatuses[username] = usernameStatusDictionary
+            usernames.add(username)
+        }
+        saveUsernames(usernames, UsernameStatus.PREORDER_REGISTRATION_PENDING)
+    }
+
+    fun recoverUsernames() {
+        Preconditions.checkState(registrationStatus == RegistrationStatus.REGISTERED, "Identity must be registered before recovering usernames")
+
+        val nameDocuments = platform.names.getByUserId(uniqueIdString)
+        val usernames = ArrayList<String>()
+
+        for (nameDocument in nameDocuments) {
+            val username = nameDocument.data["normalizedLabel"] as String
+            var usernameStatusDictionary = HashMap<String, Any>()
+            usernameStatusDictionary[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.CONFIRMED
+            usernameStatuses[username] = usernameStatusDictionary
+            usernames.add(username)
+        }
+        currentUsername = usernames.lastOrNull()
+        saveUsernames(usernames, UsernameStatus.CONFIRMED)
+    }
+
     //
 
     // MARK: Username Helpers
