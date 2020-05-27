@@ -242,19 +242,20 @@ class Names(val platform: Platform) {
 
         var startAt = startAt
         var documents = ArrayList<Document>()
+        var documentList: List<Document>
         var requests = 0
 
         do {
             try {
-                val documentList = platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.startAt(startAt).build())
+                documentList = platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.startAt(startAt).build())
                 requests += 1
                 startAt += Documents.DOCUMENT_LIMIT
-                if(documentList.isNotEmpty())
+                if (documentList.isNotEmpty())
                     documents.addAll(documentList)
             } catch (e: Exception) {
                 throw e
             }
-        } while ((requests == 0 || documents!!.size >= Documents.DOCUMENT_LIMIT) && retrieveAll)
+        } while ((requests == 0 || documentList!!.size >= Documents.DOCUMENT_LIMIT) && retrieveAll)
 
         return documents
     }
