@@ -259,4 +259,70 @@ class Names(val platform: Platform) {
 
         return documents
     }
+
+    fun getByUserId(userId: String): List<Document> {
+        //first try to get the names associated with the $userId
+        val documentQuery = DocumentQuery.Builder()
+            .where(listOf("$userId", "==", userId))
+
+        try {
+            return platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.build())
+        } catch (x: Exception) {
+            //TODO: This needs to be removed when $userId is an index for the DPNS domain document
+            // in DPP 0.11, the DPNS document does not allow searches for $userId, so we will download
+            // all entries and search manually
+
+            var documentList: List<Document>
+            var documentsForUserId = ArrayList<Document>()
+            var startAt = 0
+            do {
+                try {
+                    documentList =
+                        platform.documents.get(DPNS_DOMAIN_DOCUMENT, DocumentQuery.Builder().startAt(startAt).build())
+
+                    if (documentList.isNotEmpty()) {
+                        documentsForUserId.addAll(documentList.filter { document -> document.userId == userId })
+                    }
+                    startAt = 100
+                } catch (e: Exception) {
+                    throw e
+                }
+            } while (documentList!!.size >= Documents.DOCUMENT_LIMIT)
+
+            return documentsForUserId
+        }
+    }
+
+    fun getPreordersByUserId(userId: String): List<Document> {
+        //first try to get the names associated with the $userId
+        val documentQuery = DocumentQuery.Builder()
+            .where(listOf("$userId", "==", userId))
+
+        try {
+            return platform.documents.get(DPNS_PREORDER_DOCUMENT, documentQuery.build())
+        } catch (x: Exception) {
+            //TODO: This needs to be removed when $userId is an index for the DPNS domain document
+            // in DPP 0.11, the DPNS document does not allow searches for $userId, so we will download
+            // all entries and search manually
+
+            var documentList: List<Document>
+            var documentsForUserId = ArrayList<Document>()
+            var startAt = 0
+            do {
+                try {
+                    documentList =
+                        platform.documents.get(DPNS_PREORDER_DOCUMENT, DocumentQuery.Builder().startAt(startAt).build())
+
+                    if (documentList.isNotEmpty()) {
+                        documentsForUserId.addAll(documentList.filter { document -> document.userId == userId })
+                    }
+                    startAt = 100
+                } catch (e: Exception) {
+                    throw e
+                }
+            } while (documentList!!.size >= Documents.DOCUMENT_LIMIT)
+
+            return documentsForUserId
+        }
+    }
 }
