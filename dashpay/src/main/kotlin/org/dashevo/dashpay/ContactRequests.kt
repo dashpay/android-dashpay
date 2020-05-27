@@ -31,11 +31,12 @@ class ContactRequests(val platform: Platform) {
         // TODO: This block of code can get all the results of a query, or 100 at a time
         var startAt = startAt
         var documents = ArrayList<Document>()
+        var documentList: List<Document>
         var requests = 0
 
         do {
             try {
-                val documentList =
+                documentList =
                     platform.documents.get(CONTACTREQUEST_DOCUMENT, documentQuery.startAt(startAt).build())
                 requests += 1
                 startAt += Documents.DOCUMENT_LIMIT
@@ -44,7 +45,7 @@ class ContactRequests(val platform: Platform) {
             } catch (e: Exception) {
                 throw e
             }
-        } while ((requests == 0 || documents!!.size >= Documents.DOCUMENT_LIMIT) && retrieveAll)
+        } while ((requests == 0 || documentList!!.size >= Documents.DOCUMENT_LIMIT) && retrieveAll)
 
         return documents
     }
