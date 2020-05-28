@@ -367,22 +367,9 @@ class BlockchainIdentity {
 
     }
 
-    fun recoverPreorders() {
-        Preconditions.checkState(registrationStatus == RegistrationStatus.REGISTERED, "Identity must be registered before recovering usernames")
-
-        val nameDocuments = platform.names.getPreordersByUserId(uniqueIdString)
-        val usernames = ArrayList<String>()
-
-        for (nameDocument in nameDocuments) {
-            val username = nameDocument.data["normalizedLabel"] as String
-            var usernameStatusDictionary = HashMap<String, Any>()
-            usernameStatusDictionary[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.PREORDERED
-            usernameStatuses[username] = usernameStatusDictionary
-            usernames.add(username)
-        }
-        saveUsernames(usernames, UsernameStatus.PREORDER_REGISTRATION_PENDING)
-    }
-
+    /**
+     * Recover all usernames and preorder data associated with the identity
+     */
     fun recoverUsernames() {
         Preconditions.checkState(registrationStatus == RegistrationStatus.REGISTERED, "Identity must be registered before recovering usernames")
 
@@ -394,9 +381,10 @@ class BlockchainIdentity {
             var usernameStatusDictionary = HashMap<String, Any>()
             usernameStatusDictionary[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.CONFIRMED
             usernameStatuses[username] = usernameStatusDictionary
+            usernameSalts[username] = Base58.decode(nameDocument.data["preorderSalt"] as String)
             usernames.add(username)
         }
-        currentUsername = usernames.lastOrNull()
+        currentUsername = usernames.firstOrNull()
         saveUsernames(usernames, UsernameStatus.CONFIRMED)
     }
 
