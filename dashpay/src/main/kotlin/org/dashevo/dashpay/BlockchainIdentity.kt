@@ -31,6 +31,7 @@ import org.dashevo.dpp.toBase64
 import org.dashevo.dpp.toHexString
 import org.dashevo.dpp.util.Cbor
 import org.dashevo.dpp.util.Entropy
+import org.dashevo.dpp.util.HashUtils
 import org.dashevo.platform.Names
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -41,11 +42,13 @@ import kotlin.concurrent.timerTask
 class BlockchainIdentity {
 
     var platform: Platform
+    var profiles: Profiles
     var params: NetworkParameters
 
     private constructor(params: NetworkParameters) {
         this.params = params
         platform = Platform(params)
+        profiles = Profiles(platform)
     }
 
     companion object {
@@ -302,14 +305,14 @@ class BlockchainIdentity {
         finalizeIdentityRegistration(fundingTransaction.creditBurnIdentityIdentifier);
     }
 
-    fun finalizeIdentityRegistration(uniqueId: Sha256Hash) {
+    private fun finalizeIdentityRegistration(uniqueId: Sha256Hash) {
         if (isLocal) {
             this.uniqueId = uniqueId
             finalizeIdentityRegistration()
         }
     }
 
-    fun finalizeIdentityRegistration() {
+    private fun finalizeIdentityRegistration() {
         if (isLocal) {
             saveInitial()
         }
@@ -381,7 +384,8 @@ class BlockchainIdentity {
             var usernameStatusDictionary = HashMap<String, Any>()
             usernameStatusDictionary[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.CONFIRMED
             usernameStatuses[username] = usernameStatusDictionary
-            usernameSalts[username] = Base58.decode(nameDocument.data["preorderSalt"] as String)
+            usernameSalts[username] = HashUtils.fromHex(nameDocument.data["preorderSalt"] as String)
+            usernameStatusDictionary[BLOCKCHAIN_USERNAME_SALT] = usernameSalts[username] as ByteArray
             usernames.add(username)
         }
         currentUsername = usernames.firstOrNull()
@@ -975,4 +979,48 @@ class BlockchainIdentity {
         return Pair(false, usernames)
     }
 
+    // DashPay Profile methods
+    private fun createProfileTransition(displayName: String, publicMessage: String, avatarUrl: String? = null): DocumentsStateTransition {
+        val profileDocument = profiles.createProfileDocument(displayName, publicMessage, avatarUrl, identity!!)
+        return platform.dpp.document.createStateTransition(listOf(profileDocument))
+    }
+
+    fun registerProfile(displayName: String, publicMessage: String, avatarUrl: String?, keyParameter: KeyParameter?) {
+        val transition = createProfileTransition(displayName, publicMessage, avatarUrl)
+        if (transition == null) {
+            return;
+        }
+        signStateTransition(transition!!, keyParameter)
+
+        platform.client.applyStateTransition(transition)
+    }
+
+    fun getProfile() : Document? {
+        return profiles.get(uniqueIdString)
+    }
+
+    suspend fun watchProfile(
+        retryCount: Int,
+        delayMillis: Long,
+        retryDelayType: RetryDelayType
+    ): Document? {
+
+        val profileResult = profiles.get(uniqueIdString)
+
+        if (profileResult != null) {
+            save()
+            return profileResult
+        } else {
+            if (retryCount > 0) {
+                val nextDelay = delayMillis * when (retryDelayType) {
+                    RetryDelayType.SLOW20 -> 5 / 4
+                    RetryDelayType.SLOW50 -> 3 / 2
+                    else -> 1
+                }
+                kotlinx.coroutines.delay(nextDelay)
+                return watchProfile(retryCount - 1, nextDelay, retryDelayType)
+            }
+        }
+        return null
+    }
 }
