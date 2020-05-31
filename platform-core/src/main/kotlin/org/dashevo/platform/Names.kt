@@ -283,7 +283,7 @@ class Names(val platform: Platform) {
                     if (documentList.isNotEmpty()) {
                         documentsForUserId.addAll(documentList.filter { document -> document.userId == userId })
                     }
-                    startAt = 100
+                    startAt += Documents.DOCUMENT_LIMIT
                 } catch (e: Exception) {
                     throw e
                 }
@@ -316,7 +316,7 @@ class Names(val platform: Platform) {
                     if (documentList.isNotEmpty()) {
                         documentsForUserId.addAll(documentList.filter { document -> document.userId == userId })
                     }
-                    startAt = 100
+                    startAt += Documents.DOCUMENT_LIMIT
                 } catch (e: Exception) {
                     throw e
                 }
