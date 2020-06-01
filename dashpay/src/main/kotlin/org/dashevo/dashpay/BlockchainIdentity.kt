@@ -31,6 +31,7 @@ import org.dashevo.dpp.toBase64
 import org.dashevo.dpp.toHexString
 import org.dashevo.dpp.util.Cbor
 import org.dashevo.dpp.util.Entropy
+import org.dashevo.dpp.util.HashUtils
 import org.dashevo.platform.Names
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -41,11 +42,13 @@ import kotlin.concurrent.timerTask
 class BlockchainIdentity {
 
     var platform: Platform
+    var profiles: Profiles
     var params: NetworkParameters
 
     private constructor(params: NetworkParameters) {
         this.params = params
         platform = Platform(params)
+        profiles = Profiles(platform)
     }
 
     companion object {
@@ -179,7 +182,7 @@ class BlockchainIdentity {
 
     constructor(type: Identity.IdentityType, transaction: CreditFundingTransaction, wallet: Wallet) :
             this(type, transaction.usedDerivationPathIndex, transaction.lockedOutpoint, wallet) {
-        Preconditions.checkArgument(!transaction.creditBurnPublicKey.isPubKeyOnly)
+        Preconditions.checkArgument(!transaction.creditBurnPublicKey.isPubKeyOnly || transaction.creditBurnPublicKey.isEncrypted)
         creditFundingTransaction = transaction
         registrationFundingPrivateKey = transaction.creditBurnPublicKey
 
@@ -277,21 +280,39 @@ class BlockchainIdentity {
         finalizeIdentityRegistration(creditFundingTransaction!!)
     }
 
-    fun finalizeIdentityRegistration(fundingTransaction: CreditFundingTransaction) {
+    fun recoverIdentity(creditFundingTransaction: CreditFundingTransaction) : Boolean {
+        Preconditions.checkState(type != Identity.IdentityType.UNKNOWN, "The identity type must be USER or APPLICATION")
+        Preconditions.checkState(
+            registrationStatus == RegistrationStatus.UNKNOWN,
+            "The identity must not be registered"
+        )
+        Preconditions.checkState(creditFundingTransaction != null, "The credit funding transaction must exist")
+
+        identity =
+            platform.identities.get(creditFundingTransaction.creditBurnIdentityIdentifier.toStringBase58()) ?: return false
+
+        registrationStatus = RegistrationStatus.REGISTERED
+
+        finalizeIdentityRegistration(creditFundingTransaction)
+
+        return true
+    }
+
+    private fun finalizeIdentityRegistration(fundingTransaction: CreditFundingTransaction) {
         this.creditFundingTransaction = fundingTransaction;
         this.registrationFundingPrivateKey = fundingTransaction.creditBurnPublicKey
         this.lockedOutpoint = fundingTransaction.lockedOutpoint;
         finalizeIdentityRegistration(fundingTransaction.creditBurnIdentityIdentifier);
     }
 
-    fun finalizeIdentityRegistration(uniqueId: Sha256Hash) {
+    private fun finalizeIdentityRegistration(uniqueId: Sha256Hash) {
         if (isLocal) {
             this.uniqueId = uniqueId
             finalizeIdentityRegistration()
         }
     }
 
-    fun finalizeIdentityRegistration() {
+    private fun finalizeIdentityRegistration() {
         if (isLocal) {
             saveInitial()
         }
@@ -348,6 +369,29 @@ class BlockchainIdentity {
         saveUsernames(usernames, BlockchainIdentity.UsernameStatus.REGISTRATION_PENDING)
 
     }
+
+    /**
+     * Recover all usernames and preorder data associated with the identity
+     */
+    fun recoverUsernames() {
+        Preconditions.checkState(registrationStatus == RegistrationStatus.REGISTERED, "Identity must be registered before recovering usernames")
+
+        val nameDocuments = platform.names.getByUserId(uniqueIdString)
+        val usernames = ArrayList<String>()
+
+        for (nameDocument in nameDocuments) {
+            val username = nameDocument.data["normalizedLabel"] as String
+            var usernameStatusDictionary = HashMap<String, Any>()
+            usernameStatusDictionary[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.CONFIRMED
+            usernameStatuses[username] = usernameStatusDictionary
+            usernameSalts[username] = HashUtils.byteArrayFromString(nameDocument.data["preorderSalt"] as String)
+            usernameStatusDictionary[BLOCKCHAIN_USERNAME_SALT] = usernameSalts[username] as ByteArray
+            usernames.add(username)
+        }
+        currentUsername = usernames.firstOrNull()
+        saveUsernames(usernames, UsernameStatus.CONFIRMED)
+    }
+
     //
 
     // MARK: Username Helpers
@@ -935,4 +979,48 @@ class BlockchainIdentity {
         return Pair(false, usernames)
     }
 
+    // DashPay Profile methods
+    private fun createProfileTransition(displayName: String, publicMessage: String, avatarUrl: String? = null): DocumentsStateTransition {
+        val profileDocument = profiles.createProfileDocument(displayName, publicMessage, avatarUrl, identity!!)
+        return platform.dpp.document.createStateTransition(listOf(profileDocument))
+    }
+
+    fun registerProfile(displayName: String, publicMessage: String, avatarUrl: String?, keyParameter: KeyParameter?) {
+        val transition = createProfileTransition(displayName, publicMessage, avatarUrl)
+        if (transition == null) {
+            return;
+        }
+        signStateTransition(transition!!, keyParameter)
+
+        platform.client.applyStateTransition(transition)
+    }
+
+    fun getProfile() : Document? {
+        return profiles.get(uniqueIdString)
+    }
+
+    suspend fun watchProfile(
+        retryCount: Int,
+        delayMillis: Long,
+        retryDelayType: RetryDelayType
+    ): Document? {
+
+        val profileResult = profiles.get(uniqueIdString)
+
+        if (profileResult != null) {
+            save()
+            return profileResult
+        } else {
+            if (retryCount > 0) {
+                val nextDelay = delayMillis * when (retryDelayType) {
+                    RetryDelayType.SLOW20 -> 5 / 4
+                    RetryDelayType.SLOW50 -> 3 / 2
+                    else -> 1
+                }
+                kotlinx.coroutines.delay(nextDelay)
+                return watchProfile(retryCount - 1, nextDelay, retryDelayType)
+            }
+        }
+        return null
+    }
 }

@@ -7,33 +7,61 @@
 
 package org.dashevo.dashpay
 
-import org.bouncycastle.crypto.params.KeyParameter
+import org.bitcoinj.core.ECKey
+import org.dashevo.dapiclient.model.DocumentQuery
+import org.dashevo.dpp.document.Document
+import org.dashevo.dpp.identity.Identity
 import org.dashevo.platform.Platform
 
 class Profiles(
-    val platform: Platform, private val blockchainIdentity: BlockchainIdentity,
-    private val keyParameter: KeyParameter
+    val platform: Platform
 ) {
 
     private val typeLocator: String = "dashpay.profile"
 
     fun create(
         displayName: String,
-        publicMessage: String
+        publicMessage: String,
+        avatarUrl: String?,
+        identity: Identity,
+        id: Int,
+        signingKey: ECKey
     ) {
-        val profileDocument = platform.documents.create(
-            typeLocator, blockchainIdentity.identity!!,
+        val profileDocument = createProfileDocument(displayName, publicMessage, avatarUrl, identity)
+
+        val profileStateTransition =
+            platform.dpp.document.createStateTransition(listOf(profileDocument))
+        profileStateTransition.sign(identity.getPublicKeyById(id)!!, signingKey.privateKeyAsHex)
+        platform.client.applyStateTransition(profileStateTransition)
+    }
+
+    fun createProfileDocument(
+        displayName: String,
+        publicMessage: String,
+        avatarUrl: String?,
+        identity: Identity
+    ) : Document {
+        val avatarUrl = avatarUrl ?: "https://api.adorable.io/avatars/120/$displayName"
+        return platform.documents.create(
+            typeLocator, identity,
             mutableMapOf<String, Any?>(
                 "publicMessage" to publicMessage,
                 "displayName" to displayName,
-                "publicMessage" to publicMessage,
-                "avatarUrl" to "https://api.adorable.io/avatars/120/${displayName}"
+                "avatarUrl" to avatarUrl
             )
         )
-        val profileStateTransition =
-            platform.dpp.document.createStateTransition(listOf(profileDocument))
-        blockchainIdentity.signStateTransition(profileStateTransition, keyParameter)
-        platform.client.applyStateTransition(profileStateTransition)
+    }
+
+    fun get(userId: String) : Document? {
+        val query = DocumentQuery.Builder()
+            .where("\$userId", "==", userId)
+            .build()
+        try {
+            val documents = platform.documents.get(typeLocator, query)
+            return if (documents.isNotEmpty()) documents[0] else null
+        } catch (e : Exception) {
+            throw e
+        }
     }
 
 }
