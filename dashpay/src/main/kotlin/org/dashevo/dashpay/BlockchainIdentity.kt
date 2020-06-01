@@ -16,7 +16,11 @@ import org.bitcoinj.crypto.EncryptedData
 import org.bitcoinj.crypto.KeyCrypterECDH
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.evolution.EvolutionContact
-import org.bitcoinj.wallet.*
+import org.bitcoinj.wallet.DerivationPathFactory
+import org.bitcoinj.wallet.FriendKeyChain
+import org.bitcoinj.wallet.SendRequest
+import org.bitcoinj.wallet.Wallet
+import org.bitcoinj.wallet.ZeroConfCoinSelector
 import org.bouncycastle.crypto.params.KeyParameter
 import org.dashevo.dashpay.callback.RegisterIdentityCallback
 import org.dashevo.dashpay.callback.RegisterNameCallback
