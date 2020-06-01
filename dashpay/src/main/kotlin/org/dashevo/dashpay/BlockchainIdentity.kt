@@ -384,7 +384,7 @@ class BlockchainIdentity {
             var usernameStatusDictionary = HashMap<String, Any>()
             usernameStatusDictionary[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.CONFIRMED
             usernameStatuses[username] = usernameStatusDictionary
-            usernameSalts[username] = HashUtils.fromHex(nameDocument.data["preorderSalt"] as String)
+            usernameSalts[username] = HashUtils.byteArrayFromString(nameDocument.data["preorderSalt"] as String)
             usernameStatusDictionary[BLOCKCHAIN_USERNAME_SALT] = usernameSalts[username] as ByteArray
             usernames.add(username)
         }
