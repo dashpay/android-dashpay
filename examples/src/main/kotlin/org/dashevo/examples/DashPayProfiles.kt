@@ -23,7 +23,7 @@ class DashPayProfiles {
 
         fun getDocuments() {
             val platform = sdk.platform
-            sdk.isReady();
+            sdk.isReady()
 
             var startAt = 0
             var documents: List<Document>? = null
