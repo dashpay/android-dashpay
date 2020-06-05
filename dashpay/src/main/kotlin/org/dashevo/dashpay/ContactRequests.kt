@@ -19,7 +19,12 @@ class ContactRequests(val platform: Platform) {
      * @param startAt Int where to start getting results
      * @return List<Documents>
      */
-    fun get(userId: String, toUserId: Boolean, retrieveAll: Boolean = true, startAt: Int = 0): List<Document> {
+    fun get(
+        userId: String,
+        toUserId: Boolean,
+        retrieveAll: Boolean = true,
+        startAt: Int = 0
+    ): List<Document> {
         val documentQuery = DocumentQuery.Builder()
 
         if (toUserId)
@@ -30,14 +35,17 @@ class ContactRequests(val platform: Platform) {
         // TODO: Refactor the rest of this code since it is also used in Names.search
         // TODO: This block of code can get all the results of a query, or 100 at a time
         var startAt = startAt
-        var documents = ArrayList<Document>()
+        val documents = ArrayList<Document>()
         var documentList: List<Document>
         var requests = 0
 
         do {
             try {
                 documentList =
-                    platform.documents.get(CONTACTREQUEST_DOCUMENT, documentQuery.startAt(startAt).build())
+                    platform.documents.get(
+                        CONTACTREQUEST_DOCUMENT,
+                        documentQuery.startAt(startAt).build()
+                    )
                 requests += 1
                 startAt += Documents.DOCUMENT_LIMIT
                 if (documentList.isNotEmpty())
@@ -45,7 +53,7 @@ class ContactRequests(val platform: Platform) {
             } catch (e: Exception) {
                 throw e
             }
-        } while ((requests == 0 || documentList!!.size >= Documents.DOCUMENT_LIMIT) && retrieveAll)
+        } while ((requests == 0 || documentList.size >= Documents.DOCUMENT_LIMIT) && retrieveAll)
 
         return documents
     }
