@@ -71,10 +71,6 @@ fastlane/readme.md
 # Mac OS
 .DS_Store
 
-gradlew
-gradlew.bat
-gradle
-
 *.tmp
 *.spvchain
 *.wallet
