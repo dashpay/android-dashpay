@@ -9,6 +9,7 @@ package org.dashevo.examples
 import org.dashevo.Client
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.document.Document
+import org.dashevo.platform.Documents
 
 class RegisteredNames {
     companion object {
@@ -43,7 +44,7 @@ class RegisteredNames {
                         )
                     }
 
-                    startAt += 100;
+                    startAt += Documents.DOCUMENT_LIMIT;
                 } catch (e: Exception) {
                     println("\nError retrieving results (startAt =  $startAt)")
                     println(e.message);

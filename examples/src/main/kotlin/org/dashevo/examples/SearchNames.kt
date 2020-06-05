@@ -58,7 +58,7 @@ class SearchNames {
                         println("No names found starting with $text")
                     }
 
-                    startAt += 100;
+                    startAt += Documents.DOCUMENT_LIMIT;
                 } catch (e: Exception) {
                     println("\nError retrieving results (startAt =  $startAt)")
                     println(e.message)

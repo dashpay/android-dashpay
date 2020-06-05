@@ -8,7 +8,9 @@ package org.dashevo.examples
 
 import org.dashevo.Client
 import org.dashevo.dapiclient.model.DocumentQuery
+import org.dashevo.dashpay.Profiles
 import org.dashevo.dpp.document.Document
+import org.dashevo.platform.Documents
 
 class DashPayProfiles {
     companion object {
@@ -44,7 +46,7 @@ class DashPayProfiles {
                         println("-> publicMessage: " + doc.data["publicMessage"])
                     }
 
-                    startAt += 100;
+                    startAt += Documents.DOCUMENT_LIMIT;
                 } catch (e: Exception) {
                     println("\nError retrieving results (startAt =  $startAt)")
                     println(e.message)

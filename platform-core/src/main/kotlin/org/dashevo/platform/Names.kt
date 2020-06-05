@@ -242,20 +242,87 @@ class Names(val platform: Platform) {
 
         var startAt = startAt
         var documents = ArrayList<Document>()
+        var documentList: List<Document>
         var requests = 0
 
         do {
             try {
-                val documentList = platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.startAt(startAt).build())
+                documentList = platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.startAt(startAt).build())
                 requests += 1
                 startAt += Documents.DOCUMENT_LIMIT
-                if(documentList.isNotEmpty())
+                if (documentList.isNotEmpty())
                     documents.addAll(documentList)
             } catch (e: Exception) {
                 throw e
             }
-        } while ((requests == 0 || documents!!.size >= Documents.DOCUMENT_LIMIT) && retrieveAll)
+        } while ((requests == 0 || documentList!!.size >= Documents.DOCUMENT_LIMIT) && retrieveAll)
 
         return documents
+    }
+
+    fun getByUserId(userId: String): List<Document> {
+        //first try to get the names associated with the $userId
+        val documentQuery = DocumentQuery.Builder()
+            .where(listOf("$userId", "==", userId))
+
+        try {
+            return platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.build())
+        } catch (x: Exception) {
+            //TODO: This needs to be removed when $userId is an index for the DPNS domain document
+            // in DPP 0.11, the DPNS document does not allow searches for $userId, so we will download
+            // all entries and search manually
+
+            var documentList: List<Document>
+            var documentsForUserId = ArrayList<Document>()
+            var startAt = 0
+            do {
+                try {
+                    documentList =
+                        platform.documents.get(DPNS_DOMAIN_DOCUMENT, DocumentQuery.Builder().startAt(startAt).build())
+
+                    if (documentList.isNotEmpty()) {
+                        documentsForUserId.addAll(documentList.filter { document -> document.userId == userId })
+                    }
+                    startAt += Documents.DOCUMENT_LIMIT
+                } catch (e: Exception) {
+                    throw e
+                }
+            } while (documentList!!.size >= Documents.DOCUMENT_LIMIT)
+
+            return documentsForUserId
+        }
+    }
+
+    fun getPreordersByUserId(userId: String): List<Document> {
+        //first try to get the names associated with the $userId
+        val documentQuery = DocumentQuery.Builder()
+            .where(listOf("$userId", "==", userId))
+
+        try {
+            return platform.documents.get(DPNS_PREORDER_DOCUMENT, documentQuery.build())
+        } catch (x: Exception) {
+            //TODO: This needs to be removed when $userId is an index for the DPNS domain document
+            // in DPP 0.11, the DPNS document does not allow searches for $userId, so we will download
+            // all entries and search manually
+
+            var documentList: List<Document>
+            var documentsForUserId = ArrayList<Document>()
+            var startAt = 0
+            do {
+                try {
+                    documentList =
+                        platform.documents.get(DPNS_PREORDER_DOCUMENT, DocumentQuery.Builder().startAt(startAt).build())
+
+                    if (documentList.isNotEmpty()) {
+                        documentsForUserId.addAll(documentList.filter { document -> document.userId == userId })
+                    }
+                    startAt += Documents.DOCUMENT_LIMIT
+                } catch (e: Exception) {
+                    throw e
+                }
+            } while (documentList!!.size >= Documents.DOCUMENT_LIMIT)
+
+            return documentsForUserId
+        }
     }
 }
