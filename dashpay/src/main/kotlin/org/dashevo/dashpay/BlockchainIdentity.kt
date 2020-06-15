@@ -1068,7 +1068,7 @@ class BlockchainIdentity {
             FriendKeyChain.getRootPath(params),
             0,
             uniqueId,
-            Sha256Hash.wrap(contactIdentity.id)
+            Sha256Hash.wrap(HashUtils.byteArrayFromString(contactIdentity.id))
         )
     }
 
@@ -1077,7 +1077,7 @@ class BlockchainIdentity {
         return FriendKeyChain(
             params,
             xpub.toHexString(),
-            EvolutionContact(uniqueId, Sha256Hash.wrap(contactIdentity.id))
+            EvolutionContact(uniqueId, Sha256Hash.wrap(HashUtils.byteArrayFromString(contactIdentity.id)))
         )
     }
 
