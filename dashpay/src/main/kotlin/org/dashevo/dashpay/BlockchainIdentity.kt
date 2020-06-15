@@ -1057,7 +1057,6 @@ class BlockchainIdentity {
             FriendKeyChain.KeyChainType.RECEIVING_CHAIN -> wallet!!.addReceivingFromFriendKeyChain(contactKeyChain)
             FriendKeyChain.KeyChainType.SENDING_CHAIN -> wallet!!.addSendingToFriendKeyChain(contactKeyChain)
         }
-        //TODO: Save the wallet here
     }
 
     fun getReceiveFromContactChain(contactIdentity: Identity, index: Int, aesKey: KeyParameter): FriendKeyChain {
