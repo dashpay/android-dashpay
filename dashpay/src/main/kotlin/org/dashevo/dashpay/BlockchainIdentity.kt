@@ -11,8 +11,13 @@ import com.google.common.collect.ImmutableList
 import kotlinx.coroutines.delay
 import org.bitcoinj.core.*
 import org.bitcoinj.crypto.ChildNumber
+import org.bitcoinj.crypto.DeterministicKey
+import org.bitcoinj.crypto.EncryptedData
+import org.bitcoinj.crypto.KeyCrypterECDH
 import org.bitcoinj.evolution.CreditFundingTransaction
+import org.bitcoinj.evolution.EvolutionContact
 import org.bitcoinj.wallet.DerivationPathFactory
+import org.bitcoinj.wallet.FriendKeyChain
 import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
 import org.bitcoinj.wallet.ZeroConfCoinSelector
@@ -34,6 +39,7 @@ import org.dashevo.dpp.util.Entropy
 import org.dashevo.dpp.util.HashUtils
 import org.dashevo.platform.Names
 import org.slf4j.LoggerFactory
+import java.io.ByteArrayOutputStream
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -269,7 +275,7 @@ class BlockchainIdentity {
         )
         Preconditions.checkState(creditFundingTransaction != null, "The credit funding transaction must exist")
 
-        if(wallet!!.isEncrypted) {
+        if (wallet!!.isEncrypted) {
             platform.identities.register(type, creditFundingTransaction!!, wallet!!.keyCrypter, keyParameter!!)
         } else {
             platform.identities.register(type, creditFundingTransaction!!)
@@ -516,13 +522,29 @@ class BlockchainIdentity {
         keyParameter: KeyParameter? = null
     ) {
 
-        var privateKey = privateKeyAtIndex(keyIndex, signingAlgorithm)
-        if(privateKey!!.isEncrypted)
-            privateKey = privateKey.decrypt(wallet!!.keyCrypter, keyParameter)
+        var privateKey = maybeDecryptKey(keyIndex, signingAlgorithm, keyParameter)
         Preconditions.checkState(privateKey != null, "The private key should exist");
 
         val identityPublicKey = IdentityPublicKey(keyIndex + 1, signingAlgorithm, privateKey!!.pubKey.toBase64(), true)
         transition.sign(identityPublicKey, privateKey!!.privateKeyAsHex)
+    }
+
+    /**
+     * Decrypts the key at the keyIndex if necessary using the keyParameter
+     * @param keyIndex Int
+     * @param signingAlgorithm TYPES
+     * @param keyParameter KeyParameter?
+     * @return ECKey?
+     */
+    private fun maybeDecryptKey(
+        keyIndex: Int,
+        signingAlgorithm: IdentityPublicKey.TYPES,
+        keyParameter: KeyParameter?
+    ): ECKey? {
+        var privateKey = privateKeyAtIndex(keyIndex, signingAlgorithm)
+        if (privateKey!!.isEncrypted)
+            privateKey = privateKey.decrypt(wallet!!.keyCrypter, keyParameter)
+        return privateKey
     }
 
     fun signStateTransition(transition: StateTransition, keyParameter: KeyParameter?) {
@@ -784,10 +806,15 @@ class BlockchainIdentity {
         retryCount: Int,
         delayMillis: Long,
         retryDelayType: RetryDelayType
-    ) : Pair<Boolean, List<String>> {
+    ): Pair<Boolean, List<String>> {
 
         val query = DocumentQuery.Builder()
-            .where(listOf("saltedDomainHash", "in", saltedDomainHashes.map { "${Names.HASH_PREFIX_STRING}${it.value.toHexString()}" })).build()
+            .where(
+                listOf(
+                    "saltedDomainHash",
+                    "in",
+                    saltedDomainHashes.map { "${Names.HASH_PREFIX_STRING}${it.value.toHexString()}" })
+            ).build()
         val preorderDocuments = platform.documents.get(Names.DPNS_PREORDER_DOCUMENT, query)
 
         if (preorderDocuments != null && preorderDocuments.isNotEmpty()) {
@@ -926,7 +953,7 @@ class BlockchainIdentity {
         retryCount: Int,
         delayMillis: Long,
         retryDelayType: RetryDelayType
-    ) : Pair<Boolean, List<String>> {
+    ): Pair<Boolean, List<String>> {
 
         val query = DocumentQuery.Builder()
             .where("normalizedParentDomainName", "==", Names.DEFAULT_PARENT_DOMAIN)
@@ -951,9 +978,9 @@ class BlockchainIdentity {
             }
             if (usernamesLeft.size > 0 && retryCount > 0) {
                 val nextDelay = delayMillis * when (retryDelayType) {
-                        RetryDelayType.SLOW20 -> 5 / 4
-                        RetryDelayType.SLOW50 -> 3 / 2
-                        else -> 1
+                    RetryDelayType.SLOW20 -> 5 / 4
+                    RetryDelayType.SLOW50 -> 3 / 2
+                    else -> 1
                 }
                 delay(nextDelay)
                 watchUsernames(usernamesLeft, retryCount - 1, nextDelay, retryDelayType)
@@ -1023,4 +1050,128 @@ class BlockchainIdentity {
         }
         return null
     }
+
+    // Contact Requests
+    fun addContactToWallet(contactKeyChain: FriendKeyChain) {
+        when (contactKeyChain.type) {
+            FriendKeyChain.KeyChainType.RECEIVING_CHAIN -> wallet!!.addReceivingFromFriendKeyChain(contactKeyChain)
+            FriendKeyChain.KeyChainType.SENDING_CHAIN -> wallet!!.addSendingToFriendKeyChain(contactKeyChain)
+        }
+    }
+
+    fun getReceiveFromContactChain(contactIdentity: Identity, index: Int, aesKey: KeyParameter): FriendKeyChain {
+        val seed = wallet!!.keyChainSeed.decrypt(wallet!!.keyCrypter, "", aesKey)
+
+        return FriendKeyChain(
+            seed,
+            null,
+            FriendKeyChain.getRootPath(params),
+            0,
+            uniqueId,
+            Sha256Hash.wrap(HashUtils.byteArrayFromString(contactIdentity.id))
+        )
+    }
+
+    fun getSendToContactChain(contactIdentity: Identity, xpub: ByteArray): FriendKeyChain {
+        val contactIdentityPublicKey = contactIdentity.getPublicKeyById(index + 1)
+        return FriendKeyChain(
+            params,
+            xpub.toHexString(),
+            EvolutionContact(uniqueId, Sha256Hash.wrap(HashUtils.byteArrayFromString(contactIdentity.id)))
+        )
+    }
+
+    fun encryptExtendedPublicKey(
+        xpub: ByteArray,
+        contactIdentity: Identity,
+        index: Int,
+        aesKey: KeyParameter
+    ): ByteArray {
+        // obtain the public key for index - 1
+        // TODO: DPP 0.12 will allow zero (0) indexes and subtracting 1 will not be necessary
+        val contactIdentityPublicKey = contactIdentity.getPublicKeyById(index - 1)
+            ?: throw IllegalArgumentException("index $index does not exist for $contactIdentity")
+
+        val contactPublicKey = contactIdentityPublicKey!!.getKey()
+
+        return encryptExtendedPublicKey(xpub, contactPublicKey, contactIdentityPublicKey.type, aesKey)
+    }
+
+    /**
+     *
+     * @param xpub ByteArray The serialized extended public key obtained from [DeterministicKeyChain.getWatchingKey().serialize]
+     * @param contactPublicKey ECKey The public key of the identity
+     * @param signingAlgorithm TYPES
+     * @param aesKey KeyParameter? The decryption key to the encrypted wallet
+     * @return ByteArray The encrypted extended public key
+     */
+    fun encryptExtendedPublicKey(
+        xpub: ByteArray,
+        contactPublicKey: ECKey,
+        signingAlgorithm: IdentityPublicKey.TYPES,
+        aesKey: KeyParameter?
+    ): ByteArray {
+        val keyCrypter = KeyCrypterECDH()
+
+        // first decrypt our identity key if necessary (currently uses the first key [0])
+        val decryptedIdentityKey = maybeDecryptKey(identity!!.publicKeys[0].id - 1, signingAlgorithm, aesKey)
+
+        // derived the shared key (our private key + their public key)
+        val encryptionKey = keyCrypter.deriveKey(decryptedIdentityKey, contactPublicKey)
+
+        // encrypt
+        val encryptedData = keyCrypter.encrypt(xpub, encryptionKey)
+
+        // format as a single byte array
+        val boas = ByteArrayOutputStream(encryptedData.initialisationVector.size + encryptedData.encryptedBytes.size)
+        boas.write(encryptedData.initialisationVector)
+        boas.write(encryptedData.encryptedBytes)
+        return boas.toByteArray()
+    }
+
+    fun decryptExtendedPublicKey(
+        encryptedXpub: ByteArray,
+        contactIdentity: Identity,
+        index: Int,
+        aesKey: KeyParameter
+    ): DeterministicKey {
+        val contactIdentityPublicKey = contactIdentity.getPublicKeyById(index - 1)
+            ?: throw IllegalArgumentException("index $index does not exist for $contactIdentity")
+        val contactPublicKey = contactIdentityPublicKey.getKey()
+
+        return decryptExtendedPublicKey(encryptedXpub, contactPublicKey, contactIdentityPublicKey.type, aesKey)
+    }
+
+    /**
+     *
+     * @param encryptedXpub ByteArray
+     * @param contactPublicKey ECKey
+     * @param signingAlgorithm TYPES
+     * @param keyParameter KeyParameter The decryption key to the encrypted wallet
+     * @return DeterministicKey The extended public key without the derivation path
+     */
+    fun decryptExtendedPublicKey(
+        encryptedXpub: ByteArray,
+        contactPublicKey: ECKey,
+        signingAlgorithm: IdentityPublicKey.TYPES,
+        keyParameter: KeyParameter
+    ): DeterministicKey {
+
+        val keyCrypter = KeyCrypterECDH()
+
+        //first decrypt our identity key if necessary (currently uses the first key [0])
+        val decryptedIdentityKey =
+            maybeDecryptKey(identity!!.publicKeys[0].id - 1, signingAlgorithm, keyParameter)
+
+        // derive the shared key (our private key + their public key)
+        val encryptionKey = keyCrypter.deriveKey(decryptedIdentityKey, contactPublicKey)
+
+        // separate the encrypted data (IV + ciphertext) and then decrypt the extended public key
+        val encryptedData =
+            EncryptedData(encryptedXpub.copyOfRange(0, 16), encryptedXpub.copyOfRange(17, encryptedXpub.size))
+        val decryptedData = keyCrypter.decrypt(encryptedData, encryptionKey)
+
+        return DeterministicKey.deserialize(params, decryptedData)
+    }
+
 }
