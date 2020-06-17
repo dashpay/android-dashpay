@@ -51,6 +51,9 @@ class ShowContactRequests {
                     requests += 1;
 
                     for (doc in documents) {
+                        println()
+                        println(doc.toJSON().toString())
+                        println()
                         println(
                             "id: " + doc.userId +
                                     " (toUserId: " + doc.data["toUserId"] +

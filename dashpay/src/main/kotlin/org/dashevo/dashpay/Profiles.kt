@@ -42,7 +42,6 @@ class Profiles(
         avatarUrl: String?,
         identity: Identity
     ): Document {
-        val avatarUrl = avatarUrl ?: "https://api.adorable.io/avatars/120/$displayName"
         return platform.documents.create(
             typeLocator, identity,
             mutableMapOf<String, Any?>(

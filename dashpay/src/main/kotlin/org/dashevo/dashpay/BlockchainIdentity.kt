@@ -1059,7 +1059,7 @@ class BlockchainIdentity {
         }
     }
 
-    fun getReceiveFromContactChain(contactIdentity: Identity, index: Int, aesKey: KeyParameter): FriendKeyChain {
+    fun getReceiveFromContactChain(contactIdentity: Identity, aesKey: KeyParameter): FriendKeyChain {
         val seed = wallet!!.keyChainSeed.decrypt(wallet!!.keyCrypter, "", aesKey)
 
         return FriendKeyChain(
