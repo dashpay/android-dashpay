@@ -43,7 +43,7 @@ class Profiles(
         identity: Identity
     ): Document {
         return platform.documents.create(
-            typeLocator, identity,
+            typeLocator, identity.id,
             mutableMapOf<String, Any?>(
                 "publicMessage" to publicMessage,
                 "displayName" to displayName,
