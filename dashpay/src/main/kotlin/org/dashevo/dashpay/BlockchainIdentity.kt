@@ -644,11 +644,6 @@ class BlockchainIdentity {
         saveUsername(username, status, salt, true)
     }
 
-    enum class RetryDelayType {
-        LINEAR,
-        SLOW20,
-        SLOW50
-    }
 
 
     /**

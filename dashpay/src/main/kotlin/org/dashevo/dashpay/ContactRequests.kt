@@ -88,4 +88,30 @@ class ContactRequests(val platform: Platform) {
 
         return documents
     }
+
+    suspend fun watchContactRequest(
+        fromUserId: String,
+        toUserId: String,
+        retryCount: Int,
+        delayMillis: Long,
+        retryDelayType: RetryDelayType
+    ): Document? {
+        val documentQuery = DocumentQuery.Builder()
+        documentQuery.where(listOf("\$userId" to fromUserId, "toUserId" to toUserId))
+        val result = platform.documents.get(CONTACTREQUEST_DOCUMENT, documentQuery.build())
+        if (result.isNotEmpty()) {
+            return result[0]
+        } else {
+            if (retryCount > 0) {
+                val nextDelay = delayMillis * when (retryDelayType) {
+                    RetryDelayType.SLOW20 -> 5 / 4
+                    RetryDelayType.SLOW50 -> 3 / 2
+                    else -> 1
+                }
+                kotlinx.coroutines.delay(nextDelay)
+                return watchContactRequest(fromUserId, toUserId, retryCount - 1, nextDelay, retryDelayType)
+            }
+        }
+        return null
+    }
 }

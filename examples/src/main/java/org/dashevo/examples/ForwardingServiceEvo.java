@@ -37,6 +37,7 @@ import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
 import org.dashevo.dashpay.BlockchainIdentity;
+import org.dashevo.dashpay.RetryDelayType;
 import org.dashevo.dashpay.callback.RegisterIdentityCallback;
 import org.dashevo.dashpay.callback.RegisterNameCallback;
 import org.dashevo.dashpay.callback.RegisterPreorderCallback;
@@ -238,7 +239,7 @@ public class ForwardingServiceEvo {
 
             List<String> names = ImmutableList.of("test1", "test2");
 
-            blockchainIdentity.watchUsernames(names, 10, 1000, BlockchainIdentity.RetryDelayType.LINEAR,
+            blockchainIdentity.watchUsernames(names, 10, 1000, RetryDelayType.LINEAR,
                     new RegisterNameCallback() {
                         @Override
                         public void onComplete(@NotNull List<String> uniqueId) {
@@ -337,7 +338,7 @@ public class ForwardingServiceEvo {
             System.out.println("Identity created: " + lastIdentityId);
 */
         //sleep(30*1000);
-        lastBlockchainIdentity.watchIdentity(1, 1000, BlockchainIdentity.RetryDelayType.LINEAR,
+        lastBlockchainIdentity.watchIdentity(1, 1000, RetryDelayType.LINEAR,
                 new RegisterIdentityCallback() {
                     @Override
                     public void onComplete(@NotNull String uniqueId) {
@@ -424,11 +425,11 @@ public class ForwardingServiceEvo {
             lastBlockchainIdentity.registerPreorderedSaltedDomainHashesForUsernames(set, null);
 
             Map<String, byte[]> saltedDomainHashes = lastBlockchainIdentity.saltedDomainHashesForUsernames(set);
-            lastBlockchainIdentity.watchPreorder(saltedDomainHashes, 10, 1000, BlockchainIdentity.RetryDelayType.LINEAR, new RegisterPreorderCallback() {
+            lastBlockchainIdentity.watchPreorder(saltedDomainHashes, 10, 1000, RetryDelayType.LINEAR, new RegisterPreorderCallback() {
                 @Override
                 public void onComplete(@NotNull List<String> names) {
                     lastBlockchainIdentity.registerUsernameDomainsForUsernames(set, null);
-                    lastBlockchainIdentity.watchUsernames(set, 10, 1000, BlockchainIdentity.RetryDelayType.LINEAR, new RegisterNameCallback() {
+                    lastBlockchainIdentity.watchUsernames(set, 10, 1000, RetryDelayType.LINEAR, new RegisterNameCallback() {
                         @Override
                         public void onComplete(@NotNull List<String> names) {
                             System.out.println("Name Register Complete: " + names);
