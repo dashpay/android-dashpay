@@ -18,12 +18,13 @@ class ContactRequests(val platform: Platform) {
     }
 
     fun create(fromUser: BlockchainIdentity, toUser: Identity, aesKey: KeyParameter) {
-        val contactPubKey = fromUser.getReceiveFromContactChain(toUser, aesKey)
-        val xpub = Base58.decode(contactPubKey.watchingKey.serializePubB58(platform.params))
-        //TODO: Remove line below. We're generating 112 bytes and the contract specifies 96 bytes for this field (128 Base64 chars).
-        val xpubWithoutIV = xpub.copyOfRange(15, xpub.size-1)
-        //TODO: Send the correct index after encryptExtendedPublicKey is fixed, it is
-        val xpubBase64 = Base64.toBase64String(fromUser.encryptExtendedPublicKey(xpubWithoutIV, toUser, 2, aesKey))
+        val contactKeyChain = fromUser.getReceiveFromContactChain(toUser, aesKey)
+        val contactKey = contactKeyChain.watchingKey
+        val contactPub = contactKey.serializeContactPub()
+
+        //TODO: Send the correct index after encryptExtendedPublicKey is fixed.
+        val encryptedContactPubKey = fromUser.encryptExtendedPublicKey(contactPub, toUser, 2, aesKey)
+        val xpubBase64 = Base64.toBase64String(encryptedContactPubKey)
         val timeStamp = Date().time
 
         val contactRequestDocument = platform.documents.create(
