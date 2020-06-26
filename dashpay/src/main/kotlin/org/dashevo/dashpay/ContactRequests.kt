@@ -98,7 +98,8 @@ class ContactRequests(val platform: Platform) {
         retryDelayType: RetryDelayType
     ): Document? {
         val documentQuery = DocumentQuery.Builder()
-        documentQuery.where(listOf("\$userId" to fromUserId, "toUserId" to toUserId))
+        documentQuery.where("\$userId", "==", fromUserId)
+            .where("toUserId", "==", toUserId)
         val result = platform.documents.get(CONTACTREQUEST_DOCUMENT, documentQuery.build())
         if (result.isNotEmpty()) {
             return result[0]

@@ -24,11 +24,7 @@ class WatchContactRequest {
         suspend fun watchContactRequest(from: String, to: String) {
             val platform = sdk.platform
             sdk.isReady()
-            coroutineScope {
-                launch {
-                    val contactRequest = ContactRequests(platform).watchContactRequest(from, to, 100, 333, RetryDelayType.LINEAR)
-                }
-            }
+            val contactRequest = ContactRequests(platform).watchContactRequest(from, to, 100, 333, RetryDelayType.LINEAR)
         }
     }
 }
