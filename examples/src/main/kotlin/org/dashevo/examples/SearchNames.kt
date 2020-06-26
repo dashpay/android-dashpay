@@ -11,6 +11,7 @@ import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.document.Document
 import org.dashevo.platform.Documents
 import org.dashevo.platform.Names
+import org.json.JSONObject
 import java.util.*
 
 
@@ -47,6 +48,8 @@ class SearchNames {
                     requests += 1;
 
                     for (doc in documents) {
+                        println(JSONObject(doc.toJSON()).toString())
+                        println()
                         println(
                             "Name: " + doc.data["label"] +
                                     " (domain: " + doc.data["normalizedParentDomainName"] +

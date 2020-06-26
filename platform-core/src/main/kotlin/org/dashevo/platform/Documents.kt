@@ -16,7 +16,7 @@ class Documents(val platform: Platform) {
     companion object {
         const val DOCUMENT_LIMIT = 100
     }
-    fun create(typeLocator: String, identity: Identity, opts: MutableMap<String, Any?>): Document {
+    fun create(typeLocator: String, userId: String, opts: MutableMap<String, Any?>): Document {
         val dpp = platform.dpp
 
         val appNames = platform.apps.keys
@@ -31,7 +31,7 @@ class Documents(val platform: Platform) {
 
         return dpp.document.create(
             dataContract!!,
-            identity.id,
+            userId,
             fieldType,
             opts as Map<String, Any>
         )

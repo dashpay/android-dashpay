@@ -12,6 +12,7 @@ import org.dashevo.dashpay.ContactRequests
 import org.dashevo.dpp.document.Document
 import org.dashevo.platform.Documents
 import org.dashevo.platform.Names
+import org.json.JSONObject
 import java.util.*
 
 
@@ -51,11 +52,9 @@ class ShowContactRequests {
                     requests += 1;
 
                     for (doc in documents) {
-                        println(
-                            "id: " + doc.userId +
-                                    " (toUserId: " + doc.data["toUserId"] +
-                                    ") encryptedPublicKey: " + doc.data["encryptedPublicKey"]
-                        )
+                        println("from: ${doc.userId} -> to: ${doc.data["toUserId"]}")
+                        println()
+                        println(JSONObject(doc.toJSON()).toString())
                     }
 
                     if (documents.isEmpty()) {

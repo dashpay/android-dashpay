@@ -11,6 +11,7 @@ import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dashpay.Profiles
 import org.dashevo.dpp.document.Document
 import org.dashevo.platform.Documents
+import org.json.JSONObject
 
 class DashPayProfiles {
     companion object {
@@ -44,6 +45,8 @@ class DashPayProfiles {
                                     ") Identity: " + doc.userId
                         )
                         println("-> publicMessage: " + doc.data["publicMessage"])
+                        println()
+                        println(JSONObject(doc.toJSON()).toString())
                     }
 
                     startAt += Documents.DOCUMENT_LIMIT;

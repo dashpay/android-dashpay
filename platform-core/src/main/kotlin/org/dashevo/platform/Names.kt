@@ -79,7 +79,7 @@ class Names(val platform: Platform) {
 
         val preorderDocument = platform.documents.create(
             DPNS_PREORDER_DOCUMENT,
-            identity,
+            identity.id,
             map
         )
         return preorderDocument
@@ -188,7 +188,7 @@ class Names(val platform: Platform) {
         // 3. Create domain document
         val domainDocument = platform.documents.create(
             DPNS_DOMAIN_DOCUMENT,
-            identity,
+            identity.id,
             fields
         )
         return domainDocument

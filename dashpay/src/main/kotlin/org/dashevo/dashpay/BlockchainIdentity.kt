@@ -644,11 +644,6 @@ class BlockchainIdentity {
         saveUsername(username, status, salt, true)
     }
 
-    enum class RetryDelayType {
-        LINEAR,
-        SLOW20,
-        SLOW50
-    }
 
 
     /**
@@ -1059,7 +1054,7 @@ class BlockchainIdentity {
         }
     }
 
-    fun getReceiveFromContactChain(contactIdentity: Identity, index: Int, aesKey: KeyParameter): FriendKeyChain {
+    fun getReceiveFromContactChain(contactIdentity: Identity, aesKey: KeyParameter): FriendKeyChain {
         val seed = wallet!!.keyChainSeed.decrypt(wallet!!.keyCrypter, "", aesKey)
 
         return FriendKeyChain(
