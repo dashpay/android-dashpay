@@ -6,9 +6,13 @@
  */
 package org.dashevo.examples
 
+import org.bitcoinj.core.Base58
+import org.bitcoinj.core.Sha256Hash
+import org.bitcoinj.utils.BriefLogFormatter
 import org.dashevo.Client
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.document.Document
+import org.dashevo.dpp.toHexString
 import org.dashevo.platform.Documents
 
 class RegisteredNames {
@@ -34,11 +38,11 @@ class RegisteredNames {
                 try {
                     documents = platform.documents.get("dpns.domain", queryOpts)
 
-                    requests += 1;
+                    requests += 1
 
                     for (doc in documents) {
                         println(
-                            "Name: " + doc.data["label"] +
+                            "Name: %-20s".format(doc.data["label"]) +
                                     " (domain: " + doc.data["normalizedParentDomainName"] +
                                     ") Identity: " + doc.userId
                         )
