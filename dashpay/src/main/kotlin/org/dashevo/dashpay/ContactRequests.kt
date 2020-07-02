@@ -25,7 +25,7 @@ class ContactRequests(val platform: Platform) {
         //TODO: Send the correct index after encryptExtendedPublicKey is fixed.
         val encryptedContactPubKey = fromUser.encryptExtendedPublicKey(contactPub, toUser, 2, aesKey)
         val xpubBase64 = Base64.toBase64String(encryptedContactPubKey)
-        val timeStamp = Date().time
+        val timeStamp = Date().time / 1000
 
         val contactRequestDocument = platform.documents.create(
             CONTACTREQUEST_DOCUMENT, fromUser.uniqueIdString, mutableMapOf<String, Any?>(
