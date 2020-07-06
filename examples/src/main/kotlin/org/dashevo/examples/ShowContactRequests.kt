@@ -52,7 +52,7 @@ class ShowContactRequests {
                     requests += 1;
 
                     for (doc in documents) {
-                        println("from: ${doc.userId} -> to: ${doc.data["toUserId"]}")
+                        println("from: ${doc.ownerId} -> to: ${doc.data["toUserId"]}")
                         println()
                         println(JSONObject(doc.toJSON()).toString())
                     }

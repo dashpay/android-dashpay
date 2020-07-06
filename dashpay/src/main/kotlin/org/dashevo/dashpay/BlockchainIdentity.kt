@@ -28,10 +28,11 @@ import org.dashevo.dashpay.callback.RegisterPreorderCallback
 import org.dashevo.platform.Platform
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.document.Document
-import org.dashevo.dpp.document.DocumentsStateTransition
+import org.dashevo.dpp.document.DocumentsBatchTransition
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.identity.IdentityPublicKey
-import org.dashevo.dpp.statetransition.StateTransition
+import org.dashevo.dpp.statetransition.StateTransitionIdentitySigned
+import org.dashevo.dpp.toBase58
 import org.dashevo.dpp.toBase64
 import org.dashevo.dpp.toHexString
 import org.dashevo.dpp.util.Cbor
@@ -139,8 +140,6 @@ class BlockchainIdentity {
 
     var totalKeyCount: Int = 0
 
-    lateinit var type: Identity.IdentityType
-
     var keysCreated: Long = 0
 
     lateinit var keyInfo: MutableMap<Long, MutableMap<String, Any>>
@@ -160,10 +159,9 @@ class BlockchainIdentity {
         this.usernameStatuses = HashMap()
         this.keyInfo = HashMap()
         this.registrationStatus = RegistrationStatus.REGISTERED
-        this.type = Identity.IdentityType.UNKNOWN //we don't yet know the type
     }
 
-    constructor(type: Identity.IdentityType, index: Int, wallet: Wallet) : this(wallet.getParams()) {
+    constructor(index: Int, wallet: Wallet) : this(wallet.getParams()) {
         Preconditions.checkArgument(index != Int.MAX_VALUE && index != Int.MIN_VALUE, "index must be found");
 
         this.wallet = wallet
@@ -176,18 +174,17 @@ class BlockchainIdentity {
         this.keyInfo = HashMap()
         this.registrationStatus = RegistrationStatus.UNKNOWN
         this.usernameSalts = HashMap()
-        this.type = type
     }
 
-    constructor(type: Identity.IdentityType, index: Int, lockedOutpoint: TransactionOutPoint, wallet: Wallet) :
-            this(type, index, wallet) {
+    constructor(index: Int, lockedOutpoint: TransactionOutPoint, wallet: Wallet) :
+            this(index, wallet) {
         Preconditions.checkArgument(lockedOutpoint.hash != Sha256Hash.ZERO_HASH, "utxo must not be null");
         this.lockedOutpoint = lockedOutpoint;
         this.uniqueId = Sha256Hash.twiceOf(lockedOutpoint.bitcoinSerialize())
     }
 
-    constructor(type: Identity.IdentityType, transaction: CreditFundingTransaction, wallet: Wallet) :
-            this(type, transaction.usedDerivationPathIndex, transaction.lockedOutpoint, wallet) {
+    constructor(transaction: CreditFundingTransaction, wallet: Wallet) :
+            this(transaction.usedDerivationPathIndex, transaction.lockedOutpoint, wallet) {
         Preconditions.checkArgument(!transaction.creditBurnPublicKey.isPubKeyOnly || transaction.creditBurnPublicKey.isEncrypted)
         creditFundingTransaction = transaction
         registrationFundingPrivateKey = transaction.creditBurnPublicKey
@@ -203,12 +200,11 @@ class BlockchainIdentity {
     }
 
     constructor(
-        type: Identity.IdentityType,
         transaction: CreditFundingTransaction,
         usernameStatus: MutableMap<String, Any>,
         wallet: Wallet
     ) :
-            this(type, transaction, wallet) {
+            this(transaction, wallet) {
         if (getUsernames().isNotEmpty()) {
             val usernameSalts = HashMap<String, ByteArray>()
             for (username in usernameStatus.keys) {
@@ -228,7 +224,6 @@ class BlockchainIdentity {
     }
 
     constructor(
-        type: Identity.IdentityType,
         index: Int,
         transaction: CreditFundingTransaction,
         usernameStatus: MutableMap<String, Any>,
@@ -236,7 +231,7 @@ class BlockchainIdentity {
         registrationStatus: RegistrationStatus,
         wallet: Wallet
     ) :
-            this(type, transaction, usernameStatus, wallet) {
+            this(transaction, usernameStatus, wallet) {
         creditBalance = credits;
         this.registrationStatus = registrationStatus;
     }
@@ -248,7 +243,6 @@ class BlockchainIdentity {
         not sure if this method works.  The app may create its own tx, broadcast it, then start the process at registerIdentity()
      */
     fun createCreditFundingTransaction(credits: Coin, keyParameter: KeyParameter?): CreditFundingTransaction {
-        Preconditions.checkState(type != Identity.IdentityType.UNKNOWN, "The identity type must be USER or APPLICATION")
         Preconditions.checkState(creditFundingTransaction == null, "The credit funding transaction must not exist")
         Preconditions.checkState(
             registrationStatus == RegistrationStatus.UNKNOWN,
@@ -268,7 +262,6 @@ class BlockchainIdentity {
     }
 
     fun registerIdentity(keyParameter: KeyParameter?) {
-        Preconditions.checkState(type != Identity.IdentityType.UNKNOWN, "The identity type must be USER or APPLICATION")
         Preconditions.checkState(
             registrationStatus == RegistrationStatus.NOT_REGISTERED,
             "The identity must not be registered"
@@ -276,9 +269,9 @@ class BlockchainIdentity {
         Preconditions.checkState(creditFundingTransaction != null, "The credit funding transaction must exist")
 
         if (wallet!!.isEncrypted) {
-            platform.identities.register(type, creditFundingTransaction!!, wallet!!.keyCrypter, keyParameter!!)
+            platform.identities.register(creditFundingTransaction!!, wallet!!.keyCrypter, keyParameter!!)
         } else {
-            platform.identities.register(type, creditFundingTransaction!!)
+            platform.identities.register(creditFundingTransaction!!)
         }
 
         registrationStatus = RegistrationStatus.REGISTERED
@@ -287,7 +280,6 @@ class BlockchainIdentity {
     }
 
     fun recoverIdentity(creditFundingTransaction: CreditFundingTransaction) : Boolean {
-        Preconditions.checkState(type != Identity.IdentityType.UNKNOWN, "The identity type must be USER or APPLICATION")
         Preconditions.checkState(
             registrationStatus == RegistrationStatus.UNKNOWN,
             "The identity must not be registered"
@@ -442,7 +434,7 @@ class BlockchainIdentity {
         val usernameDomainDocuments = ArrayList<Document>()
         for (username in saltedDomainHashesForUsernames(unregisteredUsernames).keys) {
             val document =
-                platform.names.createDomainDocument(identity!!, username, usernameSalts[username]!!.toHexString())
+                platform.names.createDomainDocument(identity!!, username, usernameSalts[username]!!.toBase58())
             usernameDomainDocuments.add(document)
         }
         return usernameDomainDocuments
@@ -450,16 +442,22 @@ class BlockchainIdentity {
 
     // MARK: Transitions
 
-    fun createPreorderTransition(unregisteredUsernames: List<String>): DocumentsStateTransition? {
+    fun createPreorderTransition(unregisteredUsernames: List<String>): DocumentsBatchTransition? {
         val usernamePreorderDocuments = createPreorderDocuments(unregisteredUsernames)
         if (usernamePreorderDocuments.isEmpty()) return null
-        return platform.dpp.document.createStateTransition(usernamePreorderDocuments);
+        val transitionMap = hashMapOf<String, List<Document>?>(
+            "create" to usernamePreorderDocuments
+        )
+        return platform.dpp.document.createStateTransition(transitionMap);
     }
 
-    fun createDomainTransition(unregisteredUsernames: List<String>): DocumentsStateTransition? {
-        val usernamePreorderDocuments = createDomainDocuments(unregisteredUsernames)
-        if (usernamePreorderDocuments.isEmpty()) return null
-        return platform.dpp.document.createStateTransition(usernamePreorderDocuments);
+    fun createDomainTransition(unregisteredUsernames: List<String>): DocumentsBatchTransition? {
+        val usernameDomainDocuments = createDomainDocuments(unregisteredUsernames)
+        if (usernameDomainDocuments.isEmpty()) return null
+        val transitionMap = hashMapOf<String, List<Document>?>(
+            "create" to usernameDomainDocuments
+        )
+        return platform.dpp.document.createStateTransition(transitionMap);
     }
 
     // MARK: Usernames
@@ -516,7 +514,7 @@ class BlockchainIdentity {
     // MARK: - Signing and Encryption
 
     fun signStateTransition(
-        transition: StateTransition,
+        transition: StateTransitionIdentitySigned,
         keyIndex: Int,
         signingAlgorithm: IdentityPublicKey.TYPES,
         keyParameter: KeyParameter? = null
@@ -525,7 +523,7 @@ class BlockchainIdentity {
         var privateKey = maybeDecryptKey(keyIndex, signingAlgorithm, keyParameter)
         Preconditions.checkState(privateKey != null, "The private key should exist");
 
-        val identityPublicKey = IdentityPublicKey(keyIndex + 1, signingAlgorithm, privateKey!!.pubKey.toBase64(), true)
+        val identityPublicKey = IdentityPublicKey(keyIndex, signingAlgorithm, privateKey!!.pubKey.toBase64(), true)
         transition.sign(identityPublicKey, privateKey!!.privateKeyAsHex)
     }
 
@@ -547,14 +545,14 @@ class BlockchainIdentity {
         return privateKey
     }
 
-    fun signStateTransition(transition: StateTransition, keyParameter: KeyParameter?) {
+    fun signStateTransition(transition: StateTransitionIdentitySigned, keyParameter: KeyParameter?) {
         /*if (keysCreated == 0) {
             uint32_t index
             [self createNewKeyOfType:DEFAULT_SIGNING_ALGORITH returnIndex:&index];
         }*/
         return signStateTransition(
             transition,
-            identity!!.publicKeys[0].id - 1/* currentMainKeyIndex*/,
+            identity!!.publicKeys[0].id/* currentMainKeyIndex*/,
             currentMainKeyType,
             keyParameter
         )
@@ -581,7 +579,7 @@ class BlockchainIdentity {
             //val authenticationChain = wallet!!.blockchainIdentityKeyChain
             //val authenticationChain = wallet!!.blockchainIdentityFundingKeyChain
 
-            //val key = authenticationChain.getKey(index - 1)
+            //val key = authenticationChain.getKey(index)
 
             return registrationFundingPrivateKey //key
         } else return null
@@ -1002,9 +1000,12 @@ class BlockchainIdentity {
     }
 
     // DashPay Profile methods
-    private fun createProfileTransition(displayName: String, publicMessage: String, avatarUrl: String? = null): DocumentsStateTransition {
+    private fun createProfileTransition(displayName: String, publicMessage: String, avatarUrl: String? = null): DocumentsBatchTransition {
         val profileDocument = profiles.createProfileDocument(displayName, publicMessage, avatarUrl, identity!!)
-        return platform.dpp.document.createStateTransition(listOf(profileDocument))
+        val transitionMap = hashMapOf<String, List<Document>?>(
+            "create" to listOf(profileDocument)
+        )
+        return platform.dpp.document.createStateTransition(transitionMap)
     }
 
     fun registerProfile(displayName: String, publicMessage: String, avatarUrl: String?, keyParameter: KeyParameter?) {
@@ -1068,7 +1069,7 @@ class BlockchainIdentity {
     }
 
     fun getSendToContactChain(contactIdentity: Identity, xpub: ByteArray): FriendKeyChain {
-        val contactIdentityPublicKey = contactIdentity.getPublicKeyById(index + 1)
+        val contactIdentityPublicKey = contactIdentity.getPublicKeyById(index)
         return FriendKeyChain(
             params,
             xpub.toHexString(),
@@ -1082,9 +1083,7 @@ class BlockchainIdentity {
         index: Int,
         aesKey: KeyParameter
     ): ByteArray {
-        // obtain the public key for index - 1
-        // TODO: DPP 0.12 will allow zero (0) indexes and subtracting 1 will not be necessary
-        val contactIdentityPublicKey = contactIdentity.getPublicKeyById(index - 1)
+        val contactIdentityPublicKey = contactIdentity.getPublicKeyById(index)
             ?: throw IllegalArgumentException("index $index does not exist for $contactIdentity")
 
         val contactPublicKey = contactIdentityPublicKey!!.getKey()
@@ -1109,7 +1108,7 @@ class BlockchainIdentity {
         val keyCrypter = KeyCrypterECDH()
 
         // first decrypt our identity key if necessary (currently uses the first key [0])
-        val decryptedIdentityKey = maybeDecryptKey(identity!!.publicKeys[0].id - 1, signingAlgorithm, aesKey)
+        val decryptedIdentityKey = maybeDecryptKey(identity!!.publicKeys[0].id, signingAlgorithm, aesKey)
 
         // derived the shared key (our private key + their public key)
         val encryptionKey = keyCrypter.deriveKey(decryptedIdentityKey, contactPublicKey)
@@ -1130,7 +1129,7 @@ class BlockchainIdentity {
         index: Int,
         aesKey: KeyParameter
     ): DeterministicKey {
-        val contactIdentityPublicKey = contactIdentity.getPublicKeyById(index - 1)
+        val contactIdentityPublicKey = contactIdentity.getPublicKeyById(index)
             ?: throw IllegalArgumentException("index $index does not exist for $contactIdentity")
         val contactPublicKey = contactIdentityPublicKey.getKey()
 
@@ -1156,7 +1155,7 @@ class BlockchainIdentity {
 
         //first decrypt our identity key if necessary (currently uses the first key [0])
         val decryptedIdentityKey =
-            maybeDecryptKey(identity!!.publicKeys[0].id - 1, signingAlgorithm, keyParameter)
+            maybeDecryptKey(identity!!.publicKeys[0].id, signingAlgorithm, keyParameter)
 
         // derive the shared key (our private key + their public key)
         val encryptionKey = keyCrypter.deriveKey(decryptedIdentityKey, contactPublicKey)

@@ -39,7 +39,7 @@ class PreorderdNames {
                     for (doc in documents) {
                         println(
                             "Salted domain hash: " + doc.data["saltedDomainHash"] +
-                                    " Identity: " + doc.userId
+                                    " Identity: " + doc.ownerId
                         )
                     }
 

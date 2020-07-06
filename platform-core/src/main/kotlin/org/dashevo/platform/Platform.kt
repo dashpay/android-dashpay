@@ -20,7 +20,7 @@ import org.dashevo.dpp.identity.Identity
 class Platform(val params: NetworkParameters) {
 
     var dataProvider: DataProvider = object : DataProvider {
-        override fun fetchDataContract(s: String): Contract? {
+        override fun fetchDataContract(s: String): DataContract? {
             return contracts.get(s)
         }
 
@@ -54,7 +54,10 @@ class Platform(val params: NetworkParameters) {
             apps["dashpay"] = ContractInfo("FW2BGfVdTLgGWGkJRjC838MPpEcL2cSfkNkwao8ooxm5")
             client = DapiClient(RandomMasternode(MobileDevNetParams.MASTERNODES), true, true)
 
-        }
+    fun broadcastStateTransition(stateTransition: StateTransitionIdentitySigned, identity: Identity, privateKey: ECKey, keyIndex: Int = 0) {
+        stateTransition.sign(identity.getPublicKeyById(keyIndex)!!, privateKey.privateKeyAsHex)
+        //TODO: validate transition structure here
+        client.applyStateTransition(stateTransition);
     }
 
 }

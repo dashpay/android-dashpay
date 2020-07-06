@@ -42,7 +42,7 @@ class DashPayProfiles {
                         println(
                             "displayName: " + doc.data["displayName"] +
                                     " (avatar: " + doc.data["avatarUrl"] +
-                                    ") Identity: " + doc.userId
+                                    ") Identity: " + doc.ownerId
                         )
                         println("-> publicMessage: " + doc.data["publicMessage"])
                         println()

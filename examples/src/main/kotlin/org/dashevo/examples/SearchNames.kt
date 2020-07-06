@@ -53,7 +53,7 @@ class SearchNames {
                         println(
                             "Name: " + doc.data["label"] +
                                     " (domain: " + doc.data["normalizedParentDomainName"] +
-                                    ") Identity: " + doc.userId
+                                    ") Identity: " + doc.ownerId
                         )
                     }
 

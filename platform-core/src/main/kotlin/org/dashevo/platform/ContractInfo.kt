@@ -6,7 +6,7 @@
  */
 package org.dashevo.platform
 
-import org.dashevo.dpp.contract.Contract
+import org.dashevo.dpp.contract.DataContract
 
 /**
  *
@@ -15,9 +15,9 @@ import org.dashevo.dpp.contract.Contract
  * @constructor
  */
 data class ContractInfo(val contractId: String) {
-    var contract: Contract? = null
+    var contract: DataContract? = null
 
-    constructor(contractId: String, contract: Contract) : this(contractId) {
+    constructor(contractId: String, contract: DataContract) : this(contractId) {
         this.contract = contract
     }
 }

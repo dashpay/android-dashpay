@@ -18,7 +18,7 @@ import java.io.ByteArrayOutputStream
 class Names(val platform: Platform) {
 
     companion object {
-        const val DEFAULT_PARENT_DOMAIN = "" //normally should be "dash", but for mobile devnet ""
+        const val DEFAULT_PARENT_DOMAIN = "dash"
         const val DPNS_DOMAIN_DOCUMENT = "dpns.domain"
         const val DPNS_PREORDER_DOCUMENT = "dpns.preorder"
 
@@ -40,8 +40,6 @@ class Names(val platform: Platform) {
 
     fun preorder(name: String, identity: Identity, identityHDPrivateKey: ECKey, preorderSaltBase58: String): Document? {
 
-        val identityType = if (identity.type.value == 2) "application" else "user"
-
         val (normalizedParentDomainName, normalizedLabel) = normalizedNames(name)
         val fullDomainName = "$normalizedLabel.$normalizedParentDomainName"
 
@@ -59,8 +57,12 @@ class Names(val platform: Platform) {
 
         val preorderDocument = createPreorderDocument(saltedDomainHash, identity)
 
-        val preorderTransition = platform.dpp.document.createStateTransition(listOf(preorderDocument))
-        preorderTransition.sign(identity.getPublicKeyById(1)!!, identityHDPrivateKey.privateKeyAsHex)
+        val map = hashMapOf(
+            "create" to listOf(preorderDocument)
+        )
+
+        val preorderTransition = platform.dpp.document.createStateTransition(map)
+        preorderTransition.sign(identity.getPublicKeyById(0)!!, identityHDPrivateKey.privateKeyAsHex)
 
         return try {
             platform.client.applyStateTransition(preorderTransition)
@@ -153,7 +155,10 @@ class Names(val platform: Platform) {
         println(domainDocument.toJSON())
 
         // 4. Create and send domain state transition
-        val domainTransition = platform.dpp.document.createStateTransition(listOf(domainDocument))
+        val map = hashMapOf<String, List<Document>?>(
+            "create" to listOf(domainDocument)
+        )
+        val domainTransition = platform.dpp.document.createStateTransition(map)
         domainTransition.sign(identity.getPublicKeyById(1)!!, identityHDPrivateKey.privateKeyAsHex)
 
         println(domainTransition.toJSON())
@@ -208,6 +213,10 @@ class Names(val platform: Platform) {
      */
     fun get(name: String): Document? {
         return get(name, DEFAULT_PARENT_DOMAIN)
+    }
+
+    fun resolve(name: String): Document? {
+        return get(name)
     }
 
     /**
@@ -268,6 +277,15 @@ class Names(val platform: Platform) {
             .where(listOf("records.dashIdentity", "==", userId))
 
         return platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.build())
+    }
+
+    fun resolveByRecord(record: String, value: String): Document? {
+        val documentQuery = DocumentQuery.Builder()
+            .where(listOf("records.$record", "==", value))
+
+        val results = platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.build())
+
+        return results[0]
     }
 
     /**

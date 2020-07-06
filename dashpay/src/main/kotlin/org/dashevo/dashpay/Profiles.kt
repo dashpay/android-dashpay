@@ -30,8 +30,12 @@ class Profiles(
     ) {
         val profileDocument = createProfileDocument(displayName, publicMessage, avatarUrl, identity)
 
+        val transitionMap = hashMapOf(
+            "create" to listOf(profileDocument)
+        )
+
         val profileStateTransition =
-            platform.dpp.document.createStateTransition(listOf(profileDocument))
+            platform.dpp.document.createStateTransition(transitionMap)
         profileStateTransition.sign(identity.getPublicKeyById(id)!!, signingKey.privateKeyAsHex)
         platform.client.applyStateTransition(profileStateTransition)
     }
