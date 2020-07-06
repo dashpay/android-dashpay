@@ -17,8 +17,8 @@ dependencies {
     implementation project(':dashpay')
     implementation 'com.google.guava:guava:27.1-android'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    implementation "org.dashevo:dpp:0.11-SNAPSHOT"
-    implementation "org.dashevo:dapi-client:0.11-SNAPSHOT"
+    implementation "org.dashevo:dpp:0.13-SNAPSHOT"
+    implementation "org.dashevo:dapi-client:0.13-SNAPSHOT"
     implementation "org.dashj:dashj-core:0.18-SNAPSHOT"
     implementation "org.dashj:dashj-bls:0.18-SNAPSHOT"
     implementation 'org.slf4j:slf4j-jdk14:1.7.28'
