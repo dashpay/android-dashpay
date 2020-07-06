@@ -26,7 +26,7 @@ class DisplayContracts {
                 try {
                     val contract = platform.contracts.get(app.value.contractId)
 
-                    println("app: ${app.key} Contract: ${contract!!.contractId}")
+                    println("app: ${app.key} DataContract: ${contract!!.id}")
                     println(JSONObject(contract.toJSON()).toString(2))
                 } catch (e: Exception) {
                     println("\nError retrieving results for app:${app.key}")

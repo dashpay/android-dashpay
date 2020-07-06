@@ -44,7 +44,7 @@ class RegisteredNames {
                         println(
                             "Name: %-20s".format(doc.data["label"]) +
                                     " (domain: " + doc.data["normalizedParentDomainName"] +
-                                    ") Identity: " + doc.userId
+                                    ") Identity: " + doc.ownerId
                         )
                     }
 

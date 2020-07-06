@@ -6,6 +6,7 @@
  */
 package org.dashevo.platform
 
+import org.bitcoinj.core.ECKey
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.Factory
 import org.dashevo.dpp.document.Document
@@ -16,6 +17,21 @@ class Documents(val platform: Platform) {
     companion object {
         const val DOCUMENT_LIMIT = 100
     }
+
+    fun broadcast(identity: Identity, privateKey: ECKey, create: List<Document>?, replace: List<Document>? = null, delete: List<Document>? = null) {
+        val transitionMap = hashMapOf<String, List<Document>?>()
+        if (create != null)
+            transitionMap["create"] = create
+        if (replace != null)
+            transitionMap["replace"] = replace
+        if (delete != null)
+            transitionMap["delete"] = delete
+
+        val batch = platform.dpp.document.createStateTransition(transitionMap)
+
+        platform.broadcastStateTransition(batch, identity, privateKey)
+    }
+
     fun create(typeLocator: String, userId: String, opts: MutableMap<String, Any?>): Document {
         val dpp = platform.dpp
 

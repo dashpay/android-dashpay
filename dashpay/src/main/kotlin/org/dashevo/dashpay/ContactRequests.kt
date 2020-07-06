@@ -37,7 +37,11 @@ class ContactRequests(val platform: Platform) {
             )
         )
 
-        val transition = platform.dpp.document.createStateTransition(listOf(contactRequestDocument))
+        val transitionMap = hashMapOf(
+            "create" to listOf(contactRequestDocument)
+        )
+
+        val transition = platform.dpp.document.createStateTransition(transitionMap)
         fromUser.signStateTransition(transition, aesKey)
 
         platform.client.applyStateTransition(transition)

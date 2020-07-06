@@ -6,6 +6,7 @@
  */
 package org.dashevo.platform
 
+import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.params.MobileDevNetParams
@@ -14,14 +15,15 @@ import org.dashevo.dapiclient.DapiClient
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.DashPlatformProtocol
 import org.dashevo.dpp.DataProvider
-import org.dashevo.dpp.contract.Contract
+import org.dashevo.dpp.contract.DataContract
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identity.Identity
+import org.dashevo.dpp.statetransition.StateTransitionIdentitySigned
 
 class Platform(val params: NetworkParameters) {
 
     var dataProvider: DataProvider = object : DataProvider {
-        override fun fetchDataContract(s: String): Contract? {
+        override fun fetchDataContract(s: String): DataContract? {
             return contracts.get(s)
         }
 
@@ -59,4 +61,9 @@ class Platform(val params: NetworkParameters) {
         }
     }
 
+    fun broadcastStateTransition(stateTransition: StateTransitionIdentitySigned, identity: Identity, privateKey: ECKey, keyIndex: Int = 0) {
+        stateTransition.sign(identity.getPublicKeyById(keyIndex)!!, privateKey.privateKeyAsHex)
+        //TODO: validate transition structure here
+        client.applyStateTransition(stateTransition);
+    }
 }

@@ -19,14 +19,12 @@ import org.dashevo.dpp.toBase64
 class Identities(val platform: Platform) {
 
     fun register(
-        identityType: Identity.IdentityType = Identity.IdentityType.USER,
         signedLockTransaction: CreditFundingTransaction,
         keyCrypter: KeyCrypter?,
         keyParameter: KeyParameter?
     ): String {
         val identityPrivateKey = signedLockTransaction.creditBurnPublicKey.decrypt(keyCrypter, keyParameter)
         return register(
-            identityType,
             signedLockTransaction.lockedOutpoint,
             identityPrivateKey,
             signedLockTransaction.usedDerivationPathIndex
@@ -34,11 +32,9 @@ class Identities(val platform: Platform) {
     }
 
     fun register(
-        identityType: Identity.IdentityType = Identity.IdentityType.USER,
         signedLockTransaction: CreditFundingTransaction
     ): String {
         return register(
-            identityType,
             signedLockTransaction.lockedOutpoint,
             signedLockTransaction.creditBurnPublicKey,
             signedLockTransaction.usedDerivationPathIndex
@@ -46,7 +42,6 @@ class Identities(val platform: Platform) {
     }
 
     fun register(
-        identityType: Identity.IdentityType,
         lockedOutpoint: TransactionOutPoint,
         creditBurnKey: ECKey,
         usedDerivationPathIndex: Int
@@ -56,7 +51,7 @@ class Identities(val platform: Platform) {
             val outPoint = lockedOutpoint.toStringBase64()
             // FIXME (this will be fixed later, for now add one to the actual index)
             // This will be fixed in DPP 0.12
-            val publicKeyId = usedDerivationPathIndex + 1
+            val publicKeyId = usedDerivationPathIndex
 
             val identityPublicKeyModel = IdentityPublicKey(
                 publicKeyId,
@@ -65,10 +60,10 @@ class Identities(val platform: Platform) {
                 true
             )
 
-            val identityCreateTransition =
-                IdentityCreateTransition(identityType, outPoint, listOf(identityPublicKeyModel))
+            val identityCreateTransition = platform.dpp.identity.createIdentityCreateTransition(outPoint, listOf(identityPublicKeyModel))
+                //IdentityCreateTransition(outPoint, listOf(identityPublicKeyModel))
 
-            identityCreateTransition.sign(identityPublicKeyModel, creditBurnKey.privateKeyAsHex)
+            identityCreateTransition.signByPrivateKey(creditBurnKey)
 
             platform.client.applyStateTransition(identityCreateTransition);
             return identityCreateTransition.identityId
