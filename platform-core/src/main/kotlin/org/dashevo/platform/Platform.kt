@@ -49,15 +49,21 @@ class Platform(val params: NetworkParameters) {
     lateinit var client: DapiClient
 
     init {
-        if (params.id.contains("evonet")) {
-            apps["dpns"] = ContractInfo("77w8Xqn25HwJhjodrHW133aXhjuTsTv9ozQaYpSHACE3")
-            client = DapiClient(EvoNetParams.MASTERNODES[1], true)
-        } else if (params.id.contains("mobile")) {
-            apps["dpns"] = ContractInfo("ForwNrvKy8jdyoCNTYBK4gcV6o15n79DmFQio2gGac5p")
-            apps["dashpay"] = ContractInfo("FW2BGfVdTLgGWGkJRjC838MPpEcL2cSfkNkwao8ooxm5")
-            client = DapiClient(MobileDevNetParams.MASTERNODES.toList())
-        } else if (params.id.contains("palinka")) {
-            client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList())
+        when {
+            params.id.contains("evonet") -> {
+                apps["dpns"] = ContractInfo("7DVe2cDyZMf8sDjQ46XqDzbeGKncrmkD6L96QohLmLbg")
+                client = DapiClient(EvoNetParams.MASTERNODES.toList(), true)
+            }
+            params.id.contains("mobile") -> {
+                apps["dpns"] = ContractInfo("ForwNrvKy8jdyoCNTYBK4gcV6o15n79DmFQio2gGac5p")
+                apps["dashpay"] = ContractInfo("FW2BGfVdTLgGWGkJRjC838MPpEcL2cSfkNkwao8ooxm5")
+                client = DapiClient(MobileDevNetParams.MASTERNODES.toList())
+            }
+            params.id.contains("palinka") -> {
+                apps["dpns"] = ContractInfo("E56D2XC5oh5bw9o8n4Vtk9QRZczSWXweMNzbphtKSfzk")
+                apps["dashpay"] = ContractInfo("Ci1eGCnhRo4op8k7wRPLsycpQfTpKMtPEm5MME5o8sj5")
+                client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList(), true)
+            }
         }
     }
 
