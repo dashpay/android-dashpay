@@ -51,9 +51,9 @@ class BlockchainIdentity {
     var profiles: Profiles
     var params: NetworkParameters
 
-    private constructor(params: NetworkParameters) {
-        this.params = params
-        platform = Platform(params)
+    private constructor(platform: Platform) {
+        this.params = platform.params
+        this.platform = platform
         profiles = Profiles(platform)
     }
 
@@ -150,7 +150,7 @@ class BlockchainIdentity {
     lateinit var registrationFundingPrivateKey: ECKey
 
 
-    constructor(uniqueId: Sha256Hash, params: NetworkParameters) : this(params) {
+    constructor(platform: Platform, uniqueId: Sha256Hash) : this(platform) {
         Preconditions.checkArgument(uniqueId != Sha256Hash.ZERO_HASH, "uniqueId must not be zero");
         this.uniqueId = uniqueId
         this.isLocal = false
@@ -163,7 +163,9 @@ class BlockchainIdentity {
         this.type = Identity.IdentityType.UNKNOWN //we don't yet know the type
     }
 
-    constructor(type: Identity.IdentityType, index: Int, wallet: Wallet) : this(wallet.getParams()) {
+    constructor(platform: Platform, type: Identity.IdentityType, index: Int, wallet: Wallet) : this(
+        platform
+    ) {
         Preconditions.checkArgument(index != Int.MAX_VALUE && index != Int.MIN_VALUE, "index must be found");
 
         this.wallet = wallet
@@ -179,15 +181,26 @@ class BlockchainIdentity {
         this.type = type
     }
 
-    constructor(type: Identity.IdentityType, index: Int, lockedOutpoint: TransactionOutPoint, wallet: Wallet) :
-            this(type, index, wallet) {
+    constructor(
+        platform: Platform,
+        type: Identity.IdentityType,
+        index: Int,
+        lockedOutpoint: TransactionOutPoint,
+        wallet: Wallet
+    ) :
+            this(platform, type, index, wallet) {
         Preconditions.checkArgument(lockedOutpoint.hash != Sha256Hash.ZERO_HASH, "utxo must not be null");
         this.lockedOutpoint = lockedOutpoint;
         this.uniqueId = Sha256Hash.twiceOf(lockedOutpoint.bitcoinSerialize())
     }
 
-    constructor(type: Identity.IdentityType, transaction: CreditFundingTransaction, wallet: Wallet) :
-            this(type, transaction.usedDerivationPathIndex, transaction.lockedOutpoint, wallet) {
+    constructor(
+        platform: Platform,
+        type: Identity.IdentityType,
+        transaction: CreditFundingTransaction,
+        wallet: Wallet
+    ) :
+            this(platform, type, transaction.usedDerivationPathIndex, transaction.lockedOutpoint, wallet) {
         Preconditions.checkArgument(!transaction.creditBurnPublicKey.isPubKeyOnly || transaction.creditBurnPublicKey.isEncrypted)
         creditFundingTransaction = transaction
         registrationFundingPrivateKey = transaction.creditBurnPublicKey
@@ -203,12 +216,13 @@ class BlockchainIdentity {
     }
 
     constructor(
+        platform: Platform,
         type: Identity.IdentityType,
         transaction: CreditFundingTransaction,
         usernameStatus: MutableMap<String, Any>,
         wallet: Wallet
     ) :
-            this(type, transaction, wallet) {
+            this(platform, type, transaction, wallet) {
         if (getUsernames().isNotEmpty()) {
             val usernameSalts = HashMap<String, ByteArray>()
             for (username in usernameStatus.keys) {
@@ -228,6 +242,7 @@ class BlockchainIdentity {
     }
 
     constructor(
+        platform: Platform,
         type: Identity.IdentityType,
         index: Int,
         transaction: CreditFundingTransaction,
@@ -236,7 +251,7 @@ class BlockchainIdentity {
         registrationStatus: RegistrationStatus,
         wallet: Wallet
     ) :
-            this(type, transaction, usernameStatus, wallet) {
+            this(platform, type, transaction, usernameStatus, wallet) {
         creditBalance = credits;
         this.registrationStatus = registrationStatus;
     }
@@ -286,7 +301,7 @@ class BlockchainIdentity {
         finalizeIdentityRegistration(creditFundingTransaction!!)
     }
 
-    fun recoverIdentity(creditFundingTransaction: CreditFundingTransaction) : Boolean {
+    fun recoverIdentity(creditFundingTransaction: CreditFundingTransaction): Boolean {
         Preconditions.checkState(type != Identity.IdentityType.UNKNOWN, "The identity type must be USER or APPLICATION")
         Preconditions.checkState(
             registrationStatus == RegistrationStatus.UNKNOWN,
@@ -295,7 +310,8 @@ class BlockchainIdentity {
         Preconditions.checkState(creditFundingTransaction != null, "The credit funding transaction must exist")
 
         identity =
-            platform.identities.get(creditFundingTransaction.creditBurnIdentityIdentifier.toStringBase58()) ?: return false
+            platform.identities.get(creditFundingTransaction.creditBurnIdentityIdentifier.toStringBase58())
+                ?: return false
 
         registrationStatus = RegistrationStatus.REGISTERED
 
@@ -380,7 +396,10 @@ class BlockchainIdentity {
      * Recover all usernames and preorder data associated with the identity
      */
     fun recoverUsernames() {
-        Preconditions.checkState(registrationStatus == RegistrationStatus.REGISTERED, "Identity must be registered before recovering usernames")
+        Preconditions.checkState(
+            registrationStatus == RegistrationStatus.REGISTERED,
+            "Identity must be registered before recovering usernames"
+        )
 
         val nameDocuments = platform.names.getByUserId(uniqueIdString)
         val usernames = ArrayList<String>()
@@ -643,7 +662,6 @@ class BlockchainIdentity {
         val salt = saltForUsername(username, false)
         saveUsername(username, status, salt, true)
     }
-
 
 
     /**
@@ -1002,7 +1020,11 @@ class BlockchainIdentity {
     }
 
     // DashPay Profile methods
-    private fun createProfileTransition(displayName: String, publicMessage: String, avatarUrl: String? = null): DocumentsStateTransition {
+    private fun createProfileTransition(
+        displayName: String,
+        publicMessage: String,
+        avatarUrl: String? = null
+    ): DocumentsStateTransition {
         val profileDocument = profiles.createProfileDocument(displayName, publicMessage, avatarUrl, identity!!)
         return platform.dpp.document.createStateTransition(listOf(profileDocument))
     }
@@ -1017,7 +1039,7 @@ class BlockchainIdentity {
         platform.client.applyStateTransition(transition)
     }
 
-    fun getProfile() : Document? {
+    fun getProfile(): Document? {
         return profiles.get(uniqueIdString)
     }
 

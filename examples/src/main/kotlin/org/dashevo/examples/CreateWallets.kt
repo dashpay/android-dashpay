@@ -157,7 +157,7 @@ class CreateWallets {
                 println("credit funding tx: ${cftx.txId}")
                 println(cftxid)
 
-                val blockchainIdentity = BlockchainIdentity(Identity.IdentityType.USER, cftx, wallet)
+                val blockchainIdentity = BlockchainIdentity(platform, Identity.IdentityType.USER, cftx, wallet)
 
                 blockchainIdentity.registerIdentity(null)
                 Thread.sleep(5000)
