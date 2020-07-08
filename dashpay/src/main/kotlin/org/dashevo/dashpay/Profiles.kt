@@ -58,7 +58,7 @@ class Profiles(
 
     fun get(userId: String): Document? {
         val query = DocumentQuery.Builder()
-            .where("\$userId", "==", userId)
+            .where("\$ownerId", "==", userId)
             .build()
         try {
             val documents = platform.documents.get(typeLocator, query)
@@ -74,7 +74,7 @@ class Profiles(
         startAt: Int = 0
     ): List<Document> {
         val documentQuery = DocumentQuery.Builder()
-        documentQuery.whereIn("\$userId", userIds)
+        documentQuery.whereIn("\$ownerId", userIds)
         var requests = 0
 
         val documents = arrayListOf<Document>()

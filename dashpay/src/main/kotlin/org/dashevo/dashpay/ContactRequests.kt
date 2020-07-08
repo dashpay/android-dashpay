@@ -23,7 +23,7 @@ class ContactRequests(val platform: Platform) {
         val contactPub = contactKey.serializeContactPub()
 
         //TODO: Send the correct index after encryptExtendedPublicKey is fixed.
-        val encryptedContactPubKey = fromUser.encryptExtendedPublicKey(contactPub, toUser, 2, aesKey)
+        val encryptedContactPubKey = fromUser.encryptExtendedPublicKey(contactPub, toUser, 0, aesKey)
         val xpubBase64 = Base64.toBase64String(encryptedContactPubKey)
         val timeStamp = Date().time / 1000
 
@@ -66,7 +66,7 @@ class ContactRequests(val platform: Platform) {
         if (toUserId)
             documentQuery.where(listOf("toUserId", "==", userId))
         else
-            documentQuery.where(listOf("\$userId", "==", userId))
+            documentQuery.where(listOf("\$ownerId", "==", userId))
 
         // TODO: Refactor the rest of this code since it is also used in Names.search
         // TODO: This block of code can get all the results of a query, or 100 at a time
@@ -102,7 +102,7 @@ class ContactRequests(val platform: Platform) {
         retryDelayType: RetryDelayType
     ): Document? {
         val documentQuery = DocumentQuery.Builder()
-        documentQuery.where("\$userId", "==", fromUserId)
+        documentQuery.where("\$ownerId", "==", fromUserId)
             .where("toUserId", "==", toUserId)
         val result = platform.documents.get(CONTACTREQUEST_DOCUMENT, documentQuery.build())
         if (result.isNotEmpty()) {

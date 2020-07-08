@@ -20,7 +20,7 @@ import java.io.ByteArrayOutputStream
 class NamesTest {
     @Test
     fun saltTest() {
-        val json = "{preorderSalt: ybMDp5vFUcVfucP9y8NNQecdVfUoA1XA9r, \$userId: Gm7PjQ2ekS4Q5YLSP8Fo1fLDJUSvwY6s8NZjEzF5qdeK, \$entropy: yNKtkioH2GpECL2ZxCDQYVSzXJDxsX4dDZ, normalizedParentDomainName: dash, normalizedLabel: test-adeline73, records: {dashIdentity: Gm7PjQ2ekS4Q5YLSP8Fo1fLDJUSvwY6s8NZjEzF5qdeK}, nameHash: 56208aa0e20263e5dc787c3cb8a3f99cbc60701af2b2a5fa39e13d627e53bbb66b8a, label: test-Adeline73, \$rev: 1, \$type: domain, \$contractId: 77w8Xqn25HwJhjodrHW133aXhjuTsTv9ozQaYpSHACE3}"
+        val json = "{preorderSalt: ybMDp5vFUcVfucP9y8NNQecdVfUoA1XA9r, \$ownerId: Gm7PjQ2ekS4Q5YLSP8Fo1fLDJUSvwY6s8NZjEzF5qdeK, \$entropy: yNKtkioH2GpECL2ZxCDQYVSzXJDxsX4dDZ, normalizedParentDomainName: dash, normalizedLabel: test-adeline73, records: {dashIdentity: Gm7PjQ2ekS4Q5YLSP8Fo1fLDJUSvwY6s8NZjEzF5qdeK}, nameHash: 56208aa0e20263e5dc787c3cb8a3f99cbc60701af2b2a5fa39e13d627e53bbb66b8a, label: test-Adeline73, \$rev: 1, \$type: domain, \$contractId: 77w8Xqn25HwJhjodrHW133aXhjuTsTv9ozQaYpSHACE3}"
 
         val document = Document(JSONObject(json).toMap())
 
