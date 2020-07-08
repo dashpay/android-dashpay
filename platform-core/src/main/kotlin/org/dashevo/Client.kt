@@ -8,10 +8,16 @@ package org.dashevo
 
 import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.params.MobileDevNetParams
+import org.bitcoinj.params.PalinkaDevNetParams
 import org.dashevo.platform.Platform
 
 class Client(network: String) {
-    val platform = Platform(if (network == "testnet") EvoNetParams.get() else MobileDevNetParams.get())
+    val platform = Platform( when (network) {
+        "testnet", "evonet" -> EvoNetParams.get()
+        "palinka" -> PalinkaDevNetParams.get()
+        "mobile" -> MobileDevNetParams.get()
+        else -> throw IllegalArgumentException("network $network is not valid")
+    })
 
     fun isReady(): Boolean {
         // TODO: determine that there are several valid nodes to connect to

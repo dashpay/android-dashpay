@@ -9,6 +9,7 @@ package org.dashevo.platform
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.params.MobileDevNetParams
+import org.bitcoinj.params.PalinkaDevNetParams
 import org.dashevo.dapiclient.DapiClient
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.DashPlatformProtocol
@@ -52,8 +53,9 @@ class Platform(val params: NetworkParameters) {
         } else if (params.id.contains("mobile")) {
             apps["dpns"] = ContractInfo("ForwNrvKy8jdyoCNTYBK4gcV6o15n79DmFQio2gGac5p")
             apps["dashpay"] = ContractInfo("FW2BGfVdTLgGWGkJRjC838MPpEcL2cSfkNkwao8ooxm5")
-            client = DapiClient(RandomMasternode(MobileDevNetParams.MASTERNODES), true, true)
-
+            client = DapiClient(MobileDevNetParams.MASTERNODES.toList())
+        } else if (params.id.contains("palinka")) {
+            client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList())
         }
     }
 
