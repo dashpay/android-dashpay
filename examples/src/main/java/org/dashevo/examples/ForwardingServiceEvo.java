@@ -44,7 +44,7 @@ import org.dashevo.dashpay.callback.RegisterPreorderCallback;
 import org.dashevo.platform.Platform;
 import org.dashevo.dapiclient.model.DocumentQuery;
 import org.dashevo.dpp.DataProvider;
-import org.dashevo.dpp.contract.Contract;
+import org.dashevo.dpp.contract.DataContract;
 import org.dashevo.dpp.document.Document;
 import org.dashevo.dpp.identity.Identity;
 import org.jetbrains.annotations.NotNull;
@@ -235,7 +235,7 @@ public class ForwardingServiceEvo {
                     System.out.println("  no names found");
                 }
             }
-            BlockchainIdentity blockchainIdentity = new BlockchainIdentity(platform, Identity.IdentityType.USER, tx, kit.wallet());
+            BlockchainIdentity blockchainIdentity = new BlockchainIdentity(platform, tx, kit.wallet());
 
             List<String> names = ImmutableList.of("test1", "test2");
 
@@ -379,12 +379,12 @@ public class ForwardingServiceEvo {
                     System.out.println("Blockchain Identity Funding Transaction hash is " + sendResult.tx.getTxId());
                     System.out.println(sendResult.tx.toString());
                     System.out.println("Blockchain Identity object Initialization" + sendResult.tx.getTxId());
-                    blockchainIdentity = new BlockchainIdentity(platform, Identity.IdentityType.USER, (CreditFundingTransaction)sendRequest.tx, kit.wallet());
+                    blockchainIdentity = new BlockchainIdentity(platform, (CreditFundingTransaction)sendRequest.tx, kit.wallet());
                 }
             }, MoreExecutors.directExecutor());
 
             lastTx = (CreditFundingTransaction)sendResult.tx;
-            lastBlockchainIdentity = new BlockchainIdentity(platform, Identity.IdentityType.USER, lastTx, kit.wallet());
+            lastBlockchainIdentity = new BlockchainIdentity(platform, lastTx, kit.wallet());
 
             System.out.println("Creating identity");
             registerIdentity();
@@ -466,7 +466,7 @@ public class ForwardingServiceEvo {
     static DataProvider dataProvider = new DataProvider() {
         @NotNull
         @Override
-        public Contract fetchDataContract(@NotNull String s) {
+        public DataContract fetchDataContract(@NotNull String s) {
             return null;
         }
 
