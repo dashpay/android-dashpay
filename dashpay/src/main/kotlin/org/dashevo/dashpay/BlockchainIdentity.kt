@@ -196,7 +196,7 @@ class BlockchainIdentity {
         try {
             if (platform.identities.get(uniqueIdString) != null)
                 registrationStatus = RegistrationStatus.REGISTERED
-            else registrationStatus = RegistrationStatus.NOT_REGISTERED
+            else registrationStatus = RegistrationStatus.UNKNOWN
         } catch (x: Exception) {
             //swallow and leave the status as unknown
         }
@@ -270,7 +270,7 @@ class BlockchainIdentity {
     fun registerIdentity(keyParameter: KeyParameter?) {
         Preconditions.checkState(type != Identity.IdentityType.UNKNOWN, "The identity type must be USER or APPLICATION")
         Preconditions.checkState(
-            registrationStatus == RegistrationStatus.NOT_REGISTERED,
+            registrationStatus != RegistrationStatus.REGISTERED,
             "The identity must not be registered"
         )
         Preconditions.checkState(creditFundingTransaction != null, "The credit funding transaction must exist")
