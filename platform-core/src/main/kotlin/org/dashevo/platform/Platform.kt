@@ -72,4 +72,9 @@ class Platform(val params: NetworkParameters) {
         //TODO: validate transition structure here
         client.applyStateTransition(stateTransition);
     }
+
+    fun hasApp(appName: String): Boolean {
+        return apps.containsKey(appName)
+    }
+
 }
