@@ -11,16 +11,21 @@ import org.json.JSONObject
 
 class DisplayContracts {
     companion object {
-        val sdk = Client("mobile")
+        lateinit var sdk: Client
 
         @JvmStatic
         fun main(args: Array<String>) {
-            getDocuments()
+            if (args.isEmpty()) {
+                println("Usage: DisplayContracts network")
+                return
+            }
+            sdk = Client(args[0])
+            getContracts()
         }
 
-        fun getDocuments() {
+        private fun getContracts() {
             val platform = sdk.platform
-            sdk.isReady();
+            sdk.isReady()
 
             for (app in platform.apps) {
                 try {

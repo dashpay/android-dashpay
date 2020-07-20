@@ -10,7 +10,7 @@ import org.dashevo.Client
 
 class GetStatus {
     companion object {
-        val sdk = Client("mobile")
+        val sdk = Client("palinka")
 
         @JvmStatic
         fun main(args: Array<String>) {

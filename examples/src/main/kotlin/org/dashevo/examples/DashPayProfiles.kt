@@ -15,7 +15,7 @@ import org.json.JSONObject
 
 class DashPayProfiles {
     companion object {
-        val sdk = Client("mobile")
+        val sdk = Client("palinka")
 
         @JvmStatic
         fun main(args: Array<String>) {

@@ -11,54 +11,81 @@ import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dashpay.ContactRequests
 import org.dashevo.dpp.document.Document
 import org.dashevo.platform.Documents
-import org.dashevo.platform.Names
 import org.json.JSONObject
 import java.util.*
 
 
 class ShowContactRequests {
     companion object {
-        val sdk = Client("mobile")
+        lateinit var sdk: Client
 
         @JvmStatic
         fun main(args: Array<String>) {
-            println("Enter identity to for which to list contact requests (all = show all): ")
             val scanner = Scanner(System.`in`)
+
+            val network = if (args.isNotEmpty()) {
+                args[0]
+            } else {
+                println("Enter the network in which to make a contact request query (palinka, evonet, mobile): ")
+                scanner.next()
+            }
+
+            sdk = Client(network)
+            if (!sdk.platform.hasApp("dashpay")) {
+                println("$network does not support dashpay")
+                return
+            }
+            sdk.isReady()
+
+            val prompt = "Enter identity or name for which to list contact requests (all = show all, !quit = quit): "
+            println(prompt)
             var text = scanner.next()
             do {
-                searchDocuments(text)
-                println("Enter identity to for which to list contact requests (all = show all): ")
+                if (text == "!quit")
+                    return
+                searchContactRequests(text)
+                println(prompt)
                 text = scanner.next()
             } while (text.isNotEmpty())
         }
 
-        fun searchDocuments(id: String) {
+        private fun searchContactRequests(id: String) {
             val platform = sdk.platform
-            sdk.isReady()
 
             var startAt = 0
             var documents: List<Document>? = null
             var requests = 0
             do {
                 val queryOpts = DocumentQuery.Builder().startAt(startAt).build()
-                println(queryOpts.toJSON())
+                println("query: ${queryOpts.toJSON()}")
+                var identityId = id
 
                 try {
-                    documents = if (id == "all")
+                    documents = if (id == "all") {
                         platform.documents.get(ContactRequests.CONTACTREQUEST_DOCUMENT, queryOpts)
-                    else
-                        ContactRequests(platform).get(id, false, false, startAt)
+                    } else {
+                        // resolve name if possible
+                        if (identityId.length != 44 && identityId.length != 43) {
+                            val nameDocument = platform.names.resolve(id)
+                            if (nameDocument != null) {
+                                val records = nameDocument.data["records"] as MutableMap<String, Any?>
+                                identityId = records["dashIdentity"] as String
+                            }
+                        }
+                        ContactRequests(platform).get(identityId, false, false, startAt)
+                    }
 
                     requests += 1;
 
                     for (doc in documents) {
+                        println("===================================================")
                         println("from: ${doc.ownerId} -> to: ${doc.data["toUserId"]}")
                         println()
-                        println(JSONObject(doc.toJSON()).toString())
+                        println("contactRequest: ${JSONObject(doc.toJSON())}")
                     }
 
                     if (documents.isEmpty()) {
-                        println("No names found starting with $id")
+                        println("No identities found matching $id")
                     }
 
                     startAt += Documents.DOCUMENT_LIMIT;

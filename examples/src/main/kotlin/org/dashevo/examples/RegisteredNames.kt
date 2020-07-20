@@ -6,27 +6,24 @@
  */
 package org.dashevo.examples
 
-import org.bitcoinj.core.Base58
-import org.bitcoinj.core.Sha256Hash
-import org.bitcoinj.utils.BriefLogFormatter
 import org.dashevo.Client
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.document.Document
-import org.dashevo.dpp.toHexString
 import org.dashevo.platform.Documents
 
 class RegisteredNames {
     companion object {
-        val sdk = Client("mobile")
+        lateinit var sdk: Client
 
         @JvmStatic
         fun main(args: Array<String>) {
+            sdk = Client(args[0])
             getDocuments()
         }
 
         fun getDocuments() {
             val platform = sdk.platform
-            sdk.isReady();
+            sdk.isReady()
 
             var startAt = 0
             var documents: List<Document>? = null
@@ -48,7 +45,7 @@ class RegisteredNames {
                         )
                     }
 
-                    startAt += Documents.DOCUMENT_LIMIT;
+                    startAt += Documents.DOCUMENT_LIMIT
                 } catch (e: Exception) {
                     println("\nError retrieving results (startAt =  $startAt)")
                     println(e.message);

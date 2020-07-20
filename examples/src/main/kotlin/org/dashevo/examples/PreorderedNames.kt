@@ -11,16 +11,16 @@ import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.document.Document
 import org.dashevo.platform.Documents
 
-class PreorderdNames {
+class PreorderedNames {
     companion object {
-        val sdk = Client("mobile")
+        val sdk = Client("palinka")
 
         @JvmStatic
         fun main(args: Array<String>) {
             getDocuments()
         }
 
-        fun getDocuments() {
+        private fun getDocuments() {
             val platform = sdk.platform
             sdk.isReady();
 
@@ -29,7 +29,6 @@ class PreorderdNames {
             var requests = 0
             do {
                 val queryOpts = DocumentQuery.Builder().startAt(startAt).build()
-                println(queryOpts.toJSON())
 
                 try {
                     documents = platform.documents.get("dpns.preorder", queryOpts)
@@ -43,7 +42,7 @@ class PreorderdNames {
                         )
                     }
 
-                    startAt += Documents.DOCUMENT_LIMIT;
+                    startAt += Documents.DOCUMENT_LIMIT
                 } catch (e: Exception) {
                     println("\nError retrieving results (startAt =  $startAt)")
                     println(e.message);
