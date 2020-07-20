@@ -15,6 +15,6 @@ allprojects {
     repositories {
         jcenter()
     }
-    version '0.13-SNAPSHOT'
+    version '0.14-SNAPSHOT'
     group = 'org.dashevo'
 }

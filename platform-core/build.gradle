@@ -4,7 +4,7 @@ plugins {
     id 'maven-publish'
 }
 
-version '0.13-SNAPSHOT'
+version '0.14-SNAPSHOT'
 
 repositories {
     mavenLocal()
@@ -14,8 +14,8 @@ repositories {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    implementation "org.dashevo:dpp:0.13-SNAPSHOT"
-    implementation "org.dashevo:dapi-client:0.13-SNAPSHOT"
+    implementation "org.dashevo:dpp:0.14-SNAPSHOT"
+    implementation "org.dashevo:dapi-client:0.14-SNAPSHOT"
     implementation "org.dashj:dashj-core:0.18-SNAPSHOT"
 
     implementation 'io.grpc:grpc-okhttp:1.28.0' // CURRENT_GRPC_VERSION
