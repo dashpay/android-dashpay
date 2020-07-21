@@ -8,14 +8,13 @@ package org.dashevo.examples
 
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.dashevo.Client
-import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.toBase64
 import org.json.JSONObject
 import java.lang.Thread.sleep
 
 class CreateIdentity {
     companion object {
-        val sdk = Client("mobile")
+        val sdk = Client("palinka")
 
         @JvmStatic
         fun main(args: Array<String>) {
@@ -24,7 +23,7 @@ class CreateIdentity {
 
         fun createIdentity() {
             val platform = sdk.platform
-            sdk.isReady();
+            sdk.isReady()
 
             val cftx = CreditFundingTransaction(platform.params, DefaultIdentity.creditBurnTx)
             cftx.setCreditBurnPublicKeyAndIndex(DefaultIdentity.identityPrivateKey, 0)
@@ -34,7 +33,7 @@ class CreateIdentity {
 
                 if (identity == null) {
                     // only create the identity if it does not exist
-                    platform.identities.register(Identity.IdentityType.USER, cftx)
+                    platform.identities.register(cftx)
                     sleep(10000)
                     identity = platform.identities.get(cftx.creditBurnIdentityIdentifier.toString())
                 }
