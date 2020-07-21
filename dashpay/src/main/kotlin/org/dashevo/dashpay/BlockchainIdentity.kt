@@ -252,9 +252,6 @@ class BlockchainIdentity {
 
     // MARK: - Full Registration agglomerate
 
-    /*
-        not sure if this method works.  The app may create its own tx, broadcast it, then start the process at registerIdentity()
-     */
     fun createCreditFundingTransaction(credits: Coin, keyParameter: KeyParameter?): CreditFundingTransaction {
         Preconditions.checkState(creditFundingTransaction == null, "The credit funding transaction must not exist")
         Preconditions.checkState(
@@ -281,11 +278,16 @@ class BlockchainIdentity {
         )
         Preconditions.checkState(creditFundingTransaction != null, "The credit funding transaction must exist")
 
-        if (wallet!!.isEncrypted) {
-            platform.identities.register(creditFundingTransaction!!, wallet!!.keyCrypter, keyParameter!!)
-        } else {
-            platform.identities.register(creditFundingTransaction!!)
-        }
+        var identityPrivateKey = privateKeyAtIndex(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1)
+        val identityPublicKey = IdentityPublicKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, identityPrivateKey!!.pubKey.toBase64(), true)
+        val identityPublicKeys = listOf(identityPublicKey)
+
+        val signingKey = maybeDecryptKey(creditFundingTransaction!!.creditBurnPublicKey, keyParameter)
+
+        platform.identities.register(creditFundingTransaction!!.lockedOutpoint,
+            signingKey!!,
+            identityPublicKeys
+        )
 
         registrationStatus = RegistrationStatus.REGISTERED
 
@@ -364,7 +366,7 @@ class BlockchainIdentity {
     fun registerUsernameDomainsForUsernames(usernames: List<String>, keyParameter: KeyParameter?) {
         val transition = createDomainTransition(usernames)
         if (transition == null) {
-            return;
+            return
         }
         signStateTransition(transition!!, keyParameter)
 
@@ -562,10 +564,20 @@ class BlockchainIdentity {
         return privateKey
     }
 
+    private fun maybeDecryptKey(
+        encryptedPrivateKey: ECKey,
+        keyParameter: KeyParameter?
+    ): ECKey? {
+        var privateKey = encryptedPrivateKey
+        if (encryptedPrivateKey!!.isEncrypted)
+            privateKey = encryptedPrivateKey.decrypt(wallet!!.keyCrypter, keyParameter)
+        return privateKey
+    }
+
     fun signStateTransition(transition: StateTransitionIdentitySigned, keyParameter: KeyParameter?) {
         /*if (keysCreated == 0) {
             uint32_t index
-            [self createNewKeyOfType:DEFAULT_SIGNING_ALGORITH returnIndex:&index];
+            [self createNewKeyOfType:DEFAULT_SIGNING_ALGORITHM returnIndex:&index];
         }*/
         return signStateTransition(
             transition,
@@ -586,20 +598,18 @@ class BlockchainIdentity {
         return null
     }
 
-    // multiple keys are not yet supported
-
     private fun privateKeyAtIndex(index: Int, type: IdentityPublicKey.TYPES): ECKey? {
-        if (isLocal) {
+        Preconditions.checkState(isLocal, "this must own a wallet")
 
-            //val derivationPath = ImmutableList.of(derivationPathForType(type), ChildNumber(index, false))
+        when (type) {
 
-            //val authenticationChain = wallet!!.blockchainIdentityKeyChain
-            //val authenticationChain = wallet!!.blockchainIdentityFundingKeyChain
-
-            //val key = authenticationChain.getKey(index)
-
-            return registrationFundingPrivateKey //key
-        } else return null
+            IdentityPublicKey.TYPES.ECDSA_SECP256K1 -> {
+                val authenticationChain = wallet!!.blockchainIdentityKeyChain
+                val key = authenticationChain.getKey(index)
+                return key
+            }
+            else -> throw IllegalArgumentException("$type is not supported")
+        }
     }
 /*
     fun privateKeyAtIndex(index: Int, type: IdentityPublicKey.TYPES, orSeed:(NSData*)seed): ECKey {

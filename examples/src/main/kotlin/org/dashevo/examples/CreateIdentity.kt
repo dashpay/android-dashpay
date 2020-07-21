@@ -8,6 +8,7 @@ package org.dashevo.examples
 
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.dashevo.Client
+import org.dashevo.dpp.identity.IdentityPublicKey
 import org.dashevo.dpp.toBase64
 import org.json.JSONObject
 import java.lang.Thread.sleep
@@ -33,7 +34,7 @@ class CreateIdentity {
 
                 if (identity == null) {
                     // only create the identity if it does not exist
-                    platform.identities.register(cftx)
+                    platform.identities.register(cftx, listOf(IdentityPublicKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, DefaultIdentity.publicKey.toBase64(), true)))
                     sleep(10000)
                     identity = platform.identities.get(cftx.creditBurnIdentityIdentifier.toString())
                 }

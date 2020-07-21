@@ -20,6 +20,7 @@ class Identities(val platform: Platform) {
 
     fun register(
         signedLockTransaction: CreditFundingTransaction,
+        identityPublicKeys: List<IdentityPublicKey>,
         keyCrypter: KeyCrypter?,
         keyParameter: KeyParameter?
     ): String {
@@ -27,41 +28,31 @@ class Identities(val platform: Platform) {
         return register(
             signedLockTransaction.lockedOutpoint,
             identityPrivateKey,
-            signedLockTransaction.usedDerivationPathIndex
+            identityPublicKeys
         )
     }
 
     fun register(
-        signedLockTransaction: CreditFundingTransaction
+        signedLockTransaction: CreditFundingTransaction,
+        identityPublicKeys: List<IdentityPublicKey>
     ): String {
         return register(
             signedLockTransaction.lockedOutpoint,
             signedLockTransaction.creditBurnPublicKey,
-            signedLockTransaction.usedDerivationPathIndex
+            identityPublicKeys
         )
     }
 
     fun register(
         lockedOutpoint: TransactionOutPoint,
         creditBurnKey: ECKey,
-        usedDerivationPathIndex: Int
+        identityPublicKeys: List<IdentityPublicKey>
     ): String {
 
         try {
             val outPoint = lockedOutpoint.toStringBase64()
-            // FIXME (this will be fixed later, for now add one to the actual index)
-            // This will be fixed in DPP 0.12
-            val publicKeyId = usedDerivationPathIndex
 
-            val identityPublicKeyModel = IdentityPublicKey(
-                publicKeyId,
-                IdentityPublicKey.TYPES.ECDSA_SECP256K1,
-                creditBurnKey.pubKey.toBase64(),
-                true
-            )
-
-            val identityCreateTransition = platform.dpp.identity.createIdentityCreateTransition(outPoint, listOf(identityPublicKeyModel))
-                //IdentityCreateTransition(outPoint, listOf(identityPublicKeyModel))
+            val identityCreateTransition = platform.dpp.identity.createIdentityCreateTransition(outPoint, identityPublicKeys)
 
             identityCreateTransition.signByPrivateKey(creditBurnKey)
 
