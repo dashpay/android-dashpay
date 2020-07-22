@@ -17,6 +17,7 @@ import org.bitcoinj.crypto.KeyCrypterECDH
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.evolution.EvolutionContact
 import org.bitcoinj.wallet.DerivationPathFactory
+import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.FriendKeyChain
 import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
@@ -1074,15 +1075,31 @@ class BlockchainIdentity {
     }
 
     // Contact Requests
-    fun addContactToWallet(contactKeyChain: FriendKeyChain) {
+    fun addContactToWallet(contactKeyChain: FriendKeyChain, encryptionKey: KeyParameter? = null) {
         when (contactKeyChain.type) {
-            FriendKeyChain.KeyChainType.RECEIVING_CHAIN -> wallet!!.addReceivingFromFriendKeyChain(contactKeyChain)
+            FriendKeyChain.KeyChainType.RECEIVING_CHAIN -> {
+                Preconditions.checkArgument(wallet!!.isEncrypted == (encryptionKey != null))
+                if (wallet!!.isEncrypted) {
+                    val encryptedContactKeyChain = contactKeyChain.toEncrypted(wallet!!.keyCrypter, encryptionKey)
+                    wallet!!.addReceivingFromFriendKeyChain(encryptedContactKeyChain)
+                } else {
+                    wallet!!.addReceivingFromFriendKeyChain(contactKeyChain)
+                }
+            }
             FriendKeyChain.KeyChainType.SENDING_CHAIN -> wallet!!.addSendingToFriendKeyChain(contactKeyChain)
         }
     }
 
-    fun getReceiveFromContactChain(contactIdentity: Identity, aesKey: KeyParameter): FriendKeyChain {
-        val seed = wallet!!.keyChainSeed.decrypt(wallet!!.keyCrypter, "", aesKey)
+    fun maybeDecryptSeed(aesKey: KeyParameter?): DeterministicSeed {
+        return if (wallet!!.isEncrypted) {
+            wallet!!.keyChainSeed.decrypt(wallet!!.keyCrypter, "", aesKey)
+        } else {
+            wallet!!.keyChainSeed
+        }
+    }
+
+    fun getReceiveFromContactChain(contactIdentity: Identity, aesKey: KeyParameter?): FriendKeyChain {
+        val seed = maybeDecryptSeed(aesKey)
 
         return FriendKeyChain(
             seed,
@@ -1107,7 +1124,7 @@ class BlockchainIdentity {
         xpub: ByteArray,
         contactIdentity: Identity,
         index: Int,
-        aesKey: KeyParameter
+        aesKey: KeyParameter?
     ): ByteArray {
         val contactIdentityPublicKey = contactIdentity.getPublicKeyById(index)
             ?: throw IllegalArgumentException("index $index does not exist for $contactIdentity")
@@ -1152,14 +1169,15 @@ class BlockchainIdentity {
     fun decryptExtendedPublicKey(
         encryptedXpub: ByteArray,
         contactIdentity: Identity,
-        index: Int,
-        aesKey: KeyParameter
-    ): DeterministicKey {
-        val contactIdentityPublicKey = contactIdentity.getPublicKeyById(index)
-            ?: throw IllegalArgumentException("index $index does not exist for $contactIdentity")
+        contactKeyIndex: Int,
+        keyIndex: Int,
+        aesKey: KeyParameter?
+    ): String {
+        val contactIdentityPublicKey = contactIdentity.getPublicKeyById(contactKeyIndex)
+            ?: throw IllegalArgumentException("index $contactKeyIndex does not exist for $contactIdentity")
         val contactPublicKey = contactIdentityPublicKey.getKey()
 
-        return decryptExtendedPublicKey(encryptedXpub, contactPublicKey, contactIdentityPublicKey.type, aesKey)
+        return decryptExtendedPublicKey(encryptedXpub, contactPublicKey, contactIdentityPublicKey.type, keyIndex, aesKey)
     }
 
     /**
@@ -1174,24 +1192,57 @@ class BlockchainIdentity {
         encryptedXpub: ByteArray,
         contactPublicKey: ECKey,
         signingAlgorithm: IdentityPublicKey.TYPES,
-        keyParameter: KeyParameter
-    ): DeterministicKey {
+        keyIndex: Int,
+        keyParameter: KeyParameter?
+    ): String {
 
         val keyCrypter = KeyCrypterECDH()
 
         //first decrypt our identity key if necessary (currently uses the first key [0])
         val decryptedIdentityKey =
-            maybeDecryptKey(identity!!.publicKeys[0].id, signingAlgorithm, keyParameter)
+            maybeDecryptKey(keyIndex, signingAlgorithm, keyParameter)
 
         // derive the shared key (our private key + their public key)
         val encryptionKey = keyCrypter.deriveKey(decryptedIdentityKey, contactPublicKey)
 
         // separate the encrypted data (IV + ciphertext) and then decrypt the extended public key
         val encryptedData =
-            EncryptedData(encryptedXpub.copyOfRange(0, 16), encryptedXpub.copyOfRange(17, encryptedXpub.size))
+            EncryptedData(encryptedXpub.copyOfRange(0, 16), encryptedXpub.copyOfRange(16, encryptedXpub.size))
         val decryptedData = keyCrypter.decrypt(encryptedData, encryptionKey)
 
-        return DeterministicKey.deserialize(params, decryptedData)
+        return DeterministicKey.deserializeContactPub(params, decryptedData).serializePubB58(params)
     }
 
+    fun addContactPaymentKeyChain(contactIdentity: Identity, contactRequest: Document, encryptionKey: KeyParameter?) {
+        val contact = EvolutionContact(uniqueIdString, contactIdentity.id)
+
+        if (!wallet!!.hasSendingKeyChain(contact)) {
+
+            val xpub = decryptExtendedPublicKey(
+                HashUtils.fromBase64(contactRequest.data["encryptedPublicKey"] as String),
+                contactIdentity,
+                contactRequest.data["recipientKeyIndex"] as Int,
+                contactRequest.data["senderKeyIndex"] as Int,
+                encryptionKey
+            )
+            val contactKeyChain = FriendKeyChain(wallet!!.params, xpub, contact)
+            addContactToWallet(contactKeyChain)
+        }
+    }
+
+    fun addPaymentKeyChainFromContact(contactIdentity: Identity, contactRequest: Document, encryptionKey: KeyParameter?) {
+        val contact = EvolutionContact(uniqueIdString, contactIdentity.id)
+        if (!wallet!!.hasReceivingKeyChain(contact)) {
+            val contactKeyChain = getReceiveFromContactChain(contactIdentity, encryptionKey)
+            addContactToWallet(contactKeyChain, encryptionKey)
+        }
+    }
+
+    fun getContactNextPaymentAddress(contactId: String): Address {
+        return wallet!!.currentAddress(EvolutionContact(uniqueIdString, contactId), FriendKeyChain.KeyChainType.SENDING_CHAIN)
+    }
+
+    fun getNextPaymentAddressFromContact(contactId: String): Address {
+        return wallet!!.currentAddress(EvolutionContact(uniqueIdString, contactId), FriendKeyChain.KeyChainType.RECEIVING_CHAIN)
+    }
 }
