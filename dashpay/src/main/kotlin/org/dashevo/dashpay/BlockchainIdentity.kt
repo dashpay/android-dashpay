@@ -1245,4 +1245,17 @@ class BlockchainIdentity {
     fun getNextPaymentAddressFromContact(contactId: String): Address {
         return wallet!!.currentAddress(EvolutionContact(uniqueIdString, contactId), FriendKeyChain.KeyChainType.RECEIVING_CHAIN)
     }
+
+    fun getContactTransactions(identityId: String): List<Transaction> {
+        val contact = EvolutionContact(uniqueIdString, identityId)
+        return wallet!!.getTransactionsWithFriend(contact)
+    }
+
+    fun getContactForTransaction(tx: Transaction): String? {
+        val contact = wallet!!.getFriendFromTransaction(tx) ?: return null
+        return if (uniqueId == contact.evolutionUserId)
+            contact.friendUserId.toStringBase58()
+        else
+            contact.evolutionUserId.toStringBase58()
+    }
 }
