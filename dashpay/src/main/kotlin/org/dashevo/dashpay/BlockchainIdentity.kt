@@ -1078,12 +1078,14 @@ class BlockchainIdentity {
     fun addContactToWallet(contactKeyChain: FriendKeyChain, encryptionKey: KeyParameter? = null) {
         when (contactKeyChain.type) {
             FriendKeyChain.KeyChainType.RECEIVING_CHAIN -> {
-                Preconditions.checkArgument(wallet!!.isEncrypted == (encryptionKey != null))
-                if (wallet!!.isEncrypted) {
-                    val encryptedContactKeyChain = contactKeyChain.toEncrypted(wallet!!.keyCrypter, encryptionKey)
-                    wallet!!.addReceivingFromFriendKeyChain(encryptedContactKeyChain)
-                } else {
-                    wallet!!.addReceivingFromFriendKeyChain(contactKeyChain)
+                wallet!!.run {
+                    Preconditions.checkArgument(isEncrypted == (encryptionKey != null))
+                    if (isEncrypted) {
+                        val encryptedContactKeyChain = contactKeyChain.toEncrypted(keyCrypter, encryptionKey)
+                        addReceivingFromFriendKeyChain(encryptedContactKeyChain)
+                    } else {
+                        addReceivingFromFriendKeyChain(contactKeyChain)
+                    }
                 }
             }
             FriendKeyChain.KeyChainType.SENDING_CHAIN -> wallet!!.addSendingToFriendKeyChain(contactKeyChain)
@@ -1091,10 +1093,12 @@ class BlockchainIdentity {
     }
 
     fun maybeDecryptSeed(aesKey: KeyParameter?): DeterministicSeed {
-        return if (wallet!!.isEncrypted) {
-            wallet!!.keyChainSeed.decrypt(wallet!!.keyCrypter, "", aesKey)
-        } else {
-            wallet!!.keyChainSeed
+        return wallet!!.run {
+            if (isEncrypted) {
+                keyChainSeed.decrypt(wallet!!.keyCrypter, "", aesKey)
+            } else {
+                keyChainSeed
+            }
         }
     }
 
