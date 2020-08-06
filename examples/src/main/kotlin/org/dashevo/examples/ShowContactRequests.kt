@@ -72,7 +72,7 @@ class ShowContactRequests {
                                 identityId = records["dashIdentity"] as String
                             }
                         }
-                        ContactRequests(platform).get(identityId, false, false, startAt)
+                        ContactRequests(platform).get(identityId, false, 0L, false, startAt)
                     }
 
                     requests += 1;
