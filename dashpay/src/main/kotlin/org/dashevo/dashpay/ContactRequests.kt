@@ -8,6 +8,7 @@ import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.platform.Documents
 import org.dashevo.platform.Platform
+import org.slf4j.LoggerFactory
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -22,10 +23,9 @@ class ContactRequests(val platform: Platform) {
         val contactKey = contactKeyChain.watchingKey
         val contactPub = contactKey.serializeContactPub()
 
-        //TODO: Send the correct index after encryptExtendedPublicKey is fixed.
         val encryptedContactPubKey = fromUser.encryptExtendedPublicKey(contactPub, toUser, 0, aesKey)
         val xpubBase64 = Base64.toBase64String(encryptedContactPubKey)
-        val timeStamp = Date().time / 1000
+        val timeStamp = Date().time - 1000 * 60 // set time to 1 minute ago in milliseconds
 
         val contactRequestDocument = platform.documents.create(
             CONTACTREQUEST_DOCUMENT, fromUser.uniqueIdString, mutableMapOf<String, Any?>(
@@ -33,7 +33,7 @@ class ContactRequests(val platform: Platform) {
                 "recipientKeyIndex" to toUser.publicKeys[0].id,
                 "senderKeyIndex" to fromUser.identity!!.publicKeys[0].id,
                 "toUserId" to toUser.id,
-                "timestamp" to timeStamp
+                "\$createdAt" to timeStamp
             )
         )
 
