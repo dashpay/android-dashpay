@@ -23,7 +23,7 @@ class ContactRequests(val platform: Platform) {
 
         val encryptedContactPubKey = fromUser.encryptExtendedPublicKey(contactPub, toUser, 0, aesKey)
         val xpubBase64 = Base64.toBase64String(encryptedContactPubKey)
-        val timeStamp = Date().time - 1000 * 60 // set time to 1 minute ago in milliseconds
+        val timeStamp = Date().time
 
         val contactRequestDocument = platform.documents.create(
             CONTACTREQUEST_DOCUMENT, fromUser.uniqueIdString, mutableMapOf<String, Any?>(
