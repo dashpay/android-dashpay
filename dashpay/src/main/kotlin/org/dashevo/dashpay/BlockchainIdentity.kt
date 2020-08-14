@@ -63,7 +63,7 @@ class BlockchainIdentity {
         const val BLOCKCHAIN_USERNAME_SALT = "BLOCKCHAIN_USERNAME_SALT"
         const val BLOCKCHAIN_USERNAME_STATUS = "BLOCKCHAIN_USERNAME_STATUS"
 
-        private val log = LoggerFactory.getLogger(Peer::class.java)
+        private val log = LoggerFactory.getLogger(BlockchainIdentity::class.java)
     }
 
     enum class RegistrationStatus {

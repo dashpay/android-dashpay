@@ -1,6 +1,5 @@
 package org.dashevo.dashpay
 
-import org.bitcoinj.core.Base58
 import org.bouncycastle.crypto.params.KeyParameter
 import org.bouncycastle.util.encoders.Base64
 import org.dashevo.dapiclient.model.DocumentQuery
@@ -22,10 +21,9 @@ class ContactRequests(val platform: Platform) {
         val contactKey = contactKeyChain.watchingKey
         val contactPub = contactKey.serializeContactPub()
 
-        //TODO: Send the correct index after encryptExtendedPublicKey is fixed.
         val encryptedContactPubKey = fromUser.encryptExtendedPublicKey(contactPub, toUser, 0, aesKey)
         val xpubBase64 = Base64.toBase64String(encryptedContactPubKey)
-        val timeStamp = Date().time / 1000
+        val timeStamp = Date().time
 
         val contactRequestDocument = platform.documents.create(
             CONTACTREQUEST_DOCUMENT, fromUser.uniqueIdString, mutableMapOf<String, Any?>(
@@ -33,7 +31,7 @@ class ContactRequests(val platform: Platform) {
                 "recipientKeyIndex" to toUser.publicKeys[0].id,
                 "senderKeyIndex" to fromUser.identity!!.publicKeys[0].id,
                 "toUserId" to toUser.id,
-                "timestamp" to timeStamp
+                "\$createdAt" to timeStamp
             )
         )
 
@@ -51,6 +49,7 @@ class ContactRequests(val platform: Platform) {
      * Gets the contactRequest documents for the given userId
      * @param userId String
      * @param toUserId Boolean (true if getting toUserId, false if $userId)
+     * @param afterTime Long Time in milliseconds
      * @param retrieveAll Boolean get all results (true) or 100 at a time (false)
      * @param startAt Int where to start getting results
      * @return List<Documents>
@@ -58,6 +57,7 @@ class ContactRequests(val platform: Platform) {
     fun get(
         userId: String,
         toUserId: Boolean,
+        afterTime: Long = 0,
         retrieveAll: Boolean = true,
         startAt: Int = 0
     ): List<Document> {
@@ -67,6 +67,9 @@ class ContactRequests(val platform: Platform) {
             documentQuery.where(listOf("toUserId", "==", userId))
         else
             documentQuery.where(listOf("\$ownerId", "==", userId))
+
+        if (afterTime > 0)
+            documentQuery.where(listOf("\$createdAt", ">", afterTime))
 
         // TODO: Refactor the rest of this code since it is also used in Names.search
         // TODO: This block of code can get all the results of a query, or 100 at a time
