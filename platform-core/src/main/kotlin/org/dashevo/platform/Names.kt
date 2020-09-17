@@ -65,7 +65,7 @@ class Names(val platform: Platform) {
         preorderTransition.sign(identity.getPublicKeyById(0)!!, identityHDPrivateKey.privateKeyAsHex)
 
         return try {
-            platform.client.applyStateTransition(preorderTransition)
+            platform.client.broadcastStateTransition(preorderTransition)
             preorderDocument
         } catch (x: Exception) {
             null
@@ -163,7 +163,7 @@ class Names(val platform: Platform) {
 
         println(domainTransition.toJSON())
 
-        platform.client.applyStateTransition(domainTransition)
+        platform.client.broadcastStateTransition(domainTransition)
 
         return domainDocument
     }

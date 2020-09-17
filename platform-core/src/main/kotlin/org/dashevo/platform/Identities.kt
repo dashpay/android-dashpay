@@ -56,7 +56,7 @@ class Identities(val platform: Platform) {
 
             identityCreateTransition.signByPrivateKey(creditBurnKey)
 
-            platform.client.applyStateTransition(identityCreateTransition);
+            platform.client.broadcastStateTransition(identityCreateTransition);
             return identityCreateTransition.identityId
         } catch (e: Exception) {
             throw e

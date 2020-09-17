@@ -37,7 +37,7 @@ class Profiles(
         val profileStateTransition =
             platform.dpp.document.createStateTransition(transitionMap)
         profileStateTransition.sign(identity.getPublicKeyById(id)!!, signingKey.privateKeyAsHex)
-        platform.client.applyStateTransition(profileStateTransition)
+        platform.client.broadcastStateTransition(profileStateTransition)
     }
 
     fun createProfileDocument(

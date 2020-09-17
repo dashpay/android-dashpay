@@ -70,7 +70,7 @@ class Platform(val params: NetworkParameters) {
     fun broadcastStateTransition(stateTransition: StateTransitionIdentitySigned, identity: Identity, privateKey: ECKey, keyIndex: Int = 0) {
         stateTransition.sign(identity.getPublicKeyById(keyIndex)!!, privateKey.privateKeyAsHex)
         //TODO: validate transition structure here
-        client.applyStateTransition(stateTransition);
+        client.broadcastStateTransition(stateTransition);
     }
 
     fun hasApp(appName: String): Boolean {

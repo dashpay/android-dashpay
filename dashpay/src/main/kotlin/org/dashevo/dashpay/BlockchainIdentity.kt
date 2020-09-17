@@ -351,7 +351,7 @@ class BlockchainIdentity {
         }
         signStateTransition(transition, keyParameter)
 
-        platform.client.applyStateTransition(transition)
+        platform.client.broadcastStateTransition(transition)
 
         for (string in usernames) {
             var usernameStatusDictionary = usernameStatuses[string] as MutableMap<String, Any>
@@ -371,7 +371,7 @@ class BlockchainIdentity {
         }
         signStateTransition(transition!!, keyParameter)
 
-        platform.client.applyStateTransition(transition)
+        platform.client.broadcastStateTransition(transition)
 
         for (string in usernames) {
             var usernameStatusDictionary = usernameStatuses[string] as MutableMap<String, Any>
@@ -1042,7 +1042,7 @@ class BlockchainIdentity {
         }
         signStateTransition(transition!!, keyParameter)
 
-        platform.client.applyStateTransition(transition)
+        platform.client.broadcastStateTransition(transition)
     }
 
     fun getProfile(): Document? {

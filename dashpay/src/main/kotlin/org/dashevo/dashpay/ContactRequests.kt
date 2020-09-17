@@ -42,7 +42,7 @@ class ContactRequests(val platform: Platform) {
         val transition = platform.dpp.document.createStateTransition(transitionMap)
         fromUser.signStateTransition(transition, aesKey)
 
-        platform.client.applyStateTransition(transition)
+        platform.client.broadcastStateTransition(transition)
     }
 
     /**
