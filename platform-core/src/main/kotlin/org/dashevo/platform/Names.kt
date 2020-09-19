@@ -261,7 +261,13 @@ class Names(val platform: Platform) {
      * Gets all of the alias usernames associated with userId
      */
     fun getByUserIdAlias(ownerId: String): List<Document> {
-        return resolveByRecord("dashAliasIdentityId", ownerId)
+        return try {
+            // this method returns an error
+            // Query by not indexed field \"records.dashAliasIdentityId\" is not allowed"
+            resolveByRecord("dashAliasIdentityId", ownerId)
+        } catch (e: Exception) {
+            arrayListOf()
+        }
     }
 
     fun resolveByRecord(record: String, value: String): List<Document> {

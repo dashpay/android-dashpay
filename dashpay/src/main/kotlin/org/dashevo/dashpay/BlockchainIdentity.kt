@@ -59,6 +59,7 @@ class BlockchainIdentity {
     companion object {
         const val BLOCKCHAIN_USERNAME_SALT = "BLOCKCHAIN_USERNAME_SALT"
         const val BLOCKCHAIN_USERNAME_STATUS = "BLOCKCHAIN_USERNAME_STATUS"
+        const val BLOCKCHAIN_USERNAME_UNIQUE = "BLOCKCHAIN_USERNAME_UNIQUE"
 
         private val log = LoggerFactory.getLogger(BlockchainIdentity::class.java)
     }
@@ -394,13 +395,16 @@ class BlockchainIdentity {
             "Identity must be registered before recovering usernames"
         )
 
-        val nameDocuments = platform.names.getByUserId(uniqueIdString)
+        val nameDocuments = arrayListOf<Document>()
+        nameDocuments.addAll(platform.names.getByUserId(uniqueIdString))
+        nameDocuments.addAll(platform.names.getByUserIdAlias(uniqueIdString))
         val usernames = ArrayList<String>()
 
         for (nameDocument in nameDocuments) {
             val username = nameDocument.data["normalizedLabel"] as String
             var usernameStatusDictionary = HashMap<String, Any>()
             usernameStatusDictionary[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.CONFIRMED
+            usernameStatusDictionary[BLOCKCHAIN_USERNAME_UNIQUE] = Names.isUniqueIdentity(nameDocument)
             usernameStatuses[username] = usernameStatusDictionary
             usernameSalts[username] = nameDocument.data["preorderSalt"] as ByteArray
             usernameStatusDictionary[BLOCKCHAIN_USERNAME_SALT] = usernameSalts[username] as ByteArray
@@ -461,8 +465,9 @@ class BlockchainIdentity {
     fun createDomainDocuments(unregisteredUsernames: List<String>): List<Document> {
         val usernameDomainDocuments = ArrayList<Document>()
         for (username in saltedDomainHashesForUsernames(unregisteredUsernames).keys) {
+            val isUniqueIdentity = usernameDomainDocuments.isEmpty() && getUsernamesWithStatus(UsernameStatus.CONFIRMED).isEmpty()
             val document =
-                platform.names.createDomainDocument(identity!!, username, usernameSalts[username]!!)
+                platform.names.createDomainDocument(identity!!, username, usernameSalts[username]!!, isUniqueIdentity)
             usernameDomainDocuments.add(document)
         }
         return usernameDomainDocuments
@@ -525,6 +530,30 @@ class BlockchainIdentity {
             val usernameInfo = usernameStatuses[username] as MutableMap<String, Any?>
             val status = usernameInfo[BLOCKCHAIN_USERNAME_STATUS] as UsernameStatus
             if (status == usernameStatus) {
+                usernames.add(username)
+            }
+        }
+        return usernames
+    }
+
+    fun getUniqueUsername(): String {
+        for (username in usernameStatuses.keys) {
+            val usernameInfo = usernameStatuses[username] as MutableMap<String, Any?>
+            val isUnique = usernameInfo[BLOCKCHAIN_USERNAME_UNIQUE] as Boolean
+            if (isUnique) {
+                return username
+            }
+        }
+        throw IllegalStateException("There is no unique username")
+    }
+
+    fun getAliasList(): List<String> {
+        val usernames = arrayListOf<String>()
+        for (username in usernameStatuses.keys) {
+            val usernameInfo = usernameStatuses[username] as MutableMap<String, Any?>
+            val isUnique = usernameInfo[BLOCKCHAIN_USERNAME_UNIQUE] as Boolean
+
+            if (!isUnique) {
                 usernames.add(username)
             }
         }
@@ -947,6 +976,7 @@ class BlockchainIdentity {
                             usernameStatuses[username] as MutableMap<String, Any>
                         else HashMap()
                         usernameStatus[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.CONFIRMED
+                        usernameStatus[BLOCKCHAIN_USERNAME_UNIQUE] = Names.isUniqueIdentity(nameDocument)
                         usernameStatuses[username] = usernameStatus
                         saveUsername(username, UsernameStatus.CONFIRMED, null, true)
                         usernamesLeft.remove(username)
@@ -1005,6 +1035,7 @@ class BlockchainIdentity {
                             usernameStatuses[username] as MutableMap<String, Any>
                         else HashMap()
                         usernameStatus[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.CONFIRMED
+                        usernameStatus[BLOCKCHAIN_USERNAME_UNIQUE] = Names.isUniqueIdentity(nameDocument)
                         usernameStatuses[username] = usernameStatus
                         saveUsername(username, UsernameStatus.CONFIRMED, null, true)
                         usernamesLeft.remove(username)
