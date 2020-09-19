@@ -10,10 +10,7 @@ import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import kotlinx.coroutines.delay
 import org.bitcoinj.core.*
-import org.bitcoinj.crypto.ChildNumber
-import org.bitcoinj.crypto.DeterministicKey
-import org.bitcoinj.crypto.EncryptedData
-import org.bitcoinj.crypto.KeyCrypterECDH
+import org.bitcoinj.crypto.*
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.evolution.EvolutionContact
 import org.bitcoinj.wallet.DerivationPathFactory
@@ -123,6 +120,9 @@ class BlockchainIdentity {
     //lateinit var usernames: List<String>
 
     var currentUsername: String? = null
+
+    var accountLabel: String = "Default Account"
+    var account: Int = 0
 
     val registrationFundingAddress: Address
         get() = Address.fromKey(wallet!!.params, registrationFundingPrivateKey)
@@ -402,7 +402,7 @@ class BlockchainIdentity {
             var usernameStatusDictionary = HashMap<String, Any>()
             usernameStatusDictionary[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.CONFIRMED
             usernameStatuses[username] = usernameStatusDictionary
-            usernameSalts[username] = HashUtils.byteArrayFromString(nameDocument.data["preorderSalt"] as String)
+            usernameSalts[username] = nameDocument.data["preorderSalt"] as ByteArray
             usernameStatusDictionary[BLOCKCHAIN_USERNAME_SALT] = usernameSalts[username] as ByteArray
             usernames.add(username)
         }
@@ -417,8 +417,9 @@ class BlockchainIdentity {
     fun saltForUsername(username: String, saveSalt: Boolean): ByteArray {
         var salt: ByteArray
         if (statusOfUsername(username) == UsernameStatus.INITIAL || !(usernameSalts.containsKey(username))) {
-            salt = Entropy.generateBytes()
+            salt = ECKey().privKeyBytes
             usernameSalts[username] = salt
+            println("salt for $username is ${salt.toHexString()}")
             if (saveSalt) {
                 saveUsername(username, statusOfUsername(username), salt, true)
             }
@@ -432,9 +433,16 @@ class BlockchainIdentity {
         val mSaltedDomainHashes = HashMap<String, ByteArray>()
         for (unregisteredUsername in usernames) {
             val salt = saltForUsername(unregisteredUsername, true)
-            val saltedDomainHashData = platform.names.getSaltedDomainHashBytes(salt, unregisteredUsername)
+            val fullUsername = if (unregisteredUsername.contains(".")) {
+                unregisteredUsername
+            } else {
+                unregisteredUsername + "." + Names.DEFAULT_PARENT_DOMAIN
+            }
+            val saltedDomainHashData = platform.names.getSaltedDomainHashBytes(salt, fullUsername)
             mSaltedDomainHashes[unregisteredUsername] = saltedDomainHashData
             usernameSalts[unregisteredUsername] = salt //is this required?
+            println("saltedDomainHash is ${saltedDomainHashData.toHexString()}" )
+
         }
         return mSaltedDomainHashes
     }
@@ -454,7 +462,7 @@ class BlockchainIdentity {
         val usernameDomainDocuments = ArrayList<Document>()
         for (username in saltedDomainHashesForUsernames(unregisteredUsernames).keys) {
             val document =
-                platform.names.createDomainDocument(identity!!, username, usernameSalts[username]!!.toBase58())
+                platform.names.createDomainDocument(identity!!, username, usernameSalts[username]!!)
             usernameDomainDocuments.add(document)
         }
         return usernameDomainDocuments
@@ -666,8 +674,8 @@ class BlockchainIdentity {
     }
 
     fun saveNewUsername(username: String, status: UsernameStatus) {
-        val salt = saltForUsername(username, false)
-        saveUsername(username, status, salt, true)
+        //val salt = saltForUsername(username, false)
+        //saveUsername(username, status, salt, true)
     }
 
 
@@ -757,16 +765,22 @@ class BlockchainIdentity {
     ) {
 
         val query = DocumentQuery.Builder()
-            .where(listOf("saltedDomainHash", "in", saltedDomainHashes.map { "5620${it.value.toHexString()}" })).build()
-        val preorderDocuments = platform.documents.get("dpns.preorder", query)
+            .where(
+                listOf("saltedDomainHash",
+                "in",
+                saltedDomainHashes.map {
+                    it.value
+                }
+                )
+            ).build()
+        val preorderDocuments = platform.documents.get(Names.DPNS_PREORDER_DOCUMENT, query)
 
         if (preorderDocuments != null && preorderDocuments.isNotEmpty()) {
             val usernamesLeft = HashMap(saltedDomainHashes)
             for (username in saltedDomainHashes.keys) {
                 val saltedDomainHashData = saltedDomainHashes[username] as ByteArray
-                val saltedDomainHashString = "5620${saltedDomainHashData.toHexString()}"
                 for (preorderDocument in preorderDocuments) {
-                    if (preorderDocument.data["saltedDomainHash"] == saltedDomainHashString) {
+                    if ((preorderDocument.data["saltedDomainHash"] as ByteArray).contentEquals(saltedDomainHashData)) {
                         var usernameStatus = if (usernameStatuses.containsKey(username))
                             usernameStatuses[username] as MutableMap<String, Any>
                         else HashMap()
@@ -833,17 +847,18 @@ class BlockchainIdentity {
                 listOf(
                     "saltedDomainHash",
                     "in",
-                    saltedDomainHashes.map { "${Names.HASH_PREFIX_STRING}${it.value.toHexString()}" })
+                    saltedDomainHashes.map { it.value }
+                )
             ).build()
+
         val preorderDocuments = platform.documents.get(Names.DPNS_PREORDER_DOCUMENT, query)
 
         if (preorderDocuments != null && preorderDocuments.isNotEmpty()) {
             val usernamesLeft = HashMap(saltedDomainHashes)
             for (username in saltedDomainHashes.keys) {
                 val saltedDomainHashData = saltedDomainHashes[username] as ByteArray
-                val saltedDomainHashString = "${Names.HASH_PREFIX_STRING}${saltedDomainHashData.toHexString()}"
                 for (preorderDocument in preorderDocuments) {
-                    if (preorderDocument.data["saltedDomainHash"] == saltedDomainHashString) {
+                    if ((preorderDocument.data["saltedDomainHash"] as ByteArray).contentEquals(saltedDomainHashData)) {
                         var usernameStatus = if (usernameStatuses.containsKey(username))
                             usernameStatuses[username] as MutableMap<String, Any>
                         else HashMap()
@@ -1120,7 +1135,7 @@ class BlockchainIdentity {
         return FriendKeyChain(
             params,
             xpub.toHexString(),
-            EvolutionContact(uniqueId, Sha256Hash.wrap(HashUtils.byteArrayFromString(contactIdentity.id)))
+            EvolutionContact(uniqueId, account, Sha256Hash.wrap(HashUtils.byteArrayFromString(contactIdentity.id)))
         )
     }
 
@@ -1129,7 +1144,7 @@ class BlockchainIdentity {
         contactIdentity: Identity,
         index: Int,
         aesKey: KeyParameter?
-    ): ByteArray {
+    ): Pair<ByteArray, ByteArray> {
         val contactIdentityPublicKey = contactIdentity.getPublicKeyById(index)
             ?: throw IllegalArgumentException("index $index does not exist for $contactIdentity")
 
@@ -1151,7 +1166,7 @@ class BlockchainIdentity {
         contactPublicKey: ECKey,
         signingAlgorithm: IdentityPublicKey.TYPES,
         aesKey: KeyParameter?
-    ): ByteArray {
+    ): Pair<ByteArray, ByteArray> {
         val keyCrypter = KeyCrypterECDH()
 
         // first decrypt our identity key if necessary (currently uses the first key [0])
@@ -1167,7 +1182,16 @@ class BlockchainIdentity {
         val boas = ByteArrayOutputStream(encryptedData.initialisationVector.size + encryptedData.encryptedBytes.size)
         boas.write(encryptedData.initialisationVector)
         boas.write(encryptedData.encryptedBytes)
-        return boas.toByteArray()
+
+        // encrypt
+        val encryptedAccountLabel = keyCrypter.encrypt(accountLabel.toByteArray(), encryptionKey)
+
+        // format as a single byte array
+        val accountLabelBoas = ByteArrayOutputStream(encryptedAccountLabel.initialisationVector.size + encryptedAccountLabel.encryptedBytes.size)
+        accountLabelBoas.write(encryptedAccountLabel.initialisationVector)
+        accountLabelBoas.write(encryptedAccountLabel.encryptedBytes)
+
+        return Pair(boas.toByteArray(), accountLabelBoas.toByteArray())
     }
 
     fun decryptExtendedPublicKey(
@@ -1218,12 +1242,12 @@ class BlockchainIdentity {
     }
 
     fun addContactPaymentKeyChain(contactIdentity: Identity, contactRequest: Document, encryptionKey: KeyParameter?) {
-        val contact = EvolutionContact(uniqueIdString, contactIdentity.id)
+        val contact = EvolutionContact(uniqueIdString, account, contactIdentity.id)
 
         if (!wallet!!.hasSendingKeyChain(contact)) {
 
             val xpub = decryptExtendedPublicKey(
-                HashUtils.fromBase64(contactRequest.data["encryptedPublicKey"] as String),
+                contactRequest.data["encryptedPublicKey"] as ByteArray,
                 contactIdentity,
                 contactRequest.data["recipientKeyIndex"] as Int,
                 contactRequest.data["senderKeyIndex"] as Int,
@@ -1235,7 +1259,7 @@ class BlockchainIdentity {
     }
 
     fun addPaymentKeyChainFromContact(contactIdentity: Identity, contactRequest: Document, encryptionKey: KeyParameter?) {
-        val contact = EvolutionContact(uniqueIdString, contactIdentity.id)
+        val contact = EvolutionContact(uniqueIdString, account, contactIdentity.id)
         if (!wallet!!.hasReceivingKeyChain(contact)) {
             val contactKeyChain = getReceiveFromContactChain(contactIdentity, encryptionKey)
             addContactToWallet(contactKeyChain, encryptionKey)
@@ -1243,15 +1267,15 @@ class BlockchainIdentity {
     }
 
     fun getContactNextPaymentAddress(contactId: String): Address {
-        return wallet!!.currentAddress(EvolutionContact(uniqueIdString, contactId), FriendKeyChain.KeyChainType.SENDING_CHAIN)
+        return wallet!!.currentAddress(EvolutionContact(uniqueIdString, account, contactId), FriendKeyChain.KeyChainType.SENDING_CHAIN)
     }
 
     fun getNextPaymentAddressFromContact(contactId: String): Address {
-        return wallet!!.currentAddress(EvolutionContact(uniqueIdString, contactId), FriendKeyChain.KeyChainType.RECEIVING_CHAIN)
+        return wallet!!.currentAddress(EvolutionContact(uniqueIdString, account, contactId), FriendKeyChain.KeyChainType.RECEIVING_CHAIN)
     }
 
     fun getContactTransactions(identityId: String): List<Transaction> {
-        val contact = EvolutionContact(uniqueIdString, identityId)
+        val contact = EvolutionContact(uniqueIdString, account, identityId)
         return wallet!!.getTransactionsWithFriend(contact)
     }
 
@@ -1261,5 +1285,29 @@ class BlockchainIdentity {
             contact.friendUserId.toStringBase58()
         else
             contact.evolutionUserId.toStringBase58()
+    }
+
+
+    fun getAccountReference(encryptionKey: KeyParameter?, fromIdentity: Identity): Long {
+        val privateKey = maybeDecryptKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, encryptionKey)
+
+        val contact = EvolutionContact(uniqueIdString, account, fromIdentity.id)
+
+        val receiveChain = getReceiveFromContactChain(fromIdentity, encryptionKey)
+
+        val extendedPublicKey = receiveChain.watchingKey.dropPrivateBytes();
+
+        val accountSecretKey = HDUtils.hmacSha256(privateKey!!.privKeyBytes, extendedPublicKey.serializeContactPub())
+
+        val accountSecretKey28 = Sha256Hash.wrapReversed(accountSecretKey).toBigInteger().toInt() shr 4
+
+        val shortenedAccountBits = account and 0x00FFFFFF
+
+        val version = 0L
+
+        val versionBits: Long = version shl 28
+
+        return versionBits or (accountSecretKey28 xor shortenedAccountBits).toLong()
+
     }
 }
