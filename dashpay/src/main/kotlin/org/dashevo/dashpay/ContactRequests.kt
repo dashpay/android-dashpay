@@ -1,7 +1,7 @@
 package org.dashevo.dashpay
 
+import org.bitcoinj.core.Base58
 import org.bouncycastle.crypto.params.KeyParameter
-import org.bouncycastle.util.encoders.Base64
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identity.Identity
@@ -21,16 +21,18 @@ class ContactRequests(val platform: Platform) {
         val contactKey = contactKeyChain.watchingKey
         val contactPub = contactKey.serializeContactPub()
 
-        val encryptedContactPubKey = fromUser.encryptExtendedPublicKey(contactPub, toUser, 0, aesKey)
-        val xpubBase64 = Base64.toBase64String(encryptedContactPubKey)
+        val (encryptedContactPubKey, encryptedAccountLabel) = fromUser.encryptExtendedPublicKey(contactPub, toUser, 0, aesKey)
+        val accountReference = fromUser.getAccountReference(aesKey, toUser)
         val timeStamp = Date().time
 
         val contactRequestDocument = platform.documents.create(
             CONTACTREQUEST_DOCUMENT, fromUser.uniqueIdString, mutableMapOf<String, Any?>(
-                "encryptedPublicKey" to xpubBase64,
+                "encryptedPublicKey" to encryptedContactPubKey,
                 "recipientKeyIndex" to toUser.publicKeys[0].id,
                 "senderKeyIndex" to fromUser.identity!!.publicKeys[0].id,
-                "toUserId" to toUser.id,
+                "toUserId" to Base58.decode(toUser.id),
+                "accountReference" to accountReference,
+                //"encryptedAccountLabel" to encryptedAccountLabel,  //contact requires 64 bytes, but minimum should be 32
                 "\$createdAt" to timeStamp
             )
         )
@@ -64,7 +66,7 @@ class ContactRequests(val platform: Platform) {
         val documentQuery = DocumentQuery.Builder()
 
         if (toUserId)
-            documentQuery.where(listOf("toUserId", "==", userId))
+            documentQuery.where(listOf("toUserId", "==", Base58.decode(userId)))
         else
             documentQuery.where(listOf("\$ownerId", "==", userId))
 
@@ -106,7 +108,7 @@ class ContactRequests(val platform: Platform) {
     ): Document? {
         val documentQuery = DocumentQuery.Builder()
         documentQuery.where("\$ownerId", "==", fromUserId)
-            .where("toUserId", "==", toUserId)
+            .where("toUserId", "==", Base58.decode(toUserId))
         val result = platform.documents.get(CONTACTREQUEST_DOCUMENT, documentQuery.build())
         if (result.isNotEmpty()) {
             return result[0]
