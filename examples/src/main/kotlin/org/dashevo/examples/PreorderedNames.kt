@@ -9,6 +9,7 @@ package org.dashevo.examples
 import org.dashevo.Client
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.document.Document
+import org.dashevo.dpp.toBase64
 import org.dashevo.platform.Documents
 
 class PreorderedNames {
@@ -37,7 +38,7 @@ class PreorderedNames {
 
                     for (doc in documents) {
                         println(
-                            "Salted domain hash: " + doc.data["saltedDomainHash"] +
+                            "Salted domain hash: " + (doc.data["saltedDomainHash"] as ByteArray).toBase64() +
                                     " Identity: " + doc.ownerId
                         )
                     }
