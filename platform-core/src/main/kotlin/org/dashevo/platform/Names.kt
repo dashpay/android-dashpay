@@ -12,6 +12,7 @@ import org.bitcoinj.core.Sha256Hash
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identity.Identity
+import org.dashevo.dpp.toHexString
 import org.dashevo.dpp.util.Entropy
 import java.io.ByteArrayOutputStream
 
@@ -21,20 +22,13 @@ class Names(val platform: Platform) {
         const val DEFAULT_PARENT_DOMAIN = "dash"
         const val DPNS_DOMAIN_DOCUMENT = "dpns.domain"
         const val DPNS_PREORDER_DOCUMENT = "dpns.preorder"
-
-        // 5620 (hex) is the prefix for a hash that is used
-        // in DPNS related documents (preorder, domain)
-        // 56 = SHA256D
-        // 20 = 32 bytes
-        val HASH_PREFIX_BYTES = byteArrayOf(0x56, 0x20)
-        const val HASH_PREFIX_STRING = "5620"
     }
 
     fun register(name: String, identity: Identity, identityHDPrivateKey: ECKey): Document? {
         val entropy = Entropy.generate()
         val document = preorder(name, identity, identityHDPrivateKey, entropy)
         return if (document != null) {
-            registerName(name, identity, identityHDPrivateKey, entropy, document)
+            registerName(name, identity, identityHDPrivateKey, Base58.decode(entropy), document)
         } else null
     }
 
@@ -43,12 +37,9 @@ class Names(val platform: Platform) {
         val (normalizedParentDomainName, normalizedLabel) = normalizedNames(name)
         val fullDomainName = "$normalizedLabel.$normalizedParentDomainName"
 
-        val nameHash = Sha256Hash.twiceOf(fullDomainName.toByteArray())
-        val nameHashHex = nameHash.toString()
-
         val preOrderSaltRaw = Base58.decode(preorderSaltBase58)
 
-        val saltedDomainHash = getSaltedDomainHash(preOrderSaltRaw, nameHash)
+        val saltedDomainHash = getSaltedDomainHash(preOrderSaltRaw, fullDomainName)
 
         if (platform.apps["dpns"] == null) {
             throw Error("DPNS is required to register a new name.")
@@ -77,7 +68,7 @@ class Names(val platform: Platform) {
         identity: Identity
     ): Document {
         val map = HashMap<String, Any?>(1)
-        map["saltedDomainHash"] = "$HASH_PREFIX_STRING$saltedDomainHash"
+        map["saltedDomainHash"] = saltedDomainHash.bytes;//.bytes.toBase64()
 
         val preorderDocument = platform.documents.create(
             DPNS_PREORDER_DOCUMENT,
@@ -103,54 +94,31 @@ class Names(val platform: Platform) {
         return if (nameSlice == -1) name else name.slice(0..nameSlice)
     }
 
-    fun getSaltedDomainHashString(
-        preOrderSaltRaw: ByteArray,
-        nameHash: Sha256Hash
-    ): String {
-        return getSaltedDomainHash(preOrderSaltRaw, nameHash).toString()
-    }
-
-    fun getSaltedDomainHashBytes(
-        preOrderSaltRaw: ByteArray,
-        nameHash: Sha256Hash
-    ): ByteArray {
-        return getSaltedDomainHash(preOrderSaltRaw, nameHash).bytes
-    }
-
     fun getSaltedDomainHashBytes(
         preOrderSaltRaw: ByteArray,
         name: String
     ): ByteArray {
-        return getSaltedDomainHash(preOrderSaltRaw, nameHash(name)).bytes
+        return getSaltedDomainHash(preOrderSaltRaw, name).bytes
     }
 
     fun getSaltedDomainHash(
         preOrderSaltRaw: ByteArray,
-        nameHash: Sha256Hash
+        fullName: String
     ): Sha256Hash {
-        val baos = ByteArrayOutputStream(preOrderSaltRaw.size + nameHash.bytes.size)
+        val baos = ByteArrayOutputStream(preOrderSaltRaw.size + fullName.length)
         baos.write(preOrderSaltRaw)
-        // Add prefix bytes for a hash
-        baos.write(HASH_PREFIX_BYTES)
-        baos.write(nameHash.bytes)
-
+        baos.write(fullName.toByteArray())
         return Sha256Hash.twiceOf(baos.toByteArray())
-    }
-
-    fun nameHash(name: String): Sha256Hash {
-        val (normalizedParentDomainName, normalizedLabel) = normalizedNames(name)
-        val fullDomainName = "$normalizedLabel.$normalizedParentDomainName"
-        return Sha256Hash.twiceOf(fullDomainName.toByteArray())
     }
 
     fun registerName(
         name: String,
         identity: Identity,
         identityHDPrivateKey: ECKey,
-        preorderSaltBase58: String,
+        preorderSaltBase: ByteArray,
         preorder: Document
     ): Document? {
-        val domainDocument = createDomainDocument(identity, name, preorderSaltBase58)
+        val domainDocument = createDomainDocument(identity, name, preorderSaltBase)
 
         println(domainDocument.toJSON())
 
@@ -171,24 +139,28 @@ class Names(val platform: Platform) {
     fun createDomainDocument(
         identity: Identity,
         name: String,
-        preorderSaltBase58: String
+        preorderSaltBase: ByteArray
     ): Document {
-        val records = HashMap<String, Any?>(1)
-        records["dashIdentity"] = identity.id
+        val records = hashMapOf<String, Any?>(
+            "dashUniqueIdentityId" to identity.id
+        )
+
+        val subdomainRules = hashMapOf<String, Any?>(
+            "allowSubdomains" to false // do not allow
+        )
 
         val (normalizedParentDomainName, normalizedLabel) = normalizedNames(name)
         val fullDomainName = "$normalizedLabel.$normalizedParentDomainName"
 
-        val nameHash = Sha256Hash.twiceOf(fullDomainName.toByteArray())
-        val nameHashHex = nameHash.toString()
-
         val fields = HashMap<String, Any?>(6)
-        fields["nameHash"] = "$HASH_PREFIX_STRING$nameHashHex"
         fields["label"] = getLabel(name)
         fields["normalizedLabel"] = normalizedLabel
         fields["normalizedParentDomainName"] = normalizedParentDomainName
-        fields["preorderSalt"] = preorderSaltBase58
+        fields["preorderSalt"] = preorderSaltBase
+        println("salt for $name is ${preorderSaltBase.toHexString()}")
+        println("saltedDomainHash is ${getSaltedDomainHashBytes(preorderSaltBase, fullDomainName).toHexString()}" )
         fields["records"] = records
+        fields["subdomainRules"] = subdomainRules
 
         // 3. Create domain document
         val domainDocument = platform.documents.create(
@@ -274,7 +246,7 @@ class Names(val platform: Platform) {
      */
     fun getByUserId(userId: String): List<Document> {
         val documentQuery = DocumentQuery.Builder()
-            .where(listOf("records.dashIdentity", "==", userId))
+            .where(listOf("records.dashUniqueIdentityId", "==", userId))
 
         return platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.build())
     }
@@ -297,7 +269,7 @@ class Names(val platform: Platform) {
         startAt: Int = 0
     ): List<Document> {
         val documentQuery = DocumentQuery.Builder()
-        documentQuery.whereIn("records.dashIdentity", userIds)
+        documentQuery.whereIn("records.dashUniqueIdentityId", userIds)
         var requests = 0
 
         val documents = arrayListOf<Document>()
