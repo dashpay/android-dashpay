@@ -22,13 +22,18 @@ class Names(val platform: Platform) {
         const val DEFAULT_PARENT_DOMAIN = "dash"
         const val DPNS_DOMAIN_DOCUMENT = "dpns.domain"
         const val DPNS_PREORDER_DOCUMENT = "dpns.preorder"
+
+        fun isUniqueIdentity(domainDocument: Document): Boolean {
+            val records = domainDocument.data["records"] as Map<String, Any>
+            return records.containsKey("dashUniqueIdentityId")
+        }
     }
 
-    fun register(name: String, identity: Identity, identityHDPrivateKey: ECKey): Document? {
+    fun register(name: String, identity: Identity, identityHDPrivateKey: ECKey, isUniqueIdentity: Boolean = true): Document? {
         val entropy = Entropy.generate()
         val document = preorder(name, identity, identityHDPrivateKey, entropy)
         return if (document != null) {
-            registerName(name, identity, identityHDPrivateKey, Base58.decode(entropy), document)
+            registerName(name, identity, identityHDPrivateKey, Base58.decode(entropy), isUniqueIdentity)
         } else null
     }
 
@@ -116,9 +121,9 @@ class Names(val platform: Platform) {
         identity: Identity,
         identityHDPrivateKey: ECKey,
         preorderSaltBase: ByteArray,
-        preorder: Document
+        isUniqueIdentity: Boolean = true
     ): Document? {
-        val domainDocument = createDomainDocument(identity, name, preorderSaltBase)
+        val domainDocument = createDomainDocument(identity, name, preorderSaltBase, isUniqueIdentity)
 
         println(domainDocument.toJSON())
 
@@ -139,10 +144,16 @@ class Names(val platform: Platform) {
     fun createDomainDocument(
         identity: Identity,
         name: String,
-        preorderSaltBase: ByteArray
+        preorderSaltBase: ByteArray,
+        isUniqueIdentity: Boolean = true
     ): Document {
+        val recordType = if (isUniqueIdentity)
+            "dashUniqueIdentityId"
+        else
+            "dashAliasIdentityId"
+
         val records = hashMapOf<String, Any?>(
-            "dashUniqueIdentityId" to identity.id
+            recordType to identity.id
         )
 
         val subdomainRules = hashMapOf<String, Any?>(
@@ -157,8 +168,6 @@ class Names(val platform: Platform) {
         fields["normalizedLabel"] = normalizedLabel
         fields["normalizedParentDomainName"] = normalizedParentDomainName
         fields["preorderSalt"] = preorderSaltBase
-        println("salt for $name is ${preorderSaltBase.toHexString()}")
-        println("saltedDomainHash is ${getSaltedDomainHashBytes(preorderSaltBase, fullDomainName).toHexString()}" )
         fields["records"] = records
         fields["subdomainRules"] = subdomainRules
 
@@ -212,17 +221,17 @@ class Names(val platform: Platform) {
      * on these criteria: starts with.  Contains is not supported
      * @param text String
      * @param parentDomain String
-     * @param startAt Int
+     * @param startAtIndex Int
      * @return List<Documents>
      */
-    fun search(text: String, parentDomain: String, retrieveAll: Boolean, startAt: Int = 0): List<Document> {
+    fun search(text: String, parentDomain: String, retrieveAll: Boolean, startAtIndex: Int = 0): List<Document> {
         val documentQuery = DocumentQuery.Builder()
             .where(listOf("normalizedParentDomainName", "==", parentDomain))
             .orderBy(listOf("normalizedLabel", "asc"))
             .where(listOf("normalizedLabel", "startsWith", text.toLowerCase()))
 
-        var startAt = startAt
-        var documents = ArrayList<Document>()
+        var startAt = startAtIndex
+        val documents = ArrayList<Document>()
         var documentList: List<Document>
         var requests = 0
 
@@ -236,7 +245,7 @@ class Names(val platform: Platform) {
             } catch (e: Exception) {
                 throw e
             }
-        } while ((requests == 0 || documentList!!.size >= Documents.DOCUMENT_LIMIT) && retrieveAll)
+        } while ((requests == 0 || documentList.size >= Documents.DOCUMENT_LIMIT) && retrieveAll)
 
         return documents
     }
@@ -244,24 +253,28 @@ class Names(val platform: Platform) {
     /**
      * Gets all of the usernames associated with userId
      */
-    fun getByUserId(userId: String): List<Document> {
-        val documentQuery = DocumentQuery.Builder()
-            .where(listOf("records.dashUniqueIdentityId", "==", userId))
-
-        return platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.build())
+    fun getByUserId(ownerId: String): List<Document> {
+        return resolveByRecord("dashUniqueIdentityId", ownerId)
     }
 
-    fun resolveByRecord(record: String, value: String): Document? {
+    /**
+     * Gets all of the alias usernames associated with userId
+     */
+    fun getByUserIdAlias(ownerId: String): List<Document> {
+        return resolveByRecord("dashAliasIdentityId", ownerId)
+    }
+
+    fun resolveByRecord(record: String, value: String): List<Document> {
         val documentQuery = DocumentQuery.Builder()
             .where(listOf("records.$record", "==", value))
 
         val results = platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.build())
 
-        return results[0]
+        return results
     }
 
     /**
-     * Gets all of the usernames associated with a list of userId's
+     * Gets all of the unique usernames associated with a list of userId's
      */
     fun getList(
         userIds: List<String>,
