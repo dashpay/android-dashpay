@@ -32,7 +32,10 @@ class ContactRequests(val platform: Platform) {
                 "senderKeyIndex" to fromUser.identity!!.publicKeys[0].id,
                 "toUserId" to Base58.decode(toUser.id),
                 "accountReference" to accountReference,
-                //"encryptedAccountLabel" to encryptedAccountLabel,  //contact requires 64 bytes, but minimum should be 32
+                // TODO: contract requires 64 bytes, but minimum should be 32 to allow for short labels
+                // 16 bytes IV + 16 bytes for any label less than 15 characters
+                // This is a bug in the dashpay contract
+                //"encryptedAccountLabel" to encryptedAccountLabel
                 "\$createdAt" to timeStamp
             )
         )
