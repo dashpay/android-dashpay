@@ -699,12 +699,12 @@ class BlockchainIdentity {
 
     fun saveUsername(username: String, status: UsernameStatus, salt: ByteArray?, commitSave: Boolean) {
         // save the username information to the Room database
-        //TODO()
+        // TODO: Do we actually need this method
     }
 
     fun saveNewUsername(username: String, status: UsernameStatus) {
-        //val salt = saltForUsername(username, false)
-        //saveUsername(username, status, salt, true)
+        // TODO: Do we actually need this method
+        saveUsername(username, status, null, true)
     }
 
 
