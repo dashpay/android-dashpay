@@ -281,12 +281,14 @@ class BlockchainIdentity {
         Preconditions.checkState(creditFundingTransaction != null, "The credit funding transaction must exist")
 
         var identityPrivateKey = privateKeyAtIndex(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1)
-        val identityPublicKey = IdentityPublicKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, identityPrivateKey!!.pubKey.toBase64(), true)
+        val identityPublicKey =
+            IdentityPublicKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, identityPrivateKey!!.pubKey.toBase64(), true)
         val identityPublicKeys = listOf(identityPublicKey)
 
         val signingKey = maybeDecryptKey(creditFundingTransaction!!.creditBurnPublicKey, keyParameter)
 
-        platform.identities.register(creditFundingTransaction!!.lockedOutpoint,
+        platform.identities.register(
+            creditFundingTransaction!!.lockedOutpoint,
             signingKey!!,
             identityPublicKeys
         )
@@ -296,7 +298,7 @@ class BlockchainIdentity {
         finalizeIdentityRegistration(creditFundingTransaction!!)
     }
 
-    fun recoverIdentity(creditFundingTransaction: CreditFundingTransaction) : Boolean {
+    fun recoverIdentity(creditFundingTransaction: CreditFundingTransaction): Boolean {
         Preconditions.checkState(
             registrationStatus == RegistrationStatus.UNKNOWN,
             "The identity must not be registered"
@@ -445,7 +447,7 @@ class BlockchainIdentity {
             val saltedDomainHashData = platform.names.getSaltedDomainHashBytes(salt, fullUsername)
             mSaltedDomainHashes[unregisteredUsername] = saltedDomainHashData
             usernameSalts[unregisteredUsername] = salt //is this required?
-            println("saltedDomainHash is ${saltedDomainHashData.toHexString()}" )
+            println("saltedDomainHash is ${saltedDomainHashData.toHexString()}")
 
         }
         return mSaltedDomainHashes
@@ -465,7 +467,8 @@ class BlockchainIdentity {
     fun createDomainDocuments(unregisteredUsernames: List<String>): List<Document> {
         val usernameDomainDocuments = ArrayList<Document>()
         for (username in saltedDomainHashesForUsernames(unregisteredUsernames).keys) {
-            val isUniqueIdentity = usernameDomainDocuments.isEmpty() && getUsernamesWithStatus(UsernameStatus.CONFIRMED).isEmpty()
+            val isUniqueIdentity =
+                usernameDomainDocuments.isEmpty() && getUsernamesWithStatus(UsernameStatus.CONFIRMED).isEmpty()
             val document =
                 platform.names.createDomainDocument(identity!!, username, usernameSalts[username]!!, isUniqueIdentity)
             usernameDomainDocuments.add(document)
@@ -707,7 +710,6 @@ class BlockchainIdentity {
         saveUsername(username, status, null, true)
     }
 
-
     /**
      * This method will determine if the associated identity exists by making a platform query
      * the specified number of times with the specified delay between attempts.  If the identity
@@ -796,10 +798,10 @@ class BlockchainIdentity {
         val query = DocumentQuery.Builder()
             .where(
                 listOf("saltedDomainHash",
-                "in",
-                saltedDomainHashes.map {
-                    it.value
-                }
+                    "in",
+                    saltedDomainHashes.map {
+                        it.value
+                    }
                 )
             ).build()
         val preorderDocuments = platform.documents.get(Names.DPNS_PREORDER_DOCUMENT, query)
@@ -1073,7 +1075,11 @@ class BlockchainIdentity {
     }
 
     // DashPay Profile methods
-    private fun createProfileTransition(displayName: String, publicMessage: String, avatarUrl: String? = null): DocumentsBatchTransition {
+    private fun createProfileTransition(
+        displayName: String,
+        publicMessage: String,
+        avatarUrl: String? = null
+    ): DocumentsBatchTransition {
         val profileDocument = profiles.createProfileDocument(displayName, publicMessage, avatarUrl, identity!!)
         val transitionMap = hashMapOf<String, List<Document>?>(
             "create" to listOf(profileDocument)
@@ -1218,7 +1224,8 @@ class BlockchainIdentity {
         val encryptedAccountLabel = keyCrypter.encrypt(accountLabel.toByteArray(), encryptionKey)
 
         // format as a single byte array
-        val accountLabelBoas = ByteArrayOutputStream(encryptedAccountLabel.initialisationVector.size + encryptedAccountLabel.encryptedBytes.size)
+        val accountLabelBoas =
+            ByteArrayOutputStream(encryptedAccountLabel.initialisationVector.size + encryptedAccountLabel.encryptedBytes.size)
         accountLabelBoas.write(encryptedAccountLabel.initialisationVector)
         accountLabelBoas.write(encryptedAccountLabel.encryptedBytes)
 
@@ -1236,7 +1243,13 @@ class BlockchainIdentity {
             ?: throw IllegalArgumentException("index $contactKeyIndex does not exist for $contactIdentity")
         val contactPublicKey = contactIdentityPublicKey.getKey()
 
-        return decryptExtendedPublicKey(encryptedXpub, contactPublicKey, contactIdentityPublicKey.type, keyIndex, aesKey)
+        return decryptExtendedPublicKey(
+            encryptedXpub,
+            contactPublicKey,
+            contactIdentityPublicKey.type,
+            keyIndex,
+            aesKey
+        )
     }
 
     /**
@@ -1289,7 +1302,11 @@ class BlockchainIdentity {
         }
     }
 
-    fun addPaymentKeyChainFromContact(contactIdentity: Identity, contactRequest: Document, encryptionKey: KeyParameter?) {
+    fun addPaymentKeyChainFromContact(
+        contactIdentity: Identity,
+        contactRequest: Document,
+        encryptionKey: KeyParameter?
+    ) {
         val contact = EvolutionContact(uniqueIdString, account, contactIdentity.id)
         if (!wallet!!.hasReceivingKeyChain(contact)) {
             val contactKeyChain = getReceiveFromContactChain(contactIdentity, encryptionKey)
@@ -1298,11 +1315,17 @@ class BlockchainIdentity {
     }
 
     fun getContactNextPaymentAddress(contactId: String): Address {
-        return wallet!!.currentAddress(EvolutionContact(uniqueIdString, account, contactId), FriendKeyChain.KeyChainType.SENDING_CHAIN)
+        return wallet!!.currentAddress(
+            EvolutionContact(uniqueIdString, account, contactId),
+            FriendKeyChain.KeyChainType.SENDING_CHAIN
+        )
     }
 
     fun getNextPaymentAddressFromContact(contactId: String): Address {
-        return wallet!!.currentAddress(EvolutionContact(uniqueIdString, account, contactId), FriendKeyChain.KeyChainType.RECEIVING_CHAIN)
+        return wallet!!.currentAddress(
+            EvolutionContact(uniqueIdString, account, contactId),
+            FriendKeyChain.KeyChainType.RECEIVING_CHAIN
+        )
     }
 
     fun getContactTransactions(identityId: String): List<Transaction> {
