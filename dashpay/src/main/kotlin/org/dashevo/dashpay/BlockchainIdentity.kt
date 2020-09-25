@@ -667,7 +667,7 @@ class BlockchainIdentity {
 
             IdentityPublicKey.TYPES.ECDSA_SECP256K1 -> {
                 val authenticationChain = wallet!!.blockchainIdentityKeyChain
-                val key = authenticationChain.getKey(index)
+                val key = authenticationChain.watchingKey//getKey(index)
                 return key
             }
             else -> throw IllegalArgumentException("$type is not supported")
