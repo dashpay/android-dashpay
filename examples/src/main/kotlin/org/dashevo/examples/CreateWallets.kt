@@ -34,10 +34,13 @@ import java.security.SecureRandom
 import java.util.*
 import java.util.concurrent.TimeUnit
 import org.bitcoinj.wallet.WalletTransaction
+import org.dashevo.dashpay.ContactRequests
 import org.dashevo.dashpay.RetryDelayType
 import org.dashevo.dashpay.callback.RegisterIdentityCallback
 import org.dashevo.dashpay.callback.RegisterNameCallback
 import org.dashevo.dashpay.callback.RegisterPreorderCallback
+import org.dashevo.dashpay.callback.UpdateProfileCallback
+import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.toHexString
 import org.json.JSONObject
 
@@ -173,7 +176,9 @@ class CreateWallets {
                 val cftx = wallet.sendCoinsOffline(sendRequest) as CreditFundingTransaction
                 val cftxid = runRpc("sendrawtransaction ${cftx.bitcoinSerialize().toHexString()}")
                 println("credit funding tx: ${cftx.txId}")
-                println(cftxid)
+                println("credit funding tx sent via rpc: $cftxid")
+                println("identity id: ${cftx.creditBurnIdentityIdentifier.toStringBase58()}")
+                println("pubkey hash: ${cftx.creditBurnPublicKeyId}")
 
                 // we need to wait until the transaction is confirmed or instantsend
                 val transaction = runRpc("getrawtransaction ${cftxid!!.trim()} true")
@@ -185,6 +190,10 @@ class CreateWallets {
 
                 blockchainIdentity.watchIdentity(10, 5000, RetryDelayType.SLOW20, object : RegisterIdentityCallback {
                     override fun onComplete(uniqueId: String) {
+
+                        val identityId = platform.client.getIdentityIdByFirstPublicKey(wallet.currentAuthenticationKey(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY).pubKeyHash)
+                        println("identity found using getIdentityIdByFirstPublicKey: ${identityId}")
+
                         blockchainIdentity.addUsername(namesToCreate[i])
 
                         val names = blockchainIdentity.getUnregisteredUsernames()
@@ -199,6 +208,7 @@ class CreateWallets {
                             RetryDelayType.SLOW20,
                             object : RegisterPreorderCallback {
                                 override fun onComplete(names: List<String>) {
+                                    Thread.sleep(5000)
                                     val preorderedNames = blockchainIdentity.preorderedUsernames()
                                     blockchainIdentity.registerUsernameDomainsForUsernames(preorderedNames, null)
                                     blockchainIdentity.watchUsernames(
@@ -210,6 +220,7 @@ class CreateWallets {
                                             override fun onComplete(names: List<String>) {
                                                 println("name registration successful $names")
                                                 namesMap[names[0]] = recoveryPhrase
+                                                createProfile(blockchainIdentity)
                                             }
 
                                             override fun onTimeout(incompleteNames: List<String>) {
@@ -235,6 +246,38 @@ class CreateWallets {
             for (name in namesMap) {
                 println("${name.key}, ${name.value}")
             }
+        }
+
+        private fun createProfile(blockchainIdentity: BlockchainIdentity) {
+                blockchainIdentity.registerProfile(
+                    "My Display Name",
+                    "My identity is ${blockchainIdentity.uniqueIdString}.",
+                    null, null
+                )
+                val profile = blockchainIdentity.watchProfile(10, 1000, RetryDelayType.SLOW20, object : UpdateProfileCallback {
+                    override fun onComplete(uniqueId: String, profileDocument: Document) {
+                        println("profile created successfully")
+                        println(profileDocument.toJSON())
+                        blockchainIdentity.updateProfile(
+                            "My Updated Display Name".substring(0, 20),
+                            "My identity is still ${blockchainIdentity.uniqueIdString}.",
+                            null, null
+                        )
+                        blockchainIdentity.watchProfile(10, 1000, RetryDelayType.SLOW20, object : UpdateProfileCallback {
+                            override fun onComplete(uniqueId: String, updatedProfileDocument: Document) {
+                                println("profile updated successfully")
+                                println(updatedProfileDocument.toJSON())
+                            }
+
+                            override fun onTimeout() {
+                                println("update profile failed")                            }
+                        })
+                    }
+
+                    override fun onTimeout() {
+                        println("create profile failed")
+                    }
+                })
         }
     }
 }
