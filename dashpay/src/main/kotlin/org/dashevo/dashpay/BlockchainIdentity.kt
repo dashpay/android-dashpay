@@ -26,16 +26,15 @@ import org.dashevo.dashpay.callback.RegisterNameCallback
 import org.dashevo.dashpay.callback.RegisterPreorderCallback
 import org.dashevo.platform.Platform
 import org.dashevo.dapiclient.model.DocumentQuery
+import org.dashevo.dashpay.callback.UpdateProfileCallback
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.document.DocumentsBatchTransition
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.identity.IdentityPublicKey
 import org.dashevo.dpp.statetransition.StateTransitionIdentitySigned
-import org.dashevo.dpp.toBase58
 import org.dashevo.dpp.toBase64
 import org.dashevo.dpp.toHexString
 import org.dashevo.dpp.util.Cbor
-import org.dashevo.dpp.util.Entropy
 import org.dashevo.dpp.util.HashUtils
 import org.dashevo.platform.Names
 import org.slf4j.LoggerFactory
@@ -317,7 +316,7 @@ class BlockchainIdentity {
         return true
     }
 
-    fun recoverIdentity(pubKeyId: ByteArray) : Boolean {
+    fun recoverIdentity(pubKeyId: ByteArray): Boolean {
         Preconditions.checkState(
             registrationStatus == RegistrationStatus.UNKNOWN,
             "The identity must not be registered"
@@ -333,7 +332,8 @@ class BlockchainIdentity {
     }
 
     private fun finalizeIdentityRegistration(identityId: String) {
-        this.registrationFundingPrivateKey = wallet!!.currentAuthenticationKey(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING)
+        this.registrationFundingPrivateKey =
+            wallet!!.currentAuthenticationKey(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING)
         val creditBurnIdentifier = Sha256Hash.wrap(Base58.decode(identityId))
         log.info("identity id = $creditBurnIdentifier")
         finalizeIdentityRegistration(creditBurnIdentifier)
@@ -1097,8 +1097,8 @@ class BlockchainIdentity {
 
     // DashPay Profile methods
     private fun createProfileTransition(
-        displayName: String,
-        publicMessage: String,
+        displayName: String?,
+        publicMessage: String?,
         avatarUrl: String? = null
     ): DocumentsBatchTransition {
         val profileDocument = profiles.createProfileDocument(displayName, publicMessage, avatarUrl, identity!!)
@@ -1108,17 +1108,56 @@ class BlockchainIdentity {
         return platform.dpp.document.createStateTransition(transitionMap)
     }
 
-    fun registerProfile(displayName: String, publicMessage: String, avatarUrl: String?, keyParameter: KeyParameter?) {
+    fun registerProfile(displayName: String?, publicMessage: String?, avatarUrl: String?, keyParameter: KeyParameter?) {
         val transition = createProfileTransition(displayName, publicMessage, avatarUrl)
-        if (transition == null) {
-            return;
-        }
+
+        signStateTransition(transition!!, keyParameter)
+
+        platform.client.broadcastStateTransition(transition)
+    }
+
+    private fun replaceProfileTransition(
+        displayName: String?,
+        publicMessage: String?,
+        avatarUrl: String? = null
+    ): DocumentsBatchTransition {
+
+        // first obtain the current document
+        val currentProfile = getProfileFromPlatform()
+
+        // change all of the document fields
+        val profileData = hashMapOf<String, Any?>()
+        profileData.putAll(currentProfile!!.toJSON())
+        profileData["displayName"] = displayName
+        profileData["publicMessage"] = publicMessage
+        profileData["avatarUrl"] = avatarUrl
+
+        val profileDocument = Document(profileData)
+        // a replace operation must set updatedAt
+        profileDocument.updatedAt = Date().time
+
+        val transitionMap = hashMapOf<String, List<Document>?>(
+            "replace" to listOf(profileDocument)
+        )
+        return platform.dpp.document.createStateTransition(transitionMap)
+    }
+
+    fun updateProfile(displayName: String?, publicMessage: String?, avatarUrl: String?, keyParameter: KeyParameter?) {
+        val transition = replaceProfileTransition(displayName, publicMessage, avatarUrl)
+
         signStateTransition(transition!!, keyParameter)
 
         platform.client.broadcastStateTransition(transition)
     }
 
     fun getProfile(): Document? {
+        return profiles.get(uniqueIdString)
+    }
+
+    /**
+     * Obtains the most recent profile from the network
+     */
+    fun getProfileFromPlatform(): Document? {
         return profiles.get(uniqueIdString)
     }
 
@@ -1140,11 +1179,37 @@ class BlockchainIdentity {
                     RetryDelayType.SLOW50 -> 3 / 2
                     else -> 1
                 }
-                kotlinx.coroutines.delay(nextDelay)
+                delay(nextDelay)
                 return watchProfile(retryCount - 1, nextDelay, retryDelayType)
             }
         }
         return null
+    }
+
+    fun watchProfile(
+        retryCount: Int,
+        delayMillis: Long,
+        retryDelayType: RetryDelayType,
+        callback: UpdateProfileCallback
+    ) {
+
+        val profileResult = profiles.get(uniqueIdString)
+
+        if (profileResult != null) {
+            save()
+            callback.onComplete(uniqueIdString, profileResult)
+        } else {
+            if (retryCount > 0) {
+                Timer("monitorBlockchainIdentityStatus", false).schedule(timerTask {
+                    val nextDelay = delayMillis * when (retryDelayType) {
+                        RetryDelayType.SLOW20 -> 5 / 4
+                        RetryDelayType.SLOW50 -> 3 / 2
+                        else -> 1
+                    }
+                    watchProfile(retryCount - 1, nextDelay, retryDelayType, callback)
+                }, delayMillis)
+            } else callback.onTimeout()
+        }
     }
 
     // Contact Requests
@@ -1383,6 +1448,5 @@ class BlockchainIdentity {
         val versionBits: Long = version shl 28
 
         return versionBits or (accountSecretKey28 xor shortenedAccountBits).toLong()
-
     }
 }

@@ -9,7 +9,7 @@ package org.dashevo.dashpay
 
 import org.bitcoinj.core.ECKey
 import org.dashevo.dapiclient.model.DocumentQuery
-import org.dashevo.dpp.document.Document
+import org.dashevo.dpp.document.*
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.platform.Documents
 import org.dashevo.platform.Platform
@@ -31,7 +31,7 @@ class Profiles(
         identity: Identity,
         id: Int,
         signingKey: ECKey
-    ) {
+    ) : Document {
         val profileDocument = createProfileDocument(displayName, publicMessage, avatarUrl, identity)
         profileDocument.createdAt = Date().time
 
@@ -39,7 +39,10 @@ class Profiles(
             "create" to listOf(profileDocument)
         )
 
-        signAndBroadcast(transitionMap, identity, id, signingKey)
+        val transition = signAndBroadcast(transitionMap, identity, id, signingKey)
+
+        return DocumentFactory().createFromObject(transition.transitions[0].toJSON().toMutableMap())
+
     }
 
     fun replace(
@@ -49,15 +52,25 @@ class Profiles(
         identity: Identity,
         id: Int,
         signingKey: ECKey
-    ) {
-        val profileDocument = createProfileDocument(displayName, publicMessage, avatarUrl, identity)
+    ) : Document {
+        val currentProfile = get(identity.id)
+
+        val profileData = hashMapOf<String, Any?>()
+        profileData.putAll(currentProfile!!.toJSON())
+        profileData["displayName"] = displayName
+        profileData["publicMessage"] = publicMessage
+        profileData["avatarUrl"] = avatarUrl
+
+        val profileDocument = DocumentFactory().createFromObject(profileData)
         profileDocument.updatedAt = Date().time
 
         val transitionMap = hashMapOf(
             "replace" to listOf(profileDocument)
         )
 
-        signAndBroadcast(transitionMap, identity, id, signingKey)
+        val transition = signAndBroadcast(transitionMap, identity, id, signingKey)
+
+        return DocumentFactory().createFromObject(transition.transitions[0].toJSON().toMutableMap())
     }
 
     private fun signAndBroadcast(
@@ -65,20 +78,22 @@ class Profiles(
         identity: Identity,
         id: Int,
         signingKey: ECKey
-    ) {
+    ) : DocumentsBatchTransition {
         val profileStateTransition =
             platform.dpp.document.createStateTransition(transitionMap)
         profileStateTransition.sign(identity.getPublicKeyById(id)!!, signingKey.privateKeyAsHex)
         platform.client.broadcastStateTransition(profileStateTransition)
+        return profileStateTransition
     }
 
     fun createProfileDocument(
-        displayName: String,
-        publicMessage: String,
+        displayName: String?,
+        publicMessage: String?,
         avatarUrl: String?,
-        identity: Identity
+        identity: Identity,
+        revision: Int = DocumentCreateTransition.INITIAL_REVISION
     ): Document {
-        return platform.documents.create(
+        val document = platform.documents.create(
             DOCUMENT, identity.id,
             mutableMapOf<String, Any?>(
                 "publicMessage" to publicMessage,
@@ -86,6 +101,14 @@ class Profiles(
                 "avatarUrl" to avatarUrl
             )
         )
+        document.revision = revision
+        if (revision == DocumentCreateTransition.INITIAL_REVISION) {
+            document.createdAt = Date().time
+            document.updatedAt = document.createdAt
+        } else {
+            document.updatedAt = Date().time
+        }
+        return document
     }
 
     fun get(userId: String): Document? {
