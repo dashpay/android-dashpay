@@ -335,7 +335,6 @@ class BlockchainIdentity {
     private fun finalizeIdentityRegistration(identityId: String) {
         this.registrationFundingPrivateKey = wallet!!.currentAuthenticationKey(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING)
         val creditBurnIdentifier = Sha256Hash.wrap(Base58.decode(identityId))
-        log.info("identity id = $creditBurnIdentifier")
         finalizeIdentityRegistration(creditBurnIdentifier)
     }
 
@@ -667,7 +666,7 @@ class BlockchainIdentity {
 
             IdentityPublicKey.TYPES.ECDSA_SECP256K1 -> {
                 val authenticationChain = wallet!!.blockchainIdentityKeyChain
-                val key = authenticationChain.watchingKey//getKey(index)
+                val key = authenticationChain.watchingKey
                 return key
             }
             else -> throw IllegalArgumentException("$type is not supported")
