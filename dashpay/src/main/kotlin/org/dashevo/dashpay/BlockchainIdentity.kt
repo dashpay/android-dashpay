@@ -13,6 +13,7 @@ import org.bitcoinj.core.*
 import org.bitcoinj.crypto.*
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.evolution.EvolutionContact
+import org.bitcoinj.wallet.AuthenticationKeyChain
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.FriendKeyChain
@@ -316,6 +317,27 @@ class BlockchainIdentity {
         return true
     }
 
+    fun recoverIdentity(pubKeyId: ByteArray) : Boolean {
+        Preconditions.checkState(
+            registrationStatus == RegistrationStatus.UNKNOWN,
+            "The identity must not be registered"
+        )
+
+        identity = platform.identities.get(pubKeyId) ?: return false
+
+        registrationStatus = RegistrationStatus.REGISTERED
+
+        finalizeIdentityRegistration(identity!!.id)
+
+        return true
+    }
+
+    private fun finalizeIdentityRegistration(identityId: String) {
+        this.registrationFundingPrivateKey = wallet!!.currentAuthenticationKey(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING)
+        val creditBurnIdentifier = Sha256Hash.wrap(Base58.decode(identityId))
+        finalizeIdentityRegistration(creditBurnIdentifier)
+    }
+
     private fun finalizeIdentityRegistration(fundingTransaction: CreditFundingTransaction) {
         this.creditFundingTransaction = fundingTransaction;
         this.registrationFundingPrivateKey = fundingTransaction.creditBurnPublicKey
@@ -324,10 +346,8 @@ class BlockchainIdentity {
     }
 
     private fun finalizeIdentityRegistration(uniqueId: Sha256Hash) {
-        if (isLocal) {
-            this.uniqueId = uniqueId
-            finalizeIdentityRegistration()
-        }
+        this.uniqueId = uniqueId
+        finalizeIdentityRegistration()
     }
 
     private fun finalizeIdentityRegistration() {
@@ -646,7 +666,7 @@ class BlockchainIdentity {
 
             IdentityPublicKey.TYPES.ECDSA_SECP256K1 -> {
                 val authenticationChain = wallet!!.blockchainIdentityKeyChain
-                val key = authenticationChain.getKey(index)
+                val key = authenticationChain.watchingKey
                 return key
             }
             else -> throw IllegalArgumentException("$type is not supported")

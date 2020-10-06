@@ -67,4 +67,9 @@ class Identities(val platform: Platform) {
         val identityBuffer = platform.client.getIdentity(id) ?: return null
         return platform.dpp.identity.createFromSerialized(identityBuffer.toByteArray());
     }
+
+    fun get(pubKeyHash: ByteArray): Identity? {
+        val identityBuffer = platform.client.getIdentityByFirstPublicKey(pubKeyHash) ?: return null
+        return platform.dpp.identity.createFromSerialized(identityBuffer.toByteArray());
+    }
 }
