@@ -55,8 +55,8 @@ class Platform(val params: NetworkParameters) {
                 client = DapiClient(EvoNetParams.MASTERNODES.toList(), true)
             }
             params.id.contains("mobile") -> {
-                apps["dpns"] = ContractInfo("gegjGQL5HHbGMyUYL4yaoSfzhkF9isvGGYiCVRBiz4b")
-                apps["dashpay"] = ContractInfo("Dp8ibxeTSN15tjL1PQuG3j8NkGJmzvt5eqoKoF6FhDAx")
+                apps["dpns"] = ContractInfo("CVZzFCbz4Rcf2Lmu9mvtC1CmvPukHy5kS2LNtNaBFM2N")
+                apps["dashpay"] = ContractInfo("Du2kswW2h1gNVnTWdfNdSxBrC2F9ofoaZsXA6ki1PhG6")
                 client = DapiClient(MobileDevNetParams.MASTERNODES.toList())
             }
             params.id.contains("palinka") -> {
