@@ -15,6 +15,14 @@
  * limitations under the License.
  */
 
+/**
+ * Copyright (c) 2020-present, Dash Core Group
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+
 package org.dashevo.tools;
 
 import com.google.common.base.CharMatcher;
@@ -22,8 +30,10 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.Resources;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.ByteString;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -44,6 +54,7 @@ import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.FilteredBlock;
 import org.bitcoinj.core.FullPrunedBlockChain;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.MasternodeSync;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Peer;
 import org.bitcoinj.core.PeerAddress;
@@ -57,11 +68,13 @@ import org.bitcoinj.core.Utils;
 import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.core.listeners.BlocksDownloadedEventListener;
 import org.bitcoinj.core.listeners.DownloadProgressTracker;
+import org.bitcoinj.core.listeners.PreBlocksDownloadListener;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.KeyCrypterException;
 import org.bitcoinj.crypto.MnemonicCode;
 import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.crypto.TransactionSignature;
+import org.bitcoinj.evolution.CreditFundingTransaction;
 import org.bitcoinj.params.EvoNetParams;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.MobileDevNetParams;
@@ -83,6 +96,9 @@ import org.bitcoinj.store.SPVBlockStore;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 import org.bitcoinj.utils.BriefLogFormatter;
+import org.bitcoinj.utils.BtcAutoFormat;
+import org.bitcoinj.utils.Threading;
+import org.bitcoinj.wallet.DerivationPathFactory;
 import org.bitcoinj.wallet.DeterministicKeyChain;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.MarriedKeyChain;
@@ -97,6 +113,11 @@ import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
 import org.bitcoinj.wallet.listeners.WalletReorganizeEventListener;
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.dashevo.dashpay.BlockchainIdentity;
+import org.dashevo.dashpay.Contact;
+import org.dashevo.dpp.identity.Identity;
+import org.dashevo.platform.Platform;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,13 +132,17 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -139,6 +164,7 @@ public class WalletTool {
     private static OptionSpec<ScriptType> outputScriptTypeFlag;
     private static OptionSpec<String> xpubkeysFlag;
 
+    private static Context context;
     private static NetworkParameters params;
     private static File walletFile;
     private static BlockStore store;
@@ -149,6 +175,12 @@ public class WalletTool {
     private static ValidationMode mode;
     private static String password;
     private static org.bitcoin.protocols.payments.Protos.PaymentRequest paymentRequest;
+
+    private static DashPayWalletExtension dashPayWalletExtension = new DashPayWalletExtension();
+    private static Platform platform;
+    private static BlockchainIdentity blockchainIdentity = null;
+    private static DashPayWallet dashPayWallet = null;
+
 
     public static class Condition {
         public enum Type {
@@ -227,6 +259,7 @@ public class WalletTool {
         UPGRADE,
         ROTATE,
         SET_CREATION_TIME,
+        DUMP_DASHPAY,
     }
 
     public enum WaitForEnum {
@@ -300,13 +333,14 @@ public class WalletTool {
         }
 
         if (options.has("debuglog")) {
-            BriefLogFormatter.init();
+            BriefLogFormatter.initVerbose();
             log.info("Starting up ...");
         } else {
             // Disable logspam unless there is a flag.
             java.util.logging.Logger logger = LogManager.getLogManager().getLogger("");
             logger.setLevel(Level.SEVERE);
         }
+
         switch (netFlag.value(options)) {
             case MAIN:
             case PROD:
@@ -336,7 +370,16 @@ public class WalletTool {
             default:
                 throw new RuntimeException("Unreachable.");
         }
-        Context.propagate(new Context(params));
+
+        context = new Context(params);
+        EnumSet<MasternodeSync.SYNC_FLAGS> syncFlags = MasternodeSync.SYNC_DEFAULT_SPV;
+        syncFlags.add(MasternodeSync.SYNC_FLAGS.SYNC_HEADERS_MN_LIST_FIRST);
+        syncFlags.add(MasternodeSync.SYNC_FLAGS.SYNC_BLOCKS_AFTER_PREPROCESSING);
+        context.initDash(true, true, syncFlags);
+        context.initDashSync(".");
+        Context.propagate(context);
+
+        platform = new Platform(params);
 
         mode = modeFlag.value(options);
 
@@ -386,11 +429,18 @@ public class WalletTool {
             if (options.has("ignore-mandatory-extensions"))
                 loader.setRequireMandatoryExtensions(false);
             walletInputStream = new BufferedInputStream(new FileInputStream(walletFile));
-            wallet = loader.readWallet(walletInputStream, forceReset, (WalletExtension[])(null));
+            WalletExtension [] extensions = new WalletExtension[1];
+            extensions[0] = dashPayWalletExtension;
+            wallet = loader.readWallet(walletInputStream, forceReset, extensions);
             if (!wallet.getParams().equals(params)) {
                 System.err.println("Wallet does not match requested network parameters: " +
                         wallet.getParams().getId() + " vs " + params.getId());
                 return;
+            }
+
+            if (!wallet.getExtensions().containsKey(DashPayWalletExtension.NAME)) {
+                dashPayWalletExtension = (DashPayWalletExtension)wallet.getExtensions().get(DashPayWalletExtension.NAME);
+                //TODO: load the info
             }
         } catch (Exception e) {
             System.err.println("Failed to load wallet '" + walletFile + "': " + e.getMessage());
@@ -405,12 +455,13 @@ public class WalletTool {
         // What should we do?
         switch (action) {
             case DUMP: dumpWallet(); break;
+            case DUMP_DASHPAY: dumpDashPay(); break;
             case ADD_KEY: addKey(); break;
             case ADD_ADDR: addAddr(); break;
             case DELETE_KEY: deleteKey(); break;
             case CURRENT_RECEIVE_ADDR: currentReceiveAddr(); break;
             case RESET: reset(); break;
-            case SYNC: syncChain(); break;
+            case SYNC: syncChain(waitForFlag); break;
             case SEND:
                 if (options.has(paymentRequestLocation) && options.has(outputFlag)) {
                     System.err.println("--payment-request and --output cannot be used together.");
@@ -520,6 +571,13 @@ public class WalletTool {
 
         saveWallet(walletFile);
 
+        // wait for the preblock download to be done first
+        Futures.addCallback(waitAndShutdownFuture, waitAndShutdownCallback, Executors.newSingleThreadExecutor());
+        if (!context.masternodeSync.syncFlags.contains(MasternodeSync.SYNC_FLAGS.SYNC_BLOCKS_AFTER_PREPROCESSING))
+            waitAndShutdownFuture.set(waitForFlag);
+    }
+
+    private static void waitAndShutdown(OptionSpec<WaitForEnum> waitForFlag) throws BlockStoreException {
         if (options.has(waitForFlag)) {
             WaitForEnum value;
             try {
@@ -1327,11 +1385,24 @@ public class WalletTool {
         }
     }
 
-    private static void syncChain() {
+    private static void syncChain(OptionSpec<WaitForEnum> waitForFlag) {
         try {
             setup();
             int startTransactions = wallet.getTransactions(true).size();
             DownloadProgressTracker listener = new DownloadProgressTracker();
+
+            //set up the sync process correctly
+            peerGroup.addPreBlocksDownloadListener(Threading.SAME_THREAD, new PreBlocksDownloadListener() {
+                @Override
+                public void onPreBlocksDownload(Peer peer) {
+                    initializeIdentity();
+
+                    peerGroup.triggerPreBlockDownloadComplete();
+
+                    waitAndShutdownFuture.set(waitForFlag);
+                }
+            });
+
             peerGroup.start();
             peerGroup.startBlockChainDownload(listener);
             try {
@@ -1348,6 +1419,29 @@ public class WalletTool {
             System.err.println("Error reading block chain file " + chainFileName + ": " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private static void initializeIdentity() {
+        // Determine our blockchain identity
+        if (blockchainIdentity == null) {
+            List<CreditFundingTransaction> cftxs = wallet.getCreditFundingTransactions();
+            if (!cftxs.isEmpty()) {
+                CreditFundingTransaction cftx = cftxs.get(0);
+                blockchainIdentity = new BlockchainIdentity(platform, 0, wallet);
+                blockchainIdentity.recoverIdentity(cftx);
+            } else {
+                byte [] pubKeyHash = wallet.getBlockchainIdentityKeyChain().getWatchingKey().getPubKeyHash();
+                Identity identity = platform.getIdentities().get(pubKeyHash);
+                if (identity != null) {
+                    blockchainIdentity = new BlockchainIdentity(platform, 0, wallet);
+                    blockchainIdentity.recoverIdentity(pubKeyHash);
+                }
+            }
+            blockchainIdentity.recoverUsernames();
+        }
+        // synchronize the Platform data here
+        dashPayWallet = new DashPayWallet(blockchainIdentity, peerGroup, null);
+        dashPayWallet.updateContactRequests();
     }
 
     private static void shutdown() {
@@ -1401,6 +1495,12 @@ public class WalletTool {
         } else {
             wallet = Wallet.createDeterministic(params, outputScriptType);
         }
+        DeterministicKeyChain bip44 = DeterministicKeyChain.builder()
+                .seed(wallet.getKeyChainSeed())
+                .accountPath(DerivationPathFactory.get(params).bip44DerivationPath(0))
+                .build();
+        wallet.addAndActivateHDChain(bip44);
+        wallet.initializeAuthenticationKeyChains(wallet.getKeyChainSeed(), null);
         if (password != null)
             wallet.encrypt(password);
         wallet.saveToFile(walletFile);
@@ -1567,6 +1667,56 @@ public class WalletTool {
         }
     }
 
+    private static void dumpDashPay() {
+        initializeIdentity();
+        CreditFundingTransaction cftx = wallet.getCreditFundingTransactions().get(0);
+        Transaction tx = wallet.getTransaction(cftx.getTxId());
+
+        System.out.println("DashPay Activity Report");
+        System.out.println("-----------------------------------------------");
+        System.out.println("Recovery Phrase:                  " + wallet.getKeyChainSeed().getMnemonicCode().toString());
+        System.out.println("Username:                         " + blockchainIdentity.getCurrentUsername());
+        System.out.println("Display Name:                     " + dashPayWallet.getProfiles().get(blockchainIdentity.getUniqueIdString()).getDisplayName());
+
+        DateFormat dateFormat = DateFormat.getDateTimeInstance();
+        System.out.println("Username Created:                 " + dateFormat.format(tx.getUpdateTime()));
+
+        System.out.println("Balance:                          " + BtcAutoFormat.getCoinInstance().format(wallet.getBalance(BalanceType.ESTIMATED), 8,4));
+
+        Set<String> ids = dashPayWallet.getContactIdentities();
+        int inboundTx = 0, outboundTx = 0;
+        Transaction firstOutboundTx = null;
+        for (String id : ids) {
+            List<Transaction> list = blockchainIdentity.getContactTransactions(id);
+            for (Transaction contactTx : list) {
+                if (contactTx.getValue(wallet).isPositive())
+                    inboundTx++;
+                else {
+                    outboundTx++;
+                    if (firstOutboundTx == null) {
+                        firstOutboundTx = contactTx;
+                    } else {
+                        if (firstOutboundTx.getUpdateTime().after(contactTx.getUpdateTime())) {
+                            firstOutboundTx = contactTx;
+                        }
+                    }
+                }
+            }
+        }
+        System.out.println("First Outbound Tx's Date/Time:    " + ((firstOutboundTx != null) ? dateFormat.format(firstOutboundTx.getUpdateTime()): "N/A"));
+        System.out.println("Outbound Username Tx's:           " + outboundTx);
+        System.out.println("Inbound Username Tx's:            " + inboundTx);
+        System.out.println("Outbound contact requests:        " + dashPayWallet.getSentContactRequests().size());
+        System.out.println("Inbound contact requests:         " + dashPayWallet.getRecievedContactRequests().size());
+
+        List<Contact> contacts = dashPayWallet.getEstablishedContacts();
+        System.out.println("Contacts:                         " + contacts.size());
+        for (Contact contact : contacts) {
+            System.out.println("  " + contact.getUsername());
+        }
+        System.out.println();
+    }
+
     private static void setCreationTime() {
         long creationTime = getCreationTimeSeconds();
         for (DeterministicKeyChain chain : wallet.getActiveKeyChains()) {
@@ -1619,4 +1769,24 @@ public class WalletTool {
             onChange(latch);
         }
     }
+    private static SettableFuture<OptionSpec<WaitForEnum>> waitAndShutdownFuture = SettableFuture.create();
+    private static FutureCallback<OptionSpec<WaitForEnum>> waitAndShutdownCallback = new FutureCallback<OptionSpec<WaitForEnum>>() {
+
+        @Override
+        public void onSuccess(@org.jetbrains.annotations.Nullable OptionSpec<WaitForEnum> result) {
+            try {
+                Context.propagate(context);
+                waitAndShutdown(result);
+            } catch (BlockStoreException x) {
+                throw new RuntimeException(x);
+            }
+        }
+
+        @Override
+        public void onFailure(Throwable t) {
+
+        }
+    };
+
+
 }
