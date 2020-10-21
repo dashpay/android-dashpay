@@ -1,5 +1,5 @@
 #!/bin/bash
-export WALLET_TOOLS_OPTS="-Djava.library.path=."
+export WALLET_TOOL_OPTS="-Djava.library.path=."
 export WALLET_NETWORK="MOBILE"
 mkdir -p reports
 ./bin/network-activity mobile > reports/network.txt

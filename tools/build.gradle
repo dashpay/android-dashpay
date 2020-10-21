@@ -6,11 +6,6 @@ plugins {
     //id 'edu.sc.seis.launch4j' version '2.4.8'
 }
 
-//launch4j {
-//    mainClassName = 'com.example.myapp.Start'
-//    icon = "${projectDir}/icons/myApp.ico"
-//}
-
 group 'org.dashevo'
 version '0.15-SNAPSHOT'
 
@@ -44,10 +39,6 @@ task network_activity(type: JavaExec) {
         args = Arrays.asList(appArgs.split("\\s+"))
     classpath = sourceSets.main.runtimeClasspath
 }
-/*task copyLicense(type: Copy) {
-    from "generate-report.sh"
-    into "$buildDir/bin"
-}*/
 
 task copyLicense {
     outputs.file new File("$buildDir/generate-report.sh")
@@ -62,25 +53,6 @@ task copyLicense {
 applicationDistribution.from(copyLicense) {
     into ""
 }
-
-/*task createDocs {
-    def docs = file("$buildDir/bin")
-    outputs.dir docs
-    doLast {
-        docs.mkdirs()
-        new File(docs, 'readme.txt').write('Read me!')
-    }
-}
-
-distributions {
-    main {
-        contents {
-            from(createDocs) {
-                into 'docs'
-            }
-        }
-    }
-}*/
 
 compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
