@@ -8,7 +8,8 @@ Usage: wallet-tool --flags action-name
                        printed if --dump-privkeys is specified. If the wallet is encrypted, also specify the --password
                        option to dump the private keys and seed.
                        If --dump-lookahead is present, also show pregenerated but not yet issued keys.
-  dump-dashpay         Loads and prints the DashPay related information for the wallet
+  dump-dashpay         Loads and prints the DashPay related information for the wallet. Data is output to a file if
+                       --outfile is specified.  The format is in a default report format unless --csv is used.
   raw-dump             Prints the wallet as a raw protobuf with no parsing or sanity checking applied.
   create               Makes a new wallet in the file specified by --wallet.
                        Will complain and require --force if the wallet already exists.

@@ -14,7 +14,7 @@ import org.bitcoinj.crypto.KeyCrypterException
 import org.bitcoinj.evolution.EvolutionContact
 import org.bouncycastle.crypto.params.KeyParameter
 import org.dashevo.dashpay.*
-import org.dashevo.dashpay.callback.Profile
+import org.dashevo.dashpay.Profile
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.toBase58
 import org.dashevo.platform.DomainDocument

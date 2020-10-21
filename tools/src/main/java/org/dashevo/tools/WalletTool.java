@@ -115,9 +115,9 @@ import org.bitcoinj.wallet.listeners.WalletReorganizeEventListener;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.dashevo.dashpay.BlockchainIdentity;
 import org.dashevo.dashpay.Contact;
+import org.dashevo.dashpay.Profile;
 import org.dashevo.dpp.identity.Identity;
 import org.dashevo.platform.Platform;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,8 +125,11 @@ import javax.annotation.Nullable;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -175,6 +178,8 @@ public class WalletTool {
     private static ValidationMode mode;
     private static String password;
     private static org.bitcoin.protocols.payments.Protos.PaymentRequest paymentRequest;
+    private static boolean isFormatCSV;
+    private static File outputFile;
 
     private static DashPayWalletExtension dashPayWalletExtension = new DashPayWalletExtension();
     private static Platform platform;
@@ -291,6 +296,9 @@ public class WalletTool {
         OptionSpec<ValidationMode> modeFlag = parser.accepts("mode").withRequiredArg().ofType(ValidationMode.class)
                 .defaultsTo(ValidationMode.SPV);
         OptionSpec<String> chainFlag = parser.accepts("chain").withRequiredArg();
+        parser.accepts("csv");
+        OptionSpec<String> outputFileFlag = parser.accepts("outfile").withRequiredArg();
+
         // For addkey/delkey.
         parser.accepts("pubkey").withRequiredArg();
         parser.accepts("privkey").withRequiredArg();
@@ -394,6 +402,14 @@ public class WalletTool {
 
         if (options.has(passwordFlag)) {
             password = passwordFlag.value(options);
+        }
+
+        if (options.has("csv")) {
+            isFormatCSV = true;
+        }
+
+        if (options.has(outputFileFlag)) {
+            outputFile = new File(outputFileFlag.value(options));
         }
 
         walletFile = new File(walletFileName.value(options));
@@ -1437,11 +1453,15 @@ public class WalletTool {
                     blockchainIdentity.recoverIdentity(pubKeyHash);
                 }
             }
-            blockchainIdentity.recoverUsernames();
+            if (blockchainIdentity != null)
+                blockchainIdentity.recoverUsernames();
         }
-        // synchronize the Platform data here
-        dashPayWallet = new DashPayWallet(blockchainIdentity, peerGroup, null);
-        dashPayWallet.updateContactRequests();
+
+        if (blockchainIdentity != null) {
+            // synchronize the Platform data here
+            dashPayWallet = new DashPayWallet(blockchainIdentity, peerGroup, null);
+            dashPayWallet.updateContactRequests();
+        }
     }
 
     private static void shutdown() {
@@ -1452,6 +1472,7 @@ public class WalletTool {
             saveWallet(walletFile);
             store.close();
             wallet = null;
+            System.exit(0);
         } catch (BlockStoreException e) {
             throw new RuntimeException(e);
         }
@@ -1667,54 +1688,135 @@ public class WalletTool {
         }
     }
 
+    private static void outputToCSV(String value, @Nullable FileOutputStream stream) {
+        if (stream != null) {
+            try {
+                stream.write((value + ",").getBytes());
+            } catch (IOException x) {
+                throw new RuntimeException(x);
+            }
+        }
+    }
+
     private static void dumpDashPay() {
-        initializeIdentity();
-        CreditFundingTransaction cftx = wallet.getCreditFundingTransactions().get(0);
-        Transaction tx = wallet.getTransaction(cftx.getTxId());
+        PrintStream outputStream = System.out;
+        FileOutputStream csvFile = null;
+        boolean wasUpgraded = false;
+        try {
+            try {
+                initializeIdentity();
+            } catch (IllegalStateException x) {
+                wasUpgraded = true;
+            }
 
-        System.out.println("DashPay Activity Report");
-        System.out.println("-----------------------------------------------");
-        System.out.println("Recovery Phrase:                  " + wallet.getKeyChainSeed().getMnemonicCode().toString());
-        System.out.println("Username:                         " + blockchainIdentity.getCurrentUsername());
-        System.out.println("Display Name:                     " + dashPayWallet.getProfiles().get(blockchainIdentity.getUniqueIdString()).getDisplayName());
+            if (outputFile != null && !isFormatCSV) {
+                try {
+                    outputStream = new PrintStream(outputFile);
+                } catch (FileNotFoundException x) {
+                    throw new RuntimeException(x);
+                }
+            } else if (isFormatCSV) {
+                try {
+                    csvFile = new FileOutputStream(outputFile, true);
+                } catch (FileNotFoundException x) {
+                    throw new RuntimeException(x);
+                }
+            }
 
-        DateFormat dateFormat = DateFormat.getDateTimeInstance();
-        System.out.println("Username Created:                 " + dateFormat.format(tx.getUpdateTime()));
+            outputStream.println("DashPay Activity Report");
+            outputStream.println("-----------------------------------------------");
+            List<String> wordList = wallet.getKeyChainSeed().getMnemonicCode();
+            StringBuilder words = new StringBuilder();
+            for (String word : wordList) {
+                words.append(word).append(" ");
+            }
+            String wordsString = words.toString().trim();
+            outputStream.println("Recovery Phrase:                  " + wordsString);
+            outputToCSV(wordsString, csvFile);
+            if (blockchainIdentity == null) {
+                outputStream.println("Username: Not registered");
+                outputToCSV(wasUpgraded ? "registered with upgraded wallet" : "not registered", csvFile);
+                return;
+            }
 
-        System.out.println("Balance:                          " + BtcAutoFormat.getCoinInstance().format(wallet.getBalance(BalanceType.ESTIMATED), 8,4));
+            String username = blockchainIdentity.getCurrentUsername() == null ? (wasUpgraded ? "registered with upgraded wallet" : "not registered") : blockchainIdentity.getCurrentUsername();
+            outputStream.println("Username:                         " + username);
+            outputToCSV(username, csvFile);
+            Profile profile = dashPayWallet.getProfiles().get(blockchainIdentity.getUniqueIdString());
+            String displayName = profile != null ? profile.getDisplayName() : "No profile created";
+            outputStream.println("Display Name:                     " + displayName);
+            outputToCSV(displayName, csvFile);
 
-        Set<String> ids = dashPayWallet.getContactIdentities();
-        int inboundTx = 0, outboundTx = 0;
-        Transaction firstOutboundTx = null;
-        for (String id : ids) {
-            List<Transaction> list = blockchainIdentity.getContactTransactions(id);
-            for (Transaction contactTx : list) {
-                if (contactTx.getValue(wallet).isPositive())
-                    inboundTx++;
-                else {
-                    outboundTx++;
-                    if (firstOutboundTx == null) {
-                        firstOutboundTx = contactTx;
-                    } else {
-                        if (firstOutboundTx.getUpdateTime().after(contactTx.getUpdateTime())) {
+            DateFormat dateFormat = DateFormat.getDateTimeInstance();
+            if (wallet.getCreditFundingTransactions().size() > 0) {
+                CreditFundingTransaction cftx = wallet.getCreditFundingTransactions().get(0);
+                Transaction tx = wallet.getTransaction(cftx.getTxId());
+                String date = "\"" + dateFormat.format(tx.getUpdateTime()) + "\"";
+                outputStream.println("Username Created:                 " + date);
+                outputToCSV(date, csvFile);
+            } else {
+                outputStream.println("Username Created:                 " + "N/A");
+                outputToCSV("N/A", csvFile);
+            }
+
+            String balance = BtcAutoFormat.getCoinInstance().format(wallet.getBalance(BalanceType.ESTIMATED), 8, 4);
+            outputStream.println("Balance:                          " + balance);
+            outputToCSV(balance, csvFile);
+
+            Set<String> ids = dashPayWallet.getContactIdentities();
+            int inboundTx = 0, outboundTx = 0;
+            Transaction firstOutboundTx = null;
+            for (String id : ids) {
+                List<Transaction> list = blockchainIdentity.getContactTransactions(id);
+                for (Transaction contactTx : list) {
+                    if (contactTx.getValue(wallet).isPositive())
+                        inboundTx++;
+                    else {
+                        outboundTx++;
+                        if (firstOutboundTx == null) {
                             firstOutboundTx = contactTx;
+                        } else {
+                            if (firstOutboundTx.getUpdateTime().after(contactTx.getUpdateTime())) {
+                                firstOutboundTx = contactTx;
+                            }
                         }
                     }
                 }
             }
-        }
-        System.out.println("First Outbound Tx's Date/Time:    " + ((firstOutboundTx != null) ? dateFormat.format(firstOutboundTx.getUpdateTime()): "N/A"));
-        System.out.println("Outbound Username Tx's:           " + outboundTx);
-        System.out.println("Inbound Username Tx's:            " + inboundTx);
-        System.out.println("Outbound contact requests:        " + dashPayWallet.getSentContactRequests().size());
-        System.out.println("Inbound contact requests:         " + dashPayWallet.getRecievedContactRequests().size());
+            String firstOutboundDate = ((firstOutboundTx != null) ? ("\"" + dateFormat.format(firstOutboundTx.getUpdateTime()) + "\""): "N/A");
+            outputStream.println("First Outbound Tx's Date/Time:    " + firstOutboundDate);
+            outputStream.println("Outbound Username Tx's:           " + outboundTx);
+            outputStream.println("Inbound Username Tx's:            " + inboundTx);
+            outputStream.println("Outbound contact requests:        " + dashPayWallet.getSentContactRequests().size());
+            outputStream.println("Inbound contact requests:         " + dashPayWallet.getRecievedContactRequests().size());
+            outputToCSV(firstOutboundDate, csvFile);
+            outputToCSV("" + outboundTx, csvFile);
+            outputToCSV("" + inboundTx, csvFile);
+            outputToCSV("" + dashPayWallet.getSentContactRequests().size(), csvFile);
+            outputToCSV("" + dashPayWallet.getRecievedContactRequests().size(), csvFile);
 
-        List<Contact> contacts = dashPayWallet.getEstablishedContacts();
-        System.out.println("Contacts:                         " + contacts.size());
-        for (Contact contact : contacts) {
-            System.out.println("  " + contact.getUsername());
+            List<Contact> contacts = dashPayWallet.getEstablishedContacts();
+            outputStream.println("Contacts:                         " + contacts.size());
+            StringBuilder contactsString = new StringBuilder();
+            for (Contact contact : contacts) {
+                outputStream.println("  " + contact.getUsername());
+                contactsString.append(contact.getUsername() + " ");
+            }
+            outputToCSV(contactsString.toString(), csvFile);
+            outputStream.println();
+
+        } finally {
+            if (outputFile != null && !isFormatCSV) {
+                outputStream.close();
+            } else if (isFormatCSV) {
+                try {
+                    csvFile.write("\n".getBytes());
+                    csvFile.close();
+                } catch (IOException x) {
+
+                }
+            }
         }
-        System.out.println();
     }
 
     private static void setCreationTime() {

@@ -1,0 +1,92 @@
+plugins {
+    id 'java'
+    id 'kotlin'
+    id 'application'
+    id 'eclipse'
+    //id 'edu.sc.seis.launch4j' version '2.4.8'
+}
+
+//launch4j {
+//    mainClassName = 'com.example.myapp.Start'
+//    icon = "${projectDir}/icons/myApp.ico"
+//}
+
+group 'org.dashevo'
+version '0.15-SNAPSHOT'
+
+repositories {
+    mavenLocal()
+    maven { url 'https://oss.jfrog.org/artifactory/oss-snapshot-local' }
+    jcenter()
+    mavenCentral()
+}
+
+mainClassName = "org.dashevo.tools.WalletTool"
+applicationName = "wallet-tools"
+
+task createExtraRunApp(type: CreateStartScripts) {
+    mainClassName = "org.dashevo.tools.NetworkActivity"
+    classpath = startScripts.classpath
+    outputDir = startScripts.outputDir
+    applicationName = 'network-activity'
+}
+
+task createExtraRunApp2(type: CreateStartScripts) {
+    mainClassName = "org.dashevo.tools.UserActivity"
+    classpath = startScripts.classpath
+    outputDir = startScripts.outputDir
+    applicationName = 'user-activity'
+}
+
+applicationDistribution.into("bin") {
+    duplicatesStrategy= DuplicatesStrategy.EXCLUDE
+    from(createExtraRunApp)
+    fileMode = 0755
+}
+
+applicationDistribution.into("bin") {
+    duplicatesStrategy= DuplicatesStrategy.EXCLUDE
+    from(createExtraRunApp2)
+    fileMode = 0755
+}
+
+task network_activity(type: JavaExec) {
+    description = 'Obtain network activity for the specificed network.'
+    main = 'org.dashevo.tools.NetworkActivity'
+    if (project.hasProperty('appArgs') && appArgs.length() > 0)
+        args = Arrays.asList(appArgs.split("\\s+"))
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+sourceCompatibility = 1.8
+compileJava.options.encoding = 'UTF-8'
+compileTestJava.options.encoding = 'UTF-8'
+javadoc.options.encoding = 'UTF-8'
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    implementation project(':platform-core')
+    implementation project(':dashpay')
+    implementation 'com.google.guava:guava:27.1-android'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation "org.dashevo:dpp:0.15-SNAPSHOT"
+    implementation "org.dashevo:dapi-client:0.15-SNAPSHOT"
+    implementation "org.dashj:dashj-core:0.18-SNAPSHOT"
+    implementation "org.dashj:dashj-bls:0.18-SNAPSHOT"
+    implementation 'org.slf4j:slf4j-jdk14:1.7.28'
+    implementation 'io.grpc:grpc-okhttp:1.28.0' // CURRENT_GRPC_VERSION
+    implementation 'io.grpc:grpc-protobuf-lite:1.28.0' // CURRENT_GRPC_VERSION
+    implementation 'io.grpc:grpc-stub:1.28.0' // CURRENT_GRPC_VERSION
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.7'
+    implementation 'net.sf.jopt-simple:jopt-simple:5.0.4'
+}
+
+

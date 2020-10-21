@@ -1,4 +1,4 @@
-package org.dashevo.dashpay.callback
+package org.dashevo.dashpay
 
 import org.dashevo.dpp.document.Document
 import org.dashevo.platform.AbstractDocument

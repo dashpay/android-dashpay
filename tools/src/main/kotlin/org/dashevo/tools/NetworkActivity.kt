@@ -103,12 +103,19 @@ class NetworkActivity {
             val ownerIds = contactsRequestByOwnerId.keys
             val contactRequestsByToUserId = contactRequests.associateBy({it.toUserId.toBase58()}, {it})
 
-            for (ownerId in ownerIds) {
-                val fromRequest = contactRequestsByToUserId[ownerId]
+            for (sentContactRequest in contactRequests) {
+                val sender = sentContactRequest.ownerId
+                val recipient = sentContactRequest.toUserId.toBase58()
+                val receivedContactRequest = contactRequests.find { it.toUserId.toBase58() == sender && it.ownerId == recipient}
+                if (receivedContactRequest != null) {
+                    val contact = Pair(sentContactRequest, receivedContactRequest)
+                    establishedContacts.add(contact)
+                }
+                /*val fromRequest = contactRequestsByToUserId[ownerId]
                 if (fromRequest != null) {
                     val contact = Pair(contactsRequestByOwnerId[ownerId]!!, fromRequest)
                     establishedContacts.add(contact)
-                }
+                }*/
             }
             return establishedContacts
         }
