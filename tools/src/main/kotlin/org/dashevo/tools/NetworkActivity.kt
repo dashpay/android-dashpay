@@ -62,7 +62,6 @@ class NetworkActivity {
                 val queryOpts = DocumentQuery.Builder()
                     .startAt(startAt)
                     .build()
-                println(queryOpts.toJSON())
 
                 try {
                     documents = platform.documents.get(contractDocument, queryOpts)
@@ -111,11 +110,6 @@ class NetworkActivity {
                     val contact = Pair(sentContactRequest, receivedContactRequest)
                     establishedContacts.add(contact)
                 }
-                /*val fromRequest = contactRequestsByToUserId[ownerId]
-                if (fromRequest != null) {
-                    val contact = Pair(contactsRequestByOwnerId[ownerId]!!, fromRequest)
-                    establishedContacts.add(contact)
-                }*/
             }
             return establishedContacts
         }

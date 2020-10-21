@@ -22,7 +22,7 @@ repositories {
 }
 
 mainClassName = "org.dashevo.tools.WalletTool"
-applicationName = "wallet-tools"
+applicationName = "wallet-tool"
 
 task createExtraRunApp(type: CreateStartScripts) {
     mainClassName = "org.dashevo.tools.NetworkActivity"
@@ -31,22 +31,9 @@ task createExtraRunApp(type: CreateStartScripts) {
     applicationName = 'network-activity'
 }
 
-task createExtraRunApp2(type: CreateStartScripts) {
-    mainClassName = "org.dashevo.tools.UserActivity"
-    classpath = startScripts.classpath
-    outputDir = startScripts.outputDir
-    applicationName = 'user-activity'
-}
-
 applicationDistribution.into("bin") {
     duplicatesStrategy= DuplicatesStrategy.EXCLUDE
     from(createExtraRunApp)
-    fileMode = 0755
-}
-
-applicationDistribution.into("bin") {
-    duplicatesStrategy= DuplicatesStrategy.EXCLUDE
-    from(createExtraRunApp2)
     fileMode = 0755
 }
 
@@ -57,6 +44,43 @@ task network_activity(type: JavaExec) {
         args = Arrays.asList(appArgs.split("\\s+"))
     classpath = sourceSets.main.runtimeClasspath
 }
+/*task copyLicense(type: Copy) {
+    from "generate-report.sh"
+    into "$buildDir/bin"
+}*/
+
+task copyLicense {
+    outputs.file new File("$buildDir/generate-report.sh")
+    doLast {
+        copy {
+            from "generate-report.sh"
+            into "$buildDir"
+        }
+    }
+}
+
+applicationDistribution.from(copyLicense) {
+    into ""
+}
+
+/*task createDocs {
+    def docs = file("$buildDir/bin")
+    outputs.dir docs
+    doLast {
+        docs.mkdirs()
+        new File(docs, 'readme.txt').write('Read me!')
+    }
+}
+
+distributions {
+    main {
+        contents {
+            from(createDocs) {
+                into 'docs'
+            }
+        }
+    }
+}*/
 
 compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
