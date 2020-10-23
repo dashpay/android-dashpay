@@ -40,17 +40,18 @@ task network_activity(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
 }
 
-task copyLicense {
+task copyScripts {
     outputs.file new File("$buildDir/generate-report.sh")
+    outputs.file new File("$buildDir/generate-report.bat")
     doLast {
         copy {
-            from "generate-report.sh"
+            from "generate-report.sh", "generate-report.bat"
             into "$buildDir"
         }
     }
 }
 
-applicationDistribution.from(copyLicense) {
+applicationDistribution.from(copyScripts) {
     into ""
 }
 
