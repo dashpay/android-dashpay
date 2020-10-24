@@ -195,7 +195,8 @@ class BlockchainIdentity {
     constructor(
         platform: Platform,
         transaction: CreditFundingTransaction,
-        wallet: Wallet
+        wallet: Wallet,
+        registeredIdentity: Identity? = null
     ) :
             this(platform, transaction.usedDerivationPathIndex, transaction.lockedOutpoint, wallet) {
         Preconditions.checkArgument(!transaction.creditBurnPublicKey.isPubKeyOnly || transaction.creditBurnPublicKey.isEncrypted)
@@ -204,11 +205,17 @@ class BlockchainIdentity {
 
         //see if the identity is registered.
         try {
-            if (platform.identities.get(uniqueIdString) != null)
-                registrationStatus = RegistrationStatus.REGISTERED
-            else registrationStatus = RegistrationStatus.UNKNOWN
+            identity = if (registeredIdentity != null) {
+                registeredIdentity
+            } else {
+                platform.identities.get(uniqueIdString)
+            }
+            registrationStatus = if (identity != null)
+                RegistrationStatus.REGISTERED
+            else RegistrationStatus.UNKNOWN
         } catch (x: Exception) {
-            //swallow and leave the status as unknown
+            // swallow and leave the status as unknown
+            registrationStatus = RegistrationStatus.UNKNOWN
         }
     }
 
