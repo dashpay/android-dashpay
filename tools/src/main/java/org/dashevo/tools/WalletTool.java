@@ -1797,6 +1797,7 @@ public class WalletTool {
 
             List<Contact> contacts = dashPayWallet.getEstablishedContacts();
             outputStream.println("Contacts:                         " + contacts.size());
+            outputToCSV("" + contacts.size(), csvFile);
             StringBuilder contactsString = new StringBuilder();
             for (Contact contact : contacts) {
                 outputStream.println("  " + contact.getUsername());
