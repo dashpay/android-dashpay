@@ -235,7 +235,7 @@ public class ForwardingServiceEvo {
                     System.out.println("  no names found");
                 }
             }
-            BlockchainIdentity blockchainIdentity = new BlockchainIdentity(platform, tx, kit.wallet());
+            BlockchainIdentity blockchainIdentity = new BlockchainIdentity(platform, tx, kit.wallet(), null);
 
             List<String> names = ImmutableList.of("test1", "test2");
 
@@ -379,12 +379,12 @@ public class ForwardingServiceEvo {
                     System.out.println("Blockchain Identity Funding Transaction hash is " + sendResult.tx.getTxId());
                     System.out.println(sendResult.tx.toString());
                     System.out.println("Blockchain Identity object Initialization" + sendResult.tx.getTxId());
-                    blockchainIdentity = new BlockchainIdentity(platform, (CreditFundingTransaction)sendRequest.tx, kit.wallet());
+                    blockchainIdentity = new BlockchainIdentity(platform, (CreditFundingTransaction)sendRequest.tx, kit.wallet(), null);
                 }
             }, MoreExecutors.directExecutor());
 
             lastTx = (CreditFundingTransaction)sendResult.tx;
-            lastBlockchainIdentity = new BlockchainIdentity(platform, lastTx, kit.wallet());
+            lastBlockchainIdentity = new BlockchainIdentity(platform, lastTx, kit.wallet(), null);
 
             System.out.println("Creating identity");
             registerIdentity();
