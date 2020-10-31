@@ -10,6 +10,7 @@ package org.dashevo.dashpay
 import org.bitcoinj.core.ECKey
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.document.*
+import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.platform.Documents
 import org.dashevo.platform.Platform
@@ -112,6 +113,10 @@ class Profiles(
     }
 
     fun get(userId: String): Document? {
+        return get(Identifier.from(userId))
+    }
+
+    fun get(userId: Identifier): Document? {
         val query = DocumentQuery.Builder()
             .where("\$ownerId", "==", userId)
             .build()
@@ -125,7 +130,7 @@ class Profiles(
 
     //TODO: handle case where userIds's contains more than 100 items
     fun getList(
-        userIds: List<String>,
+        userIds: List<Identifier>,
         timestamp: Long = 0L,
         retrieveAll: Boolean = true,
         startAt: Int = 0
