@@ -29,6 +29,7 @@ import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dashpay.callback.UpdateProfileCallback
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.document.DocumentsBatchTransition
+import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.identity.IdentityPublicKey
 import org.dashevo.dpp.statetransition.StateTransitionIdentitySigned
@@ -104,6 +105,13 @@ class BlockchainIdentity {
         get() = uniqueId.toStringBase58()
     val uniqueIdData: ByteArray
         get() = uniqueId.bytes
+    var uniqueIdentifier: Identifier = Identifier.from(Sha256Hash.ZERO_HASH)
+        get() {
+            if (field == Identifier.from(Sha256Hash.ZERO_HASH)) {
+                field = Identifier.from(uniqueId)
+            }
+            return field
+        }
 
     var identity: Identity? = null
 
@@ -289,7 +297,7 @@ class BlockchainIdentity {
 
         var identityPrivateKey = privateKeyAtIndex(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1)
         val identityPublicKey =
-            IdentityPublicKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, identityPrivateKey!!.pubKey.toBase64(), true)
+            IdentityPublicKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, identityPrivateKey!!.pubKey)
         val identityPublicKeys = listOf(identityPublicKey)
 
         val signingKey = maybeDecryptKey(creditFundingTransaction!!.creditBurnPublicKey, keyParameter)
@@ -329,7 +337,7 @@ class BlockchainIdentity {
             "The identity must not be registered"
         )
 
-        identity = platform.identities.get(pubKeyId) ?: return false
+        identity = platform.identities.getByPublicKeyHash(pubKeyId) ?: return false
 
         registrationStatus = RegistrationStatus.REGISTERED
 
@@ -338,10 +346,10 @@ class BlockchainIdentity {
         return true
     }
 
-    private fun finalizeIdentityRegistration(identityId: String) {
+    private fun finalizeIdentityRegistration(identityId: Identifier) {
         this.registrationFundingPrivateKey =
             wallet!!.currentAuthenticationKey(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING)
-        val creditBurnIdentifier = Sha256Hash.wrap(Base58.decode(identityId))
+        val creditBurnIdentifier = Sha256Hash.wrap(identityId.toBuffer())
         finalizeIdentityRegistration(creditBurnIdentifier)
     }
 
@@ -425,8 +433,8 @@ class BlockchainIdentity {
         )
 
         val nameDocuments = arrayListOf<Document>()
-        nameDocuments.addAll(platform.names.getByUserId(uniqueIdString))
-        nameDocuments.addAll(platform.names.getByUserIdAlias(uniqueIdString))
+        nameDocuments.addAll(platform.names.getByOwnerId(uniqueIdentifier))
+        nameDocuments.addAll(platform.names.getByUserIdAlias(uniqueIdentifier))
         val usernames = ArrayList<String>()
 
         for (nameDocument in nameDocuments) {
@@ -610,8 +618,8 @@ class BlockchainIdentity {
         var privateKey = maybeDecryptKey(keyIndex, signingAlgorithm, keyParameter)
         Preconditions.checkState(privateKey != null, "The private key should exist");
 
-        val identityPublicKey = IdentityPublicKey(keyIndex, signingAlgorithm, privateKey!!.pubKey.toBase64(), true)
-        transition.sign(identityPublicKey, privateKey!!.privateKeyAsHex)
+        val identityPublicKey = IdentityPublicKey(keyIndex, signingAlgorithm, privateKey!!.pubKey)
+        transition.sign(identityPublicKey, privateKey.privateKeyAsHex)
     }
 
     /**
@@ -659,7 +667,7 @@ class BlockchainIdentity {
         if (isLocal) {
             if (type == IdentityPublicKey.TYPES.ECDSA_SECP256K1) {
                 return DerivationPathFactory(wallet!!.params).blockchainIdentityECDSADerivationPath()
-            } else if (type == IdentityPublicKey.TYPES.BLS) {
+            } else if (type == IdentityPublicKey.TYPES.BLS12_381) {
                 return DerivationPathFactory(wallet!!.params).blockchainIdentityBLSDerivationPath()
             }
         }
@@ -1255,7 +1263,7 @@ class BlockchainIdentity {
             FriendKeyChain.getRootPath(params),
             0,
             uniqueId,
-            Sha256Hash.wrap(HashUtils.byteArrayFromString(contactIdentity.id))
+            contactIdentity.id.toSha256Hash()
         )
     }
 
@@ -1264,7 +1272,7 @@ class BlockchainIdentity {
         return FriendKeyChain(
             params,
             xpub.toHexString(),
-            EvolutionContact(uniqueId, account, Sha256Hash.wrap(HashUtils.byteArrayFromString(contactIdentity.id)))
+            EvolutionContact(uniqueId, account, contactIdentity.id.toSha256Hash())
         )
     }
 
@@ -1378,7 +1386,7 @@ class BlockchainIdentity {
     }
 
     fun addContactPaymentKeyChain(contactIdentity: Identity, contactRequest: Document, encryptionKey: KeyParameter?) {
-        val contact = EvolutionContact(uniqueIdString, account, contactIdentity.id)
+        val contact = EvolutionContact(uniqueId, account, contactIdentity.id.toSha256Hash())
 
         if (!wallet!!.hasSendingKeyChain(contact)) {
 
@@ -1399,7 +1407,7 @@ class BlockchainIdentity {
         contactRequest: Document,
         encryptionKey: KeyParameter?
     ) {
-        val contact = EvolutionContact(uniqueIdString, account, contactIdentity.id)
+        val contact = EvolutionContact(uniqueId, account, contactIdentity.id.toSha256Hash())
         if (!wallet!!.hasReceivingKeyChain(contact)) {
             val contactKeyChain = getReceiveFromContactChain(contactIdentity, encryptionKey)
             addContactToWallet(contactKeyChain, encryptionKey)
@@ -1437,7 +1445,7 @@ class BlockchainIdentity {
     fun getAccountReference(encryptionKey: KeyParameter?, fromIdentity: Identity): Long {
         val privateKey = maybeDecryptKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, encryptionKey)
 
-        val contact = EvolutionContact(uniqueIdString, account, fromIdentity.id)
+        val contact = EvolutionContact(uniqueId, account, Sha256Hash.wrap(fromIdentity.id.toBuffer()))
 
         val receiveChain = getReceiveFromContactChain(fromIdentity, encryptionKey)
 
