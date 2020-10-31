@@ -10,6 +10,7 @@ import org.bitcoinj.core.ECKey
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.Factory
 import org.dashevo.dpp.document.Document
+import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
 
 class Documents(val platform: Platform) {
@@ -32,7 +33,7 @@ class Documents(val platform: Platform) {
         platform.broadcastStateTransition(batch, identity, privateKey)
     }
 
-    fun create(typeLocator: String, userId: String, opts: MutableMap<String, Any?>): Document {
+    fun create(typeLocator: String, userId: Identifier, opts: MutableMap<String, Any?>): Document {
         val dpp = platform.dpp
 
         val appNames = platform.apps.keys
@@ -86,12 +87,12 @@ class Documents(val platform: Platform) {
             throw Exception("No app named $appName specified.")
         }
         val app = platform.apps[appName];
-        if (app!!.contractId.isEmpty()) {
+        if (app!!.contractId.toBuffer().isEmpty()) {
             throw Exception("Missing contract ID for $appName")
         }
         val contractId = app.contractId;
         try {
-            val rawDataList = platform.client.getDocuments(contractId, fieldType, opts);
+            val rawDataList = platform.client.getDocuments(contractId.toBuffer(), fieldType, opts);
             val documents = ArrayList<Document>()
 
             for (rawData in rawDataList!!) {
