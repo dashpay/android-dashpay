@@ -7,17 +7,19 @@
 package org.dashevo.platform
 
 import org.dashevo.dpp.contract.DataContract
+import org.dashevo.dpp.identifier.Identifier
 
 /**
  *
  * @property contractId String
- * @property contract Contract?
+ * @property dataContract Contract?
  * @constructor
  */
-data class ContractInfo(val contractId: String) {
-    var contract: DataContract? = null
+data class ContractInfo(val contractId: Identifier, val dataContract: DataContract? = null) {
 
-    constructor(contractId: String, contract: DataContract) : this(contractId) {
-        this.contract = contract
-    }
+    constructor(contractId: String, dataContract: DataContract? = null) :
+            this(Identifier.Companion.from(contractId), dataContract)
+
+    constructor(contractId: ByteArray, dataContract: DataContract? = null) :
+            this(Identifier.from(contractId), dataContract)
 }
