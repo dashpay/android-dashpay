@@ -11,10 +11,9 @@ import org.bitcoinj.core.TransactionOutPoint
 import org.bitcoinj.crypto.KeyCrypter
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bouncycastle.crypto.params.KeyParameter
+import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
-import org.dashevo.dpp.identity.IdentityCreateTransition
 import org.dashevo.dpp.identity.IdentityPublicKey
-import org.dashevo.dpp.toBase64
 
 class Identities(val platform: Platform) {
 
@@ -50,25 +49,29 @@ class Identities(val platform: Platform) {
     ): String {
 
         try {
-            val outPoint = lockedOutpoint.toStringBase64()
+            val outPoint = lockedOutpoint.bitcoinSerialize()
 
             val identityCreateTransition = platform.dpp.identity.createIdentityCreateTransition(outPoint, identityPublicKeys)
 
             identityCreateTransition.signByPrivateKey(creditBurnKey)
 
             platform.client.broadcastStateTransition(identityCreateTransition);
-            return identityCreateTransition.identityId
+            return identityCreateTransition.identityId.toString()
         } catch (e: Exception) {
             throw e
         }
     }
 
     fun get(id: String): Identity? {
-        val identityBuffer = platform.client.getIdentity(id) ?: return null
+        return get(Identifier.from(id))
+    }
+
+    fun get(id: Identifier): Identity? {
+        val identityBuffer = platform.client.getIdentity(id.toBuffer()) ?: return null
         return platform.dpp.identity.createFromSerialized(identityBuffer.toByteArray());
     }
 
-    fun get(pubKeyHash: ByteArray): Identity? {
+    fun getByPublicKeyHash(pubKeyHash: ByteArray): Identity? {
         val identityBuffer = platform.client.getIdentityByFirstPublicKey(pubKeyHash) ?: return null
         return platform.dpp.identity.createFromSerialized(identityBuffer.toByteArray());
     }
