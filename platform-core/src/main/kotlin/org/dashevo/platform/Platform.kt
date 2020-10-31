@@ -60,8 +60,9 @@ class Platform(val params: NetworkParameters) {
                 client = DapiClient(MobileDevNetParams.MASTERNODES.toList())
             }
             params.id.contains("palinka") -> {
-                apps["dpns"] = ContractInfo("CpUg99yVZDK3CDkauTKtzSTbRJN7uH5u31zgTFYor5E8")
-                apps["dashpay"] = ContractInfo("FZpu8tK7biyRdQfCdbsYt17gJmvLBycY8TJXQRocToph")
+                apps["dpns"] = ContractInfo("H9AxLAvgxEpq72pDg41nsqR3bY5Cv9hTT6yZdKzY3PaE")
+                apps["dashpay"] = ContractInfo("Fxf3w1rsUvRxW8WsVnQcUNgtgVn8w47BwZtQPAsJWkkH")
+                apps["thumbnail"] = ContractInfo("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
                 client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList(), true)
             }
         }
