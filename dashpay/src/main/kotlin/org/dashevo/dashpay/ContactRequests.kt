@@ -5,6 +5,7 @@ import org.bouncycastle.crypto.params.KeyParameter
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identity.Identity
+import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.platform.Documents
 import org.dashevo.platform.Platform
 import java.util.*
@@ -26,11 +27,11 @@ class ContactRequests(val platform: Platform) {
         val timeStamp = Date().time
 
         val contactRequestDocument = platform.documents.create(
-            CONTACTREQUEST_DOCUMENT, fromUser.uniqueIdString, mutableMapOf<String, Any?>(
+            CONTACTREQUEST_DOCUMENT, fromUser.uniqueIdentifier, mutableMapOf<String, Any?>(
                 "encryptedPublicKey" to encryptedContactPubKey,
                 "recipientKeyIndex" to toUser.publicKeys[0].id,
                 "senderKeyIndex" to fromUser.identity!!.publicKeys[0].id,
-                "toUserId" to Base58.decode(toUser.id),
+                "toUserId" to toUser.id,
                 "accountReference" to accountReference,
                 // TODO: contract requires 64 bytes, but minimum should be 32 to allow for short labels
                 // 16 bytes IV + 16 bytes for any label less than 15 characters
@@ -103,15 +104,15 @@ class ContactRequests(val platform: Platform) {
     }
 
     suspend fun watchContactRequest(
-        fromUserId: String,
-        toUserId: String,
+        fromUserId: Identifier,
+        toUserId: Identifier,
         retryCount: Int,
         delayMillis: Long,
         retryDelayType: RetryDelayType
     ): Document? {
         val documentQuery = DocumentQuery.Builder()
         documentQuery.where("\$ownerId", "==", fromUserId)
-            .where("toUserId", "==", Base58.decode(toUserId))
+            .where("toUserId", "==", toUserId)
         val result = platform.documents.get(CONTACTREQUEST_DOCUMENT, documentQuery.build())
         if (result.isNotEmpty()) {
             return result[0]
