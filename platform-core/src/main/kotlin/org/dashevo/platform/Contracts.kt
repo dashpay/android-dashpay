@@ -7,15 +7,20 @@
 package org.dashevo.platform
 
 import org.dashevo.dpp.contract.DataContract
+import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
 import java.util.*
 
 class Contracts(val platform: Platform) {
     fun create(documentDefinitions: MutableMap<String, Any?>, identity: Identity): DataContract {
-        return platform.dpp.dataContract.createDataContract(identity.id, documentDefinitions)
+        return platform.dpp.dataContract.createDataContract(identity.id.toBuffer(), documentDefinitions)
     }
 
     fun get(identifier: String): DataContract? {
+        return get(Identifier.from(identifier))
+    }
+
+    fun get(identifier: Identifier): DataContract? {
         var localContract: ContractInfo? = null;
 
         for (appName in platform.apps.keys) {
@@ -26,11 +31,11 @@ class Contracts(val platform: Platform) {
             }
         }
 
-        if (localContract?.contract != null) {
-            return localContract!!.contract;
+        if (localContract?.dataContract != null) {
+            return localContract!!.dataContract;
         } else {
             try {
-                val rawContract = platform.client.getDataContract(identifier) ?: return null
+                val rawContract = platform.client.getDataContract(identifier.toBuffer()) ?: return null
 
                 val contract = platform.dpp.dataContract.createFromSerialized(rawContract.toByteArray())
                 val app = ContractInfo(contract.id, contract)
