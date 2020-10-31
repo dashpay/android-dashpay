@@ -11,6 +11,7 @@ import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Sha256Hash
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.document.Document
+import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.toHexString
 import org.dashevo.dpp.util.Entropy
@@ -33,16 +34,14 @@ class Names(val platform: Platform) {
         val entropy = Entropy.generate()
         val document = preorder(name, identity, identityHDPrivateKey, entropy)
         return if (document != null) {
-            registerName(name, identity, identityHDPrivateKey, Base58.decode(entropy), isUniqueIdentity)
+            registerName(name, identity, identityHDPrivateKey, entropy, isUniqueIdentity)
         } else null
     }
 
-    fun preorder(name: String, identity: Identity, identityHDPrivateKey: ECKey, preorderSaltBase58: String): Document? {
+    fun preorder(name: String, identity: Identity, identityHDPrivateKey: ECKey, preOrderSaltRaw: ByteArray): Document? {
 
         val (normalizedParentDomainName, normalizedLabel) = normalizedNames(name)
         val fullDomainName = "$normalizedLabel.$normalizedParentDomainName"
-
-        val preOrderSaltRaw = Base58.decode(preorderSaltBase58)
 
         val saltedDomainHash = getSaltedDomainHash(preOrderSaltRaw, fullDomainName)
 
@@ -253,14 +252,23 @@ class Names(val platform: Platform) {
     /**
      * Gets all of the usernames associated with userId
      */
-    fun getByUserId(ownerId: String): List<Document> {
+
+    fun getByOwnerId(ownerId: ByteArray): List<Document> {
+        return getByOwnerId(Identifier.from(ownerId))
+    }
+
+    fun getByOwnerId(ownerId: String): List<Document> {
+        return getByOwnerId(Identifier.from(ownerId))
+    }
+
+    fun getByOwnerId(ownerId: Identifier): List<Document> {
         return resolveByRecord("dashUniqueIdentityId", ownerId)
     }
 
     /**
      * Gets all of the alias usernames associated with userId
      */
-    fun getByUserIdAlias(ownerId: String): List<Document> {
+    fun getByUserIdAlias(ownerId: Identifier): List<Document> {
         return try {
             // this method returns an error
             // Query by not indexed field \"records.dashAliasIdentityId\" is not allowed"
@@ -270,7 +278,15 @@ class Names(val platform: Platform) {
         }
     }
 
+    fun resolveByRecord(record: String, value: ByteArray): List<Document> {
+        return resolveByRecord(record, Identifier.from(value))
+    }
+
     fun resolveByRecord(record: String, value: String): List<Document> {
+        return resolveByRecord(record, Identifier.from(value))
+    }
+
+    fun resolveByRecord(record: String, value: Identifier): List<Document> {
         val documentQuery = DocumentQuery.Builder()
             .where(listOf("records.$record", "==", value))
 
@@ -283,7 +299,7 @@ class Names(val platform: Platform) {
      * Gets all of the unique usernames associated with a list of userId's
      */
     fun getList(
-        userIds: List<String>,
+        userIds: List<Identifier>,
         retrieveAll: Boolean = true,
         startAt: Int = 0
     ): List<Document> {
