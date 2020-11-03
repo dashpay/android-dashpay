@@ -12,6 +12,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.bitcoinj.core.Address;
+import org.bitcoinj.core.Block;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.ECKey;
@@ -41,9 +42,11 @@ import org.dashevo.dashpay.RetryDelayType;
 import org.dashevo.dashpay.callback.RegisterIdentityCallback;
 import org.dashevo.dashpay.callback.RegisterNameCallback;
 import org.dashevo.dashpay.callback.RegisterPreorderCallback;
+import org.dashevo.dpp.StateRepository;
+import org.dashevo.dpp.identifier.Identifier;
 import org.dashevo.platform.Platform;
 import org.dashevo.dapiclient.model.DocumentQuery;
-import org.dashevo.dpp.DataProvider;
+import org.dashevo.dpp.StateRepository;
 import org.dashevo.dpp.contract.DataContract;
 import org.dashevo.dpp.document.Document;
 import org.dashevo.dpp.identity.Identity;
@@ -463,16 +466,47 @@ public class ForwardingServiceEvo {
         }
     }
 
-    static DataProvider dataProvider = new DataProvider() {
+    static StateRepository dataProvider = new StateRepository() {
+        @Override
+        public void storeIdentityPublicKeyHashes(@NotNull Identifier identifier, @NotNull List<byte[]> list) {
+
+        }
+
+        @Override
+        public void storeIdentity(@NotNull Identity identity) {
+
+        }
+
+        @Override
+        public void storeDocument(@NotNull Document document) {
+
+        }
+
+        @Override
+        public void storeDataContract(@NotNull DataContract dataContract) {
+
+        }
+
+        @Override
+        public void removeDocument(@NotNull Identifier identifier, @NotNull String s, @NotNull Identifier identifier1) {
+
+        }
+
         @NotNull
         @Override
-        public DataContract fetchDataContract(@NotNull String s) {
+        public Block fetchLatestPlatformBlockHeader() {
             return null;
         }
 
         @NotNull
         @Override
-        public List<Document> fetchDocuments(@NotNull String s, @NotNull String s1, @NotNull Object o) {
+        public DataContract fetchDataContract(@NotNull Identifier s) {
+            return null;
+        }
+
+        @NotNull
+        @Override
+        public List<Document> fetchDocuments(@NotNull Identifier s, @NotNull String s1, @NotNull Object o) {
             return null;
         }
 
@@ -483,7 +517,7 @@ public class ForwardingServiceEvo {
 
         @NotNull
         @Override
-        public Identity fetchIdentity(@NotNull String s) {
+        public Identity fetchIdentity(@NotNull Identifier s) {
             return null;
         }
     };
