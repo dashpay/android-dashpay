@@ -6,14 +6,12 @@
  */
 package org.dashevo.platform
 
-import org.bitcoinj.core.Base58
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Sha256Hash
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
-import org.dashevo.dpp.toHexString
 import org.dashevo.dpp.util.Entropy
 import java.io.ByteArrayOutputStream
 
@@ -30,7 +28,12 @@ class Names(val platform: Platform) {
         }
     }
 
-    fun register(name: String, identity: Identity, identityHDPrivateKey: ECKey, isUniqueIdentity: Boolean = true): Document? {
+    fun register(
+        name: String,
+        identity: Identity,
+        identityHDPrivateKey: ECKey,
+        isUniqueIdentity: Boolean = true
+    ): Document? {
         val entropy = Entropy.generate()
         val document = preorder(name, identity, identityHDPrivateKey, entropy)
         return if (document != null) {
@@ -160,7 +163,6 @@ class Names(val platform: Platform) {
         )
 
         val (normalizedParentDomainName, normalizedLabel) = normalizedNames(name)
-        val fullDomainName = "$normalizedLabel.$normalizedParentDomainName"
 
         val fields = HashMap<String, Any?>(6)
         fields["label"] = getLabel(name)
@@ -195,8 +197,15 @@ class Names(val platform: Platform) {
         return get(name, DEFAULT_PARENT_DOMAIN)
     }
 
+    /**
+     * Gets the document for the given name if it exists under the default parent domain
+     * @param name String The name in the form of label.domain
+     * @return Document? The document for the given name or null if the name does not exist
+     */
+
     fun resolve(name: String): Document? {
-        return get(name)
+        val (label, domain) = normalizedNames(name)
+        return get(label, domain)
     }
 
     /**
@@ -206,13 +215,8 @@ class Names(val platform: Platform) {
      * @return Document? The document for the given name or null if the name does not exist
      */
     fun get(name: String, parentDomain: String): Document? {
-
-        try {
-            val documents = platform.documents.get(DPNS_DOMAIN_DOCUMENT, getDocumentQuery(name, parentDomain))
-            return if (documents != null && documents.isNotEmpty()) documents[0] else null
-        } catch (e: Exception) {
-            throw e
-        }
+        val documents = platform.documents.get(DPNS_DOMAIN_DOCUMENT, getDocumentQuery(name, parentDomain))
+        return if (documents.isNotEmpty()) documents[0] else null
     }
 
     /**
@@ -220,6 +224,7 @@ class Names(val platform: Platform) {
      * on these criteria: starts with.  Contains is not supported
      * @param text String
      * @param parentDomain String
+     * @param retrieveAll Boolean
      * @param startAtIndex Int
      * @return List<Documents>
      */
@@ -235,15 +240,11 @@ class Names(val platform: Platform) {
         var requests = 0
 
         do {
-            try {
-                documentList = platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.startAt(startAt).build())
-                requests += 1
-                startAt += Documents.DOCUMENT_LIMIT
-                if (documentList.isNotEmpty())
-                    documents.addAll(documentList)
-            } catch (e: Exception) {
-                throw e
-            }
+            documentList = platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.startAt(startAt).build())
+            requests += 1
+            startAt += Documents.DOCUMENT_LIMIT
+            if (documentList.isNotEmpty())
+                documents.addAll(documentList)
         } while ((requests == 0 || documentList.size >= Documents.DOCUMENT_LIMIT) && retrieveAll)
 
         return documents
