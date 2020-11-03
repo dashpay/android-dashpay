@@ -50,7 +50,7 @@ class Documents(val platform: Platform) {
             dataContract!!,
             userId,
             fieldType,
-            opts as Map<String, Any>
+            opts
         )
     }
 
@@ -86,27 +86,21 @@ class Documents(val platform: Platform) {
         if (!platform.apps.containsKey(appName)) {
             throw Exception("No app named $appName specified.")
         }
-        val app = platform.apps[appName];
-        if (app!!.contractId.toBuffer().isEmpty()) {
+        val appDefinition = platform.apps[appName];
+        if (appDefinition == null || appDefinition.contractId.toBuffer().isEmpty()) {
             throw Exception("Missing contract ID for $appName")
         }
-        val contractId = app.contractId;
-        try {
-            val rawDataList = platform.client.getDocuments(contractId.toBuffer(), fieldType, opts);
-            val documents = ArrayList<Document>()
 
-            for (rawData in rawDataList!!) {
-                try {
-                    val doc = platform.dpp.document.createFromSerialized(rawData, Factory.Options(true))
-                    documents.add(doc);
-                } catch (e: Exception) {
-                    println("Document creation: failure: " + e);
-                }
+        val contractId = appDefinition.contractId;
+        try {
+            val rawDocuments = platform.client.getDocuments(appDefinition.contractId.toBuffer(), fieldType, opts)
+
+            return rawDocuments!!.map {
+                platform.dpp.document.createFromBuffer(it, Factory.Options(true))
             }
-            return documents
         } catch (e: Exception) {
-            println("Document creation: unable to get documents of ${contractId}");
-            throw e;
+            println("Document creation: unable to get documents of ${contractId}")
+            throw e
         }
     }
 }
