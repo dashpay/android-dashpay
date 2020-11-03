@@ -137,7 +137,7 @@ class CreateWallets {
                 // fund the wallet
                 val txid = runRpc("sendtoaddress $address 0.05")!!.trim()
                 if (txid.isEmpty()) {
-                    println("sendtoaddress failed: Is the palinka daemon running?")
+                    println("sendtoaddress failed: Is the $network daemon running?")
                     return
                 } else {
                     println("Wallet funding transaction: $txid")
