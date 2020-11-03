@@ -10,6 +10,8 @@ import org.dashevo.Client
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dashpay.ContactRequests
 import org.dashevo.dpp.document.Document
+import org.dashevo.dpp.toBase58
+import org.dashevo.dpp.toBase64
 import org.dashevo.platform.Documents
 import org.json.JSONObject
 import java.util.*
@@ -78,8 +80,9 @@ class ShowContactRequests {
                     requests += 1;
 
                     for (doc in documents) {
+                        val toUserId = doc.data["toUserId"] as ByteArray
                         println("===================================================")
-                        println("from: ${doc.ownerId} -> to: ${doc.data["toUserId"]}")
+                        println("from: ${doc.ownerId} -> to: ${toUserId.toBase58()}/${toUserId.toBase64()}")
                         println()
                         println("contactRequest: ${JSONObject(doc.toJSON())}")
                     }
