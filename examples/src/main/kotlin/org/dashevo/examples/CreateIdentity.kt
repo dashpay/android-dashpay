@@ -34,13 +34,13 @@ class CreateIdentity {
 
                 if (identity == null) {
                     // only create the identity if it does not exist
-                    platform.identities.register(cftx, listOf(IdentityPublicKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, DefaultIdentity.publicKey.toBase64(), true)))
+                    platform.identities.register(cftx, listOf(IdentityPublicKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, DefaultIdentity.publicKey)))
                     sleep(10000)
                     identity = platform.identities.get(cftx.creditBurnIdentityIdentifier.toString())
                 }
 
                 // check that the identity public key matches our public key information
-                if (identity!!.publicKeys[0].data == DefaultIdentity.publicKey.toBase64())
+                if (identity!!.publicKeys[0].data.contentEquals(DefaultIdentity.publicKey))
                     println("Identity public key verified")
 
                 // display information
