@@ -44,4 +44,6 @@ object DefaultIdentity {
     val creditBurnTxOutput = 0
 
     val identityPrivateKey = ECKey.fromPrivateAndPrecalculatedPublic(privateKey, publicKey)
+
+    val seed = "regular soup scene torch enrich fitness carbon praise rebuild penalty hole citizen"
 }
