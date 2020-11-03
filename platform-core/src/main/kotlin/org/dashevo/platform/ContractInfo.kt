@@ -15,7 +15,7 @@ import org.dashevo.dpp.identifier.Identifier
  * @property dataContract Contract?
  * @constructor
  */
-data class ContractInfo(val contractId: Identifier, val dataContract: DataContract? = null) {
+data class ContractInfo(val contractId: Identifier, var dataContract: DataContract? = null) {
 
     constructor(contractId: String, dataContract: DataContract? = null) :
             this(Identifier.Companion.from(contractId), dataContract)
