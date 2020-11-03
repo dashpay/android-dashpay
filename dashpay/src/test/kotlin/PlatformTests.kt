@@ -6,9 +6,11 @@
  */
 import com.google.common.io.BaseEncoding
 import io.grpc.StatusRuntimeException
+import jdk.nashorn.internal.ir.annotations.Ignore
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Utils
 import org.bitcoinj.params.EvoNetParams
+import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.platform.Platform
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -34,12 +36,12 @@ purpose: UNKNOWN
 
   identity:  J2jWLKNWogVf1B8fdo6rxMeQgDWWi9aGd9JPcTHxNj7H
  */
-    @Test
+    @Test @Ignore
     fun registerTest() {
         try {
             val platform = Platform(EvoNetParams.get())
-            val identityBytes = platform.client.getIdentity("J2jWLKNWogVf1B8fdo6rxMeQgDWWi9aGd9JPcTHxNj7H")
-            val identity = platform.dpp.identity.createFromSerialized(identityBytes!!.toByteArray())
+            val identityBytes = platform.client.getIdentity(Identifier.from("J2jWLKNWogVf1B8fdo6rxMeQgDWWi9aGd9JPcTHxNj7H").toBuffer())
+            val identity = platform.dpp.identity.createFromBuffer(identityBytes!!.toByteArray())
             var result = platform.names.register(
                 "HashEngineering1", identity,
                 ECKey.fromPrivateAndPrecalculatedPublic(
