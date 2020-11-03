@@ -22,7 +22,12 @@ class ContactRequests(val platform: Platform) {
         val contactKey = contactKeyChain.watchingKey
         val contactPub = contactKey.serializeContactPub()
 
-        val (encryptedContactPubKey, encryptedAccountLabel) = fromUser.encryptExtendedPublicKey(contactPub, toUser, 0, aesKey)
+        val (encryptedContactPubKey, encryptedAccountLabel) = fromUser.encryptExtendedPublicKey(
+            contactPub,
+            toUser,
+            0,
+            aesKey
+        )
         val accountReference = fromUser.getAccountReference(aesKey, toUser)
         val timeStamp = Date().time
 
@@ -67,10 +72,20 @@ class ContactRequests(val platform: Platform) {
         retrieveAll: Boolean = true,
         startAt: Int = 0
     ): List<Document> {
+        return get(Identifier.from(userId), toUserId, afterTime, retrieveAll, startAt)
+    }
+
+    fun get(
+        userId: Identifier,
+        toUserId: Boolean,
+        afterTime: Long = 0,
+        retrieveAll: Boolean = true,
+        startAt: Int = 0
+    ): List<Document> {
         val documentQuery = DocumentQuery.Builder()
 
         if (toUserId)
-            documentQuery.where(listOf("toUserId", "==", Base58.decode(userId)))
+            documentQuery.where(listOf("toUserId", "==", userId))
         else
             documentQuery.where(listOf("\$ownerId", "==", userId))
 
