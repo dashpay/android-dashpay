@@ -116,6 +116,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import org.dashevo.dashpay.BlockchainIdentity;
 import org.dashevo.dashpay.Contact;
 import org.dashevo.dashpay.Profile;
+import org.dashevo.dpp.identifier.Identifier;
 import org.dashevo.dpp.identity.Identity;
 import org.dashevo.platform.Platform;
 import org.slf4j.Logger;
@@ -1447,7 +1448,7 @@ public class WalletTool {
                 blockchainIdentity.recoverIdentity(cftx);
             } else {
                 byte [] pubKeyHash = wallet.getBlockchainIdentityKeyChain().getWatchingKey().getPubKeyHash();
-                Identity identity = platform.getIdentities().get(pubKeyHash);
+                Identity identity = platform.getIdentities().getByPublicKeyHash(pubKeyHash);
                 if (identity != null) {
                     blockchainIdentity = new BlockchainIdentity(platform, 0, wallet);
                     blockchainIdentity.recoverIdentity(pubKeyHash);
@@ -1763,10 +1764,10 @@ public class WalletTool {
             outputStream.println("Balance:                          " + balance);
             outputToCSV(balance, csvFile);
 
-            Set<String> ids = dashPayWallet.getContactIdentities();
+            Set<Identifier> ids = dashPayWallet.getContactIdentities();
             int inboundTx = 0, outboundTx = 0;
             Transaction firstOutboundTx = null;
-            for (String id : ids) {
+            for (Identifier id : ids) {
                 List<Transaction> list = blockchainIdentity.getContactTransactions(id);
                 for (Transaction contactTx : list) {
                     if (contactTx.getValue(wallet).isPositive())

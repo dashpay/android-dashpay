@@ -8,11 +8,12 @@
 package org.dashevo.dashpay
 
 import org.dashevo.dpp.document.Document
+import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.platform.AbstractDocument
 
 class ContactRequest(document: Document) : AbstractDocument(document) {
-    val toUserId: ByteArray
-        get() = document.data["toUserId"] as ByteArray
+    val toUserId: Identifier
+        get() = Identifier.from(document.data["toUserId"])
     val encryptedPublicKey: ByteArray
         get() = document.data["encryptedPublicKey"] as ByteArray
     val senderKeyIndex: Int

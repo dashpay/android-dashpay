@@ -100,12 +100,12 @@ class NetworkActivity {
             val establishedContacts = arrayListOf<Pair<ContactRequest, ContactRequest>>()
             val contactsRequestByOwnerId = contactRequests.associateBy({it.ownerId}, {it})
             val ownerIds = contactsRequestByOwnerId.keys
-            val contactRequestsByToUserId = contactRequests.associateBy({it.toUserId.toBase58()}, {it})
+            val contactRequestsByToUserId = contactRequests.associateBy({it.toUserId}, {it})
 
             for (sentContactRequest in contactRequests) {
                 val sender = sentContactRequest.ownerId
-                val recipient = sentContactRequest.toUserId.toBase58()
-                val receivedContactRequest = contactRequests.find { it.toUserId.toBase58() == sender && it.ownerId == recipient}
+                val recipient = sentContactRequest.toUserId
+                val receivedContactRequest = contactRequests.find { it.toUserId == sender && it.ownerId == recipient}
                 if (receivedContactRequest != null) {
                     val contact = Pair(sentContactRequest, receivedContactRequest)
                     establishedContacts.add(contact)

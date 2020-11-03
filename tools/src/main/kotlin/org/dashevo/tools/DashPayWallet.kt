@@ -18,6 +18,7 @@ import org.dashevo.dashpay.Profile
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.toBase58
 import org.dashevo.platform.DomainDocument
+import org.dashevo.dpp.identifier.Identifier
 import org.slf4j.LoggerFactory
 import java.lang.Long.max
 import java.util.concurrent.atomic.AtomicBoolean
@@ -26,8 +27,8 @@ class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: 
     val wallet = blockchainIdentity.wallet!!
     val platform = blockchainIdentity.platform
     val contactRequests = arrayListOf<ContactRequest>()
-    val profiles = hashMapOf<String, Profile>()
-    val names = hashMapOf<String, DomainDocument>()
+    val profiles = hashMapOf<Identifier, Profile>()
+    val names = hashMapOf<Identifier, DomainDocument>()
 
     private val preDownloadBlocks = AtomicBoolean(true)
     private val log = LoggerFactory.getLogger(DashPayWallet::class.java)
@@ -44,33 +45,31 @@ class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: 
 
     fun getSentContactRequests() : List<ContactRequest> {
         return contactRequests.filter {
-            it.ownerId == blockchainIdentity.uniqueIdString
+            it.ownerId == blockchainIdentity.uniqueIdentifier
         }
     }
 
     fun getRecievedContactRequests() : List<ContactRequest> {
         return contactRequests.filter {
-            it.toUserId.contentEquals(blockchainIdentity.uniqueId.bytes)
+            it.toUserId == blockchainIdentity.uniqueIdentifier
         }
     }
 
-    fun getSentContactRequestsMap() : Map<String, ContactRequest> {
-        val map = hashMapOf<String, ContactRequest>()
-        return getSentContactRequests().associateBy({ it.toUserId.toBase58() }, { it })
+    fun getSentContactRequestsMap() : Map<Identifier, ContactRequest> {
+        return getSentContactRequests().associateBy({ it.toUserId }, { it })
     }
 
-    fun getRecievedContactRequestsMap() : Map<String, ContactRequest> {
-        val map = hashMapOf<String, ContactRequest>()
+    fun getRecievedContactRequestsMap() : Map<Identifier, ContactRequest> {
         return getRecievedContactRequests().associateBy({ it.ownerId }, { it })
     }
 
-    fun getContactIdentities() : Set<String> {
-        val result = hashSetOf<String>()
+    fun getContactIdentities() : Set<Identifier> {
+        val result = hashSetOf<Identifier>()
         getRecievedContactRequests().forEach {
             result.add(it.ownerId)
         }
         getSentContactRequests().forEach {
-            result.add(it.toUserId.toBase58())
+            result.add(it.toUserId)
         }
         return result
     }
@@ -95,13 +94,14 @@ class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: 
                 return
             }
 
-            val userId = blockchainIdentity.uniqueIdString!!
+            val userId = blockchainIdentity.uniqueIdentifier
+            val userIdString = blockchainIdentity.uniqueIdString
 
             if (blockchainIdentity.currentUsername == null) {
                 return // this is here because the wallet is being reset without removing blockchainIdentityData
             }
 
-            val userIdList = HashSet<String>()
+            val userIdList = HashSet<Identifier>()
             val watch = Stopwatch.createStarted()
             var addedContact = false
             Context.propagate(wallet.context)
@@ -118,14 +118,14 @@ class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: 
             val toContactDocuments = ContactRequests(platform).get(userId, toUserId = false, afterTime = lastContactRequestTime, retrieveAll = true)
             toContactDocuments.forEach {
                 val contactRequest = ContactRequest(it)
-                userIdList.add(contactRequest.toUserId.toBase58())
+                userIdList.add(contactRequest.toUserId)
                 contactRequests.add(contactRequest)
 
                 // add our receiving from this contact keychain if it doesn't exist
-                val contact = EvolutionContact(userId, contactRequest.toUserId.toBase58())
+                val contact = EvolutionContact(userIdString, contactRequest.toUserId.toString())
                 try {
                     if (!wallet.hasReceivingKeyChain(contact)) {
-                        val contactIdentity = platform.identities.get(contactRequest.toUserId.toBase58())
+                        val contactIdentity = platform.identities.get(contactRequest.toUserId)
                         if (encryptionKey == null && wallet.isEncrypted) {
                             // Don't bother with DeriveKeyTask here, just call deriveKey
                             encryptionKey = wallet.keyCrypter!!.deriveKey(password)
@@ -146,7 +146,7 @@ class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: 
                 contactRequests.add(contactRequest)
 
                 // add the sending to contact keychain if it doesn't exist
-                val contact = EvolutionContact(userId, contactRequest.ownerId)
+                val contact = EvolutionContact(userIdString, contactRequest.ownerId.toString())
                 try {
                     if (!wallet.hasSendingKeyChain(contact)) {
                         val contactIdentity = platform.identities.get(contactRequest.ownerId)
@@ -173,7 +173,7 @@ class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: 
             }
 
             // fetch updated profiles from the network
-            updateContactProfiles(userId, lastContactRequestTime)
+            updateContactProfiles(lastContactRequestTime)
 
             // fire listeners if there were new contacts
             if (fromContactDocuments.isNotEmpty() || toContactDocuments.isNotEmpty()) {
@@ -211,13 +211,13 @@ class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: 
     /**
      * Fetches updated profiles associated with contacts of userId after lastContactRequestTime
      */
-    private fun updateContactProfiles(userId: String, lastContactRequestTime: Long) {
+    private fun updateContactProfiles(lastContactRequestTime: Long) {
         val watch = Stopwatch.createStarted()
-        val userIdSet = hashSetOf<String>()
+        val userIdSet = hashSetOf<Identifier>()
 
         val toContactDocuments = getSentContactRequests()
         toContactDocuments!!.forEach {
-            userIdSet.add(it.toUserId.toBase58())
+            userIdSet.add(it.toUserId)
         }
         val fromContactDocuments = getRecievedContactRequests()
         fromContactDocuments!!.forEach {
@@ -225,15 +225,15 @@ class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: 
         }
 
         // Also add our ownerId to get our profile, in case it was updated on a different device
-        userIdSet.add(blockchainIdentity.uniqueIdString)
+        userIdSet.add(blockchainIdentity.uniqueIdentifier)
 
         updateContactProfiles(userIdSet.toList(), lastContactRequestTime)
         log.info("updating contacts and profiles took $watch")
     }
 
-    fun getIdentityForName(nameDocument: Document): String {
+    fun getIdentityForName(nameDocument: Document): Identifier {
         val records = nameDocument.data["records"] as Map<String, Any?>
-        return records["dashUniqueIdentityId"] as String
+        return Identifier.from(records["dashUniqueIdentityId"])
     }
 
     /**
@@ -241,17 +241,17 @@ class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: 
      *
      * if lastContactRequestTime is 0, then all profiles are retrieved
      */
-    private fun updateContactProfiles(userIdList: List<String>, lastContactRequestTime: Long, checkingIntegrity: Boolean = false) {
+    private fun updateContactProfiles(userIdList: List<Identifier>, lastContactRequestTime: Long, checkingIntegrity: Boolean = false) {
         if (userIdList.isNotEmpty()) {
-
+            val identifierList = userIdList.map { Identifier.from(it) }
             val profileDocuments =
-                Profiles(platform).getList(userIdList, lastContactRequestTime) //only handles 100 userIds
+                Profiles(platform).getList(identifierList, lastContactRequestTime) //only handles 100 userIds
             val profileById = profileDocuments.associateBy({ it.ownerId }, { it })
 
-            val nameDocuments = platform.names.getList(userIdList)
+            val nameDocuments = platform.names.getList(identifierList)
             val nameById = nameDocuments.associateBy({ getIdentityForName(it) }, { it })
 
-            for (id in userIdList) {
+            for (id in profileById.keys) {
                 val nameDocument = nameById[id] // what happens if there is no username for the identity? crash
                 val username = nameDocument!!.data["normalizedLabel"] as String
                 val identityId = getIdentityForName(nameDocument)

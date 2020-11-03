@@ -7,14 +7,15 @@
 package org.dashevo.platform
 
 import org.dashevo.dpp.document.Document
+import org.dashevo.dpp.identifier.Identifier
 
 abstract class AbstractDocument(val document: Document) {
 
-    val dataContractId: String
+    val dataContractId: Identifier
         get() = document.dataContractId
     val id: String
-        get() = document.id
-    val ownerId: String
+        get() = document.id.toString()
+    val ownerId: Identifier
         get() = document.ownerId
     val protocolVersion: Int
         get() = document.protocolVersion
