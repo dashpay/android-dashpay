@@ -1146,7 +1146,7 @@ class BlockchainIdentity {
         profileData["publicMessage"] = publicMessage
         profileData["avatarUrl"] = avatarUrl
 
-        val profileDocument = Document(profileData)
+        val profileDocument = Document(profileData, platform.apps["dashpay"]!!.dataContract!!)
         // a replace operation must set updatedAt
         profileDocument.updatedAt = Date().time
 
@@ -1414,22 +1414,22 @@ class BlockchainIdentity {
         }
     }
 
-    fun getContactNextPaymentAddress(contactId: String): Address {
+    fun getContactNextPaymentAddress(contactId: Identifier): Address {
         return wallet!!.currentAddress(
-            EvolutionContact(uniqueIdString, account, contactId),
+            EvolutionContact(uniqueIdString, account, contactId.toString()),
             FriendKeyChain.KeyChainType.SENDING_CHAIN
         )
     }
 
-    fun getNextPaymentAddressFromContact(contactId: String): Address {
+    fun getNextPaymentAddressFromContact(contactId: Identifier): Address {
         return wallet!!.currentAddress(
-            EvolutionContact(uniqueIdString, account, contactId),
+            EvolutionContact(uniqueIdString, account, contactId.toString()),
             FriendKeyChain.KeyChainType.RECEIVING_CHAIN
         )
     }
 
-    fun getContactTransactions(identityId: String): List<Transaction> {
-        val contact = EvolutionContact(uniqueIdString, account, identityId)
+    fun getContactTransactions(identityId: Identifier): List<Transaction> {
+        val contact = EvolutionContact(uniqueIdString, account, identityId.toString())
         return wallet!!.getTransactionsWithFriend(contact)
     }
 
