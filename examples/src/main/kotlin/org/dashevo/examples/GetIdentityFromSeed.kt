@@ -44,10 +44,10 @@ class GetIdentityFromSeed {
             wallet.initializeAuthenticationKeyChains(seed, null)
 
             println("Locate the identity with this first public key hash ${wallet.blockchainIdentityKeyChain.watchingKey.pubKeyHash.toHexString()}")
-            val identity = platform.identities.get(wallet.blockchainIdentityKeyChain.watchingKey.pubKeyHash)
+            val identity = platform.identities.getByPublicKeyHash(wallet.blockchainIdentityKeyChain.watchingKey.pubKeyHash)
             if (identity != null) {
                 println("Identity: ${identity.id}")
-                val nameDocuments = platform.names.getByUserId(identity.id)
+                val nameDocuments = platform.names.getByOwnerId(identity.id)
                 if (nameDocuments.isNotEmpty()) {
                     println("Name: ${nameDocuments[0].data["label"] as String}")
                 } else {

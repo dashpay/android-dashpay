@@ -40,9 +40,9 @@ class GetIdentity {
             val identity = platform.identities.get(id)
             if (identity != null) {
                 println("Identity: ${identity.id}")
-                val publicKey = ECKey.fromPublicOnly(HashUtils.fromBase64(identity.publicKeys[0].data))
+                val publicKey = ECKey.fromPublicOnly(identity.publicKeys[0].data)
                 println("Identity Public Key: ${publicKey.pubKeyHash.toHexString()}")
-                val nameDocuments = platform.names.getByUserId(identity.id)
+                val nameDocuments = platform.names.getByOwnerId(identity.id)
                 if (nameDocuments.isNotEmpty()) {
                     println("Name: ${nameDocuments[0].data["label"] as String}")
                 } else {
