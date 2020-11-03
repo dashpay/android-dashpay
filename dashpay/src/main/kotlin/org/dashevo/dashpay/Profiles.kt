@@ -42,8 +42,7 @@ class Profiles(
 
         val transition = signAndBroadcast(transitionMap, identity, id, signingKey)
 
-        return DocumentFactory().createFromObject(transition.transitions[0].toJSON().toMutableMap())
-
+        return platform.dpp.document.createFromObject(transition.transitions[0].toObject().toMutableMap())
     }
 
     fun replace(
@@ -62,7 +61,7 @@ class Profiles(
         profileData["publicMessage"] = publicMessage
         profileData["avatarUrl"] = avatarUrl
 
-        val profileDocument = DocumentFactory().createFromObject(profileData)
+        val profileDocument = platform.dpp.document.createFromObject(profileData)
         profileDocument.updatedAt = Date().time
 
         val transitionMap = hashMapOf(
@@ -71,7 +70,7 @@ class Profiles(
 
         val transition = signAndBroadcast(transitionMap, identity, id, signingKey)
 
-        return DocumentFactory().createFromObject(transition.transitions[0].toJSON().toMutableMap())
+        return platform.dpp.document.createFromObject(transition.transitions[0].toJSON().toMutableMap())
     }
 
     private fun signAndBroadcast(
