@@ -19,20 +19,6 @@ class Identities(val platform: Platform) {
 
     fun register(
         signedLockTransaction: CreditFundingTransaction,
-        identityPublicKeys: List<IdentityPublicKey>,
-        keyCrypter: KeyCrypter?,
-        keyParameter: KeyParameter?
-    ): String {
-        val identityPrivateKey = signedLockTransaction.creditBurnPublicKey.decrypt(keyCrypter, keyParameter)
-        return register(
-            signedLockTransaction.lockedOutpoint,
-            identityPrivateKey,
-            identityPublicKeys
-        )
-    }
-
-    fun register(
-        signedLockTransaction: CreditFundingTransaction,
         identityPublicKeys: List<IdentityPublicKey>
     ): String {
         return register(
@@ -44,7 +30,7 @@ class Identities(val platform: Platform) {
 
     fun register(
         lockedOutpoint: TransactionOutPoint,
-        creditBurnKey: ECKey,
+        assetLockPrivateKey: ECKey,
         identityPublicKeys: List<IdentityPublicKey>
     ): String {
 
@@ -53,7 +39,7 @@ class Identities(val platform: Platform) {
 
             val identityCreateTransition = platform.dpp.identity.createIdentityCreateTransition(outPoint, identityPublicKeys)
 
-            identityCreateTransition.signByPrivateKey(creditBurnKey)
+            identityCreateTransition.signByPrivateKey(assetLockPrivateKey)
 
             platform.client.broadcastStateTransition(identityCreateTransition);
             return identityCreateTransition.identityId.toString()
@@ -68,11 +54,41 @@ class Identities(val platform: Platform) {
 
     fun get(id: Identifier): Identity? {
         val identityBuffer = platform.client.getIdentity(id.toBuffer()) ?: return null
-        return platform.dpp.identity.createFromSerialized(identityBuffer.toByteArray());
+        return platform.dpp.identity.createFromBuffer(identityBuffer.toByteArray());
     }
 
     fun getByPublicKeyHash(pubKeyHash: ByteArray): Identity? {
         val identityBuffer = platform.client.getIdentityByFirstPublicKey(pubKeyHash) ?: return null
-        return platform.dpp.identity.createFromSerialized(identityBuffer.toByteArray());
+        return platform.dpp.identity.createFromBuffer(identityBuffer.toByteArray());
+    }
+
+    fun topUp(
+        identityId: Identifier,
+        signedLockTransaction: CreditFundingTransaction
+    ): Boolean {
+        return topUp(
+            identityId,
+            signedLockTransaction.lockedOutpoint,
+            signedLockTransaction.creditBurnPublicKey
+        )
+    }
+
+    fun topUp(
+        identityId: Identifier,
+        lockedOutpoint: TransactionOutPoint,
+        assetLockPrivateKey: ECKey
+    ): Boolean {
+
+        try {
+            val identityTopupTransition = platform.dpp.identity.createIdentityTopupTransition(identityId, lockedOutpoint)
+
+            identityTopupTransition.signByPrivateKey(assetLockPrivateKey)
+
+            platform.client.broadcastStateTransition(identityTopupTransition)
+
+            return true
+        } catch (e: Exception) {
+            throw e
+        }
     }
 }
