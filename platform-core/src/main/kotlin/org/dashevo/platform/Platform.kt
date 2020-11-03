@@ -6,6 +6,7 @@
  */
 package org.dashevo.platform
 
+import org.bitcoinj.core.Block
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.params.EvoNetParams
@@ -14,20 +15,24 @@ import org.bitcoinj.params.PalinkaDevNetParams
 import org.dashevo.dapiclient.DapiClient
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.DashPlatformProtocol
-import org.dashevo.dpp.DataProvider
+import org.dashevo.dpp.StateRepository
 import org.dashevo.dpp.contract.DataContract
 import org.dashevo.dpp.document.Document
+import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.statetransition.StateTransitionIdentitySigned
 
 class Platform(val params: NetworkParameters) {
 
-    var dataProvider: DataProvider = object : DataProvider {
-        override fun fetchDataContract(s: String): DataContract? {
-            return contracts.get(s)
+    var stateRepository: StateRepository = object : StateRepository {
+        override fun fetchDataContract(id: Identifier): DataContract? {
+            val contractInfo = apps.values.find { it.contractId == id }
+            if (contractInfo != null && contractInfo.dataContract != null)
+                return contractInfo.dataContract
+            return contracts.get(id)
         }
 
-        override fun fetchDocuments(s: String, s1: String, o: Any): List<Document> {
+        override fun fetchDocuments(contractId: Identifier, s: String, o: Any): List<Document> {
             return documents.get(s, o as DocumentQuery)
         }
 
@@ -35,12 +40,36 @@ class Platform(val params: NetworkParameters) {
             TODO()
         }
 
-        override fun fetchIdentity(s: String): Identity? {
-            return identities.get(s)
+        override fun removeDocument(contractId: Identifier, type: String, id: Identifier) {
+            TODO("Not yet implemented")
+        }
+
+        override fun storeDataContract(dataContract: DataContract) {
+            TODO("Not yet implemented")
+        }
+
+        override fun storeDocument(document: Document) {
+            TODO("Not yet implemented")
+        }
+
+        override fun storeIdentity(identity: Identity) {
+            TODO("Not yet implemented")
+        }
+
+        override fun storeIdentityPublicKeyHashes(identity: Identifier, publicKeyHashes: List<ByteArray>) {
+            TODO("Not yet implemented")
+        }
+
+        override fun fetchIdentity(id: Identifier): Identity? {
+            return identities.get(id)
+        }
+
+        override fun fetchLatestPlatformBlockHeader(): Block {
+            TODO("Not yet implemented")
         }
     }
 
-    val dpp = DashPlatformProtocol(dataProvider)
+    val dpp = DashPlatformProtocol(stateRepository)
     val apps = HashMap<String, ContractInfo>()
     val contracts = Contracts(this)
     val documents = Documents(this)
