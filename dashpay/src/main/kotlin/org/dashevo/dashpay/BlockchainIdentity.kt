@@ -460,14 +460,13 @@ class BlockchainIdentity {
         if (statusOfUsername(username) == UsernameStatus.INITIAL || !(usernameSalts.containsKey(username))) {
             salt = ECKey().privKeyBytes
             usernameSalts[username] = salt
-            println("salt for $username is ${salt.toHexString()}")
             if (saveSalt) {
                 saveUsername(username, statusOfUsername(username), salt, true)
             }
         } else {
             salt = usernameSalts[username]!!
         }
-        return salt;
+        return salt
     }
 
     fun saltedDomainHashesForUsernames(usernames: List<String>): MutableMap<String, ByteArray> {
@@ -482,8 +481,6 @@ class BlockchainIdentity {
             val saltedDomainHashData = platform.names.getSaltedDomainHashBytes(salt, fullUsername)
             mSaltedDomainHashes[unregisteredUsername] = saltedDomainHashData
             usernameSalts[unregisteredUsername] = salt //is this required?
-            println("saltedDomainHash is ${saltedDomainHashData.toHexString()}")
-
         }
         return mSaltedDomainHashes
     }

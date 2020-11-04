@@ -13,11 +13,15 @@ import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.util.Entropy
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 
 class Names(val platform: Platform) {
 
     companion object {
+        private val log: Logger = LoggerFactory.getLogger(Names::class.java)
+
         const val DEFAULT_PARENT_DOMAIN = "dash"
         const val DPNS_DOMAIN_DOCUMENT = "dpns.domain"
         const val DPNS_PREORDER_DOCUMENT = "dpns.preorder"
@@ -127,7 +131,7 @@ class Names(val platform: Platform) {
     ): Document? {
         val domainDocument = createDomainDocument(identity, name, preorderSaltBase, isUniqueIdentity)
 
-        println(domainDocument.toJSON())
+        log.info("domainDocument: ${domainDocument.toJSON()}")
 
         // 4. Create and send domain state transition
         val map = hashMapOf<String, List<Document>?>(
@@ -136,7 +140,7 @@ class Names(val platform: Platform) {
         val domainTransition = platform.dpp.document.createStateTransition(map)
         domainTransition.sign(identity.getPublicKeyById(1)!!, identityHDPrivateKey.privateKeyAsHex)
 
-        println(domainTransition.toJSON())
+        log.info("domainTransition: ${domainTransition.toJSON()}")
 
         platform.client.broadcastStateTransition(domainTransition)
 

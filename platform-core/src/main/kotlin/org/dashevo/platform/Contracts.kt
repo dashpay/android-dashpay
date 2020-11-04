@@ -7,13 +7,19 @@
 package org.dashevo.platform
 
 import org.bitcoinj.core.ECKey
-import org.dashevo.dpp.contract.DataContractCreateTransition
 import org.dashevo.dpp.contract.DataContract
+import org.dashevo.dpp.contract.DataContractCreateTransition
 import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.util.*
 
 class Contracts(val platform: Platform) {
+
+    companion object {
+        private val log: Logger = LoggerFactory.getLogger(Contracts::class.java)
+    }
 
     fun broadcast(dataContract: DataContract, identity: Identity, privateKey: ECKey, index: Int) : DataContractCreateTransition {
         val  dataContractCreateTransition = platform.dpp.dataContract.createStateTransition(dataContract);
@@ -58,7 +64,7 @@ class Contracts(val platform: Platform) {
                 }
                 return contract;
             } catch (e: Exception) {
-                println("Failed to get dataContract" + e)
+                log.error("Failed to get dataContract: $e")
                 throw e
             }
 

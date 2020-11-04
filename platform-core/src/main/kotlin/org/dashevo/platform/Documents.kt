@@ -12,11 +12,14 @@ import org.dashevo.dpp.Factory
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class Documents(val platform: Platform) {
 
     companion object {
         const val DOCUMENT_LIMIT = 100
+        private val log: Logger = LoggerFactory.getLogger(Documents::class.java)
     }
 
     fun broadcast(identity: Identity, privateKey: ECKey, create: List<Document>?, replace: List<Document>? = null, delete: List<Document>? = null) {
@@ -99,7 +102,7 @@ class Documents(val platform: Platform) {
                 platform.dpp.document.createFromBuffer(it, Factory.Options(true))
             }
         } catch (e: Exception) {
-            println("Document creation: unable to get documents of ${contractId}")
+            log.error("Document creation: unable to get documents of ${contractId}: $e")
             throw e
         }
     }
