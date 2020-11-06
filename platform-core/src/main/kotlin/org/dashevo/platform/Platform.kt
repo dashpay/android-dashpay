@@ -27,7 +27,7 @@ class Platform(val params: NetworkParameters) {
     var stateRepository: StateRepository = object : StateRepository {
         override fun fetchDataContract(id: Identifier): DataContract? {
             val contractInfo = apps.values.find { it.contractId == id }
-            if (contractInfo != null && contractInfo.dataContract != null)
+            if (contractInfo?.dataContract != null)
                 return contractInfo.dataContract
             return contracts.get(id)
         }
@@ -80,7 +80,8 @@ class Platform(val params: NetworkParameters) {
     init {
         when {
             params.id.contains("evonet") -> {
-                apps["dpns"] = ContractInfo("566vcJkmebVCAb2Dkj2yVMSgGFcsshupnQqtsz1RFbcy")
+                apps["dpns"] = ContractInfo("3VvS19qomuGSbEYWbTsRzeuRgawU3yK4fPMzLrbV62u8")
+                apps["dashpay"] = ContractInfo("FrXpVEsxFZ9hgCpiXwWbsQe4xHB9wZHGj4Lg5UjgxtHb")
                 client = DapiClient(EvoNetParams.MASTERNODES.toList(), true)
             }
             params.id.contains("mobile") -> {
