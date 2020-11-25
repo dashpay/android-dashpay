@@ -43,13 +43,13 @@ class GetStatus {
             for (node in nodeList) {
                 val watch = Stopwatch.createStarted()
                 try {
-                    val status = sdk.platform.client.getStatus(DAPIAddress(node), 1)
+                    val status = sdk.platform.client.getStatus(DAPIAddress(node), 0)
                     success++
                     results[status!!.address!!] = status
                     println("$node: Get status successful: $watch")
                 } catch (e: Exception) {
                     watch.stop()
-                    println("$node: Get status failed: ${e.message}")
+                    println("$node: Get status failed: ${e.message} after $watch")
                     try {
                         sdk.platform.client.getBlockByHeight(100)
                         successFallback++
