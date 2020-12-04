@@ -232,11 +232,12 @@ class Names(val platform: Platform) {
      * @param startAtIndex Int
      * @return List<Documents>
      */
-    fun search(text: String, parentDomain: String, retrieveAll: Boolean, startAtIndex: Int = 0): List<Document> {
+    fun search(text: String, parentDomain: String, retrieveAll: Boolean, startAtIndex: Int = 0, limit: Int = -1): List<Document> {
         val documentQuery = DocumentQuery.Builder()
             .where(listOf("normalizedParentDomainName", "==", parentDomain))
             .orderBy(listOf("normalizedLabel", "asc"))
             .where(listOf("normalizedLabel", "startsWith", text.toLowerCase()))
+            .limit(limit)
 
         var startAt = startAtIndex
         val documents = ArrayList<Document>()
