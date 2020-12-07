@@ -13,6 +13,7 @@ import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.params.MobileDevNetParams
 import org.bitcoinj.params.PalinkaDevNetParams
 import org.dashevo.dapiclient.DapiClient
+import org.dashevo.dapiclient.grpc.DefaultBroadcastRetryCallback
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.DashPlatformProtocol
 import org.dashevo.dpp.StateRepository
@@ -24,7 +25,7 @@ import org.dashevo.dpp.statetransition.StateTransitionIdentitySigned
 
 class Platform(val params: NetworkParameters) {
 
-    var stateRepository: StateRepository = object : StateRepository {
+    val stateRepository: StateRepository = object : StateRepository {
         override fun fetchDataContract(id: Identifier): DataContract? {
             val contractInfo = apps.values.find { it.contractId == id }
             if (contractInfo?.dataContract != null)
@@ -32,11 +33,11 @@ class Platform(val params: NetworkParameters) {
             return contracts.get(id)
         }
 
-        override fun fetchDocuments(contractId: Identifier, s: String, o: Any): List<Document> {
-            return documents.get(s, o as DocumentQuery)
+        override fun fetchDocuments(contractId: Identifier, type: String, where: Any): List<Document> {
+            return documents.get(contractId, type, where as DocumentQuery)
         }
 
-        override fun fetchTransaction(s: String): Int {
+        override fun fetchTransaction(id: String): Int {
             TODO()
         }
 
@@ -69,6 +70,8 @@ class Platform(val params: NetworkParameters) {
         }
     }
 
+    val broadcastRetryCallback = DefaultBroadcastRetryCallback(stateRepository)
+
     val dpp = DashPlatformProtocol(stateRepository)
     val apps = HashMap<String, ContractInfo>()
     val contracts = Contracts(this)
@@ -98,14 +101,41 @@ class Platform(val params: NetworkParameters) {
         }
     }
 
-    fun broadcastStateTransition(stateTransition: StateTransitionIdentitySigned, identity: Identity, privateKey: ECKey, keyIndex: Int = 0) {
+    fun broadcastStateTransition(
+        stateTransition: StateTransitionIdentitySigned,
+        identity: Identity,
+        privateKey: ECKey,
+        keyIndex: Int = 0
+    ) {
         stateTransition.sign(identity.getPublicKeyById(keyIndex)!!, privateKey.privateKeyAsHex)
         //TODO: validate transition structure here
-        client.broadcastStateTransition(stateTransition);
+        client.broadcastStateTransition(stateTransition, retryCallback = broadcastRetryCallback);
     }
 
     fun hasApp(appName: String): Boolean {
         return apps.containsKey(appName)
     }
 
+    fun getDataContractIdAndType(typeLocator: String): Pair<Identifier, String>? {
+        val (dataContractName, documentType) = getAppnameAndType(typeLocator)
+
+        return apps[dataContractName]?.let { Pair(it.contractId, documentType) }
+    }
+
+    fun getAppnameAndType(
+        typeLocator: String
+    ): Pair<String, String> {
+        val appNames = apps.keys
+        val appName: String
+        val fieldType: String
+        if (typeLocator.contains('.')) {
+            val split = typeLocator.split('.')
+            appName = split[0]
+            fieldType = split[1]
+        } else {
+            appName = appNames.first()
+            fieldType = typeLocator
+        }
+        return Pair(appName, fieldType)
+    }
 }
