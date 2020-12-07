@@ -94,15 +94,20 @@ class Documents(val platform: Platform) {
             throw Exception("Missing contract ID for $appName")
         }
 
-        val contractId = appDefinition.contractId;
+        val contractId = appDefinition.contractId
+
+        return get(contractId, fieldType, opts)
+    }
+
+    fun get(dataContractId: Identifier, documentType: String, opts: DocumentQuery): List<Document> {
         try {
-            val rawDocuments = platform.client.getDocuments(appDefinition.contractId.toBuffer(), fieldType, opts)
+            val rawDocuments = platform.client.getDocuments(dataContractId.toBuffer(), documentType, opts)
 
             return rawDocuments!!.map {
                 platform.dpp.document.createFromBuffer(it, Factory.Options(true))
             }
         } catch (e: Exception) {
-            log.error("Document creation: unable to get documents of ${contractId}: $e")
+            log.error("Document creation: unable to get documents of ${dataContractId}: $e")
             throw e
         }
     }
