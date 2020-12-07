@@ -33,7 +33,7 @@ class GetStatus {
 
         private fun getStatus() {
             sdk.isReady()
-            val results = hashMapOf<DAPIAddress, GetStatusResponse>()
+            val results = hashMapOf<DAPIAddress, GetStatusResponse?>()
 
             val nodeList = (sdk.platform.params as DevNetParams).defaultMasternodeList.toMutableList()
             nodeList.add("211.30.243.82")
@@ -50,6 +50,7 @@ class GetStatus {
                 } catch (e: Exception) {
                     watch.stop()
                     println("$node: Get status failed: ${e.message} after $watch")
+                    results[DAPIAddress(node)] = null
                     try {
                         sdk.platform.client.getBlockByHeight(100)
                         successFallback++
@@ -63,7 +64,7 @@ class GetStatus {
             println("getBlockByHeight() Results: $successFallback/$total (${successFallback.toDouble()/total})")
             println("Overall Results: ${(success + successFallback)}/$total (${(successFallback + success).toDouble()/total})")
             for (s in results) {
-                println("${s.key.host}: ${s.value.duration}ms")
+                println("${s.key.host}: ${s.value?.duration} ms")
             }
         }
     }
