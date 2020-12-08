@@ -6,18 +6,18 @@ This library consists of two components
 # Building
 This depends on the `android-dpp` and `dapi-client-android` libraries:
 ```
-git clone https://github.com/github/dashevo/android-dpp.git
+git clone https://github.com/dashevo/android-dpp.git
 cd android-dpp
 ./gradlew assemble
 cd ..
-git clone https://github.com/github/dashevo/dapi-client-android.git
+git clone https://github.com/dashevo/dapi-client-android.git
 cd dapi-client-android
 ./gradlew assemble
 cd ..
 ```
 Finally, build the library:
 ```
-git clone https://github.com/github/dashevo/android-dashpay.git`
+git clone https://github.com/dashevo/android-dashpay.git`
 cd android-dashpay`
 ./gradlew assemble`
 ```
