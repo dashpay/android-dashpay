@@ -36,7 +36,6 @@ class GetStatus {
             val results = hashMapOf<DAPIAddress, GetStatusResponse?>()
 
             val nodeList = (sdk.platform.params as DevNetParams).defaultMasternodeList.toMutableList()
-            nodeList.add("211.30.243.82")
             val total = nodeList.size
             var success = 0
             var successFallback = 0
