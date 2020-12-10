@@ -6,7 +6,6 @@
  */
 import com.google.common.io.BaseEncoding
 import io.grpc.StatusRuntimeException
-import jdk.nashorn.internal.ir.annotations.Ignore
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Utils
 import org.bitcoinj.params.EvoNetParams
@@ -36,7 +35,7 @@ purpose: UNKNOWN
 
   identity:  J2jWLKNWogVf1B8fdo6rxMeQgDWWi9aGd9JPcTHxNj7H
  */
-    @Test @Ignore
+    /*@Test
     fun registerTest() {
         try {
             val platform = Platform(EvoNetParams.get())
@@ -55,17 +54,17 @@ purpose: UNKNOWN
             println(e)
             println(e.trailers)
         }
-    }
+    }*/
 
-    fun bouncy64(ba: ByteArray): String {
+    private fun bouncy64(ba: ByteArray): String {
         return org.bouncycastle.util.encoders.Base64.toBase64String(ba)
     }
 
-    fun google64(ba: ByteArray): String {
+    private fun google64(ba: ByteArray): String {
         return BaseEncoding.base64().encode(ba)
     }
 
-    fun google64op(ba: ByteArray): String {
+    private fun google64op(ba: ByteArray): String {
         return BaseEncoding.base64().omitPadding().encode(ba)
     }
 

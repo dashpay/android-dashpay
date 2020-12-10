@@ -21,6 +21,8 @@ import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
 import org.bitcoinj.wallet.ZeroConfCoinSelector
 import org.bouncycastle.crypto.params.KeyParameter
+import org.dashevo.dapiclient.grpc.DefaultBroadcastRetryCallback
+import org.dashevo.dapiclient.grpc.GrpcMethodShouldRetryCallback
 import org.dashevo.dashpay.callback.RegisterIdentityCallback
 import org.dashevo.dashpay.callback.RegisterNameCallback
 import org.dashevo.dashpay.callback.RegisterPreorderCallback
@@ -33,10 +35,8 @@ import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.identity.IdentityPublicKey
 import org.dashevo.dpp.statetransition.StateTransitionIdentitySigned
-import org.dashevo.dpp.toBase64
 import org.dashevo.dpp.toHexString
 import org.dashevo.dpp.util.Cbor
-import org.dashevo.dpp.util.HashUtils
 import org.dashevo.platform.Names
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
@@ -389,7 +389,9 @@ class BlockchainIdentity {
         }
         signStateTransition(transition, keyParameter)
 
-        platform.client.broadcastStateTransition(transition)
+        platform.client.broadcastStateTransition(transition,
+            retryCallback = DefaultBroadcastRetryCallback(platform.stateRepository)
+        )
 
         for (string in usernames) {
             var usernameStatusDictionary = usernameStatuses[string] as MutableMap<String, Any>
@@ -409,7 +411,9 @@ class BlockchainIdentity {
         }
         signStateTransition(transition!!, keyParameter)
 
-        platform.client.broadcastStateTransition(transition)
+        platform.client.broadcastStateTransition(transition,
+            retryCallback = platform.broadcastRetryCallback
+        )
 
         for (string in usernames) {
             var usernameStatusDictionary = usernameStatuses[string] as MutableMap<String, Any>
@@ -1124,7 +1128,9 @@ class BlockchainIdentity {
 
         signStateTransition(transition!!, keyParameter)
 
-        platform.client.broadcastStateTransition(transition)
+        platform.client.broadcastStateTransition(transition,
+            retryCallback = platform.broadcastRetryCallback
+        )
     }
 
     private fun replaceProfileTransition(
@@ -1158,7 +1164,9 @@ class BlockchainIdentity {
 
         signStateTransition(transition!!, keyParameter)
 
-        platform.client.broadcastStateTransition(transition)
+        platform.client.broadcastStateTransition(transition,
+            retryCallback = platform.broadcastRetryCallback
+        )
     }
 
     fun getProfile(): Document? {

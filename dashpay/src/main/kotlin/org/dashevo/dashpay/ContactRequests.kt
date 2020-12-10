@@ -53,7 +53,7 @@ class ContactRequests(val platform: Platform) {
         val transition = platform.dpp.document.createStateTransition(transitionMap)
         fromUser.signStateTransition(transition, aesKey)
 
-        platform.client.broadcastStateTransition(transition)
+        platform.client.broadcastStateTransition(transition, retryCallback = platform.broadcastRetryCallback)
     }
 
     /**

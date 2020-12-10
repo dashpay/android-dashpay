@@ -67,7 +67,7 @@ class Names(val platform: Platform) {
         preorderTransition.sign(identity.getPublicKeyById(0)!!, identityHDPrivateKey.privateKeyAsHex)
 
         return try {
-            platform.client.broadcastStateTransition(preorderTransition)
+            platform.client.broadcastStateTransition(preorderTransition, retryCallback = platform.broadcastRetryCallback)
             preorderDocument
         } catch (x: Exception) {
             null
@@ -142,7 +142,7 @@ class Names(val platform: Platform) {
 
         log.info("domainTransition: ${domainTransition.toJSON()}")
 
-        platform.client.broadcastStateTransition(domainTransition)
+        platform.client.broadcastStateTransition(domainTransition, retryCallback = platform.broadcastRetryCallback)
 
         return domainDocument
     }
@@ -232,11 +232,12 @@ class Names(val platform: Platform) {
      * @param startAtIndex Int
      * @return List<Documents>
      */
-    fun search(text: String, parentDomain: String, retrieveAll: Boolean, startAtIndex: Int = 0): List<Document> {
+    fun search(text: String, parentDomain: String, retrieveAll: Boolean, limit: Int = -1, startAtIndex: Int = 0): List<Document> {
         val documentQuery = DocumentQuery.Builder()
             .where(listOf("normalizedParentDomainName", "==", parentDomain))
             .orderBy(listOf("normalizedLabel", "asc"))
             .where(listOf("normalizedLabel", "startsWith", text.toLowerCase()))
+            .limit(limit)
 
         var startAt = startAtIndex
         val documents = ArrayList<Document>()

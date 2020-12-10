@@ -8,6 +8,8 @@
 package org.dashevo.dashpay
 
 import org.bitcoinj.core.ECKey
+import org.dashevo.dapiclient.grpc.DefaultBroadcastRetryCallback
+import org.dashevo.dapiclient.grpc.GrpcMethodShouldRetryCallback
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.document.*
 import org.dashevo.dpp.identifier.Identifier
@@ -40,7 +42,10 @@ class Profiles(
             "create" to listOf(profileDocument)
         )
 
-        val transition = signAndBroadcast(transitionMap, identity, id, signingKey)
+        val transition = signAndBroadcast(
+            transitionMap, identity, id, signingKey,
+            DefaultBroadcastRetryCallback(platform.stateRepository)
+        )
 
         return platform.dpp.document.createFromObject(transition.transitions[0].toObject().toMutableMap())
     }
@@ -68,7 +73,10 @@ class Profiles(
             "replace" to listOf(profileDocument)
         )
 
-        val transition = signAndBroadcast(transitionMap, identity, id, signingKey)
+        val transition = signAndBroadcast(
+            transitionMap, identity, id, signingKey,
+            DefaultBroadcastRetryCallback(platform.stateRepository, profileDocument.updatedAt!!)
+        )
 
         return platform.dpp.document.createFromObject(transition.transitions[0].toJSON().toMutableMap())
     }
@@ -77,12 +85,13 @@ class Profiles(
         transitionMap: HashMap<String, List<Document>>,
         identity: Identity,
         id: Int,
-        signingKey: ECKey
+        signingKey: ECKey,
+        retryCallback: GrpcMethodShouldRetryCallback
     ) : DocumentsBatchTransition {
         val profileStateTransition =
             platform.dpp.document.createStateTransition(transitionMap)
         profileStateTransition.sign(identity.getPublicKeyById(id)!!, signingKey.privateKeyAsHex)
-        platform.client.broadcastStateTransition(profileStateTransition)
+        platform.client.broadcastStateTransition(profileStateTransition, retryCallback = retryCallback)
         return profileStateTransition
     }
 

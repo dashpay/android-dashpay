@@ -41,7 +41,7 @@ class Identities(val platform: Platform) {
 
             identityCreateTransition.signByPrivateKey(assetLockPrivateKey)
 
-            platform.client.broadcastStateTransition(identityCreateTransition);
+            platform.client.broadcastStateTransition(identityCreateTransition, retryCallback = platform.broadcastRetryCallback);
             return identityCreateTransition.identityId.toString()
         } catch (e: Exception) {
             throw e
