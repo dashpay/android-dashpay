@@ -1,6 +1,4 @@
 {
-  "$schema": "https://schema.dash.org/dpp-0-4-0/meta/data-contract",
-  "protocolVersion": 0,
   "documents": {
     "profile": {
       "indices": [{
@@ -22,13 +20,27 @@
           "format": "url",
           "maxLength":2048
         },
+        "avatarHash": {
+          "type": "array",
+          "byteArray": true,
+          "minItems":32,
+          "maxItems":32,
+          "description": "SHA256 hash of the bytes of the image specified by avatarUrl"
+        },
+        "avatarFingerprint": {
+          "type": "array",
+          "byteArray": true,
+          "minItems":8,
+          "maxItems":8,
+          "description": "dHash the image specified by avatarUrl"
+        },
         "publicMessage": {
           "type": "string",
           "maxLength":140
         },
         "displayName": {
           "type": "string",
-          "maxLength":20
+          "maxLength":25
         }
       },
       "required": ["$createdAt", "$updatedAt"],
@@ -135,6 +147,12 @@
           "byteArray": true,
           "minItems": 48,
           "maxItems": 80
+        },
+        "autoAcceptProof": {
+          "type": "array",
+          "byteArray": true,
+          "minItems": 38,
+          "maxItems": 102
         }
       },
       "required": ["$createdAt", "toUserId", "encryptedPublicKey", "senderKeyIndex", "recipientKeyIndex", "accountReference"],
