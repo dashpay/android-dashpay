@@ -7,6 +7,8 @@
 package org.dashevo.platform
 
 import org.dashevo.dpp.document.Document
+import org.dashevo.dpp.identifier.Identifier
+import org.dashevo.dpp.util.HashUtils
 
 class DomainDocument(document: Document) : AbstractDocument(document) {
     val label: String
@@ -15,20 +17,20 @@ class DomainDocument(document: Document) : AbstractDocument(document) {
         get() = getFieldString("normalizedLabel")!!
     val normalizedParentDomainName: String
         get() = getFieldString("normalizedParentDomainName")!!
-    val dashAliasIdentityId: String?
+    val dashAliasIdentityId: Identifier?
         get() {
             val records = getFieldMap("records")
             return if (records != null && records.containsKey("dashAliasIdentityId")) {
-                records["dashAliasIdentityId"] as String
+                Identifier.from(records["dashAliasIdentityId"])
             } else {
                 null
             }
         }
-    val dashUniqueIdentityId: String?
+    val dashUniqueIdentityId: Identifier?
         get() {
             val records = getFieldMap("records")
             return if (records != null && records.containsKey("dashUniqueIdentityId")) {
-                records["dashUniqueIdentityId"] as String
+                Identifier.from(records["dashUniqueIdentityId"])
             } else {
                 null
             }
