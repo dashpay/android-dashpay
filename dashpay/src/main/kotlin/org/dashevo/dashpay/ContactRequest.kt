@@ -10,16 +10,68 @@ package org.dashevo.dashpay
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.platform.AbstractDocument
+import org.dashevo.platform.Platform
+import java.util.*
 
 class ContactRequest(document: Document) : AbstractDocument(document) {
     val toUserId: Identifier
         get() = Identifier.from(document.data["toUserId"])
-    val encryptedPublicKey: ByteArray
-        get() = document.data["encryptedPublicKey"] as ByteArray
+    val encryptedPublicKey: ByteArray?
+        get() = getFieldByteArray("encryptedPublicKey")
     val senderKeyIndex: Int
         get() = document.data["senderKeyIndex"] as Int
     val recipientKeyIndex: Int
         get() = document.data["recipientKeyIndex"] as Int
     val accountReference: Int
-        get() = document.data["accountReference"] as Int
+        get() = (document.data["accountReference"] as Long).toInt()
+    val version: Int
+        get() = accountReference shr 28
+    val encryptedAccountLabel: ByteArray?
+        get() = getFieldByteArray("encryptedAccountLabel")
+    val autoAcceptProof: ByteArray?
+        get() = getFieldByteArray("autoAcceptProof")
+
+    class Builder(val platform: Platform) {
+        val data = hashMapOf<String, Any?>()
+        var ownerId: Identifier? = null
+
+        fun from(userId: Identifier) = apply {
+            ownerId = userId
+        }
+
+        fun to(userId: Identifier) = apply {
+            data["toUserId"] = userId
+        }
+
+        fun encryptedPubKey(encryptedPublicKey: ByteArray, senderKeyIndex: Int, recipientKeyIndex: Int) = apply {
+            data["encryptedPublicKey"] = encryptedPublicKey
+            data["senderKeyIndex"] = senderKeyIndex
+            data["recipientKeyIndex"] = recipientKeyIndex
+        }
+
+        fun accountReference(accountReference: Long) = apply {
+            data["accountReference"] = accountReference
+        }
+
+        fun encryptedAccountLabel(encryptedAccountLabel: ByteArray) = apply {
+            data["encryptedAccountLabel"] = encryptedAccountLabel
+        }
+
+        fun autoAcceptProof(autoAcceptProof: ByteArray) = apply {
+            data["autoAcceptProof"] = autoAcceptProof
+        }
+
+        fun build(): ContactRequest {
+            data["\$createdAt"] = Date().time
+            val document = platform.documents.create(ContactRequests.CONTACTREQUEST_DOCUMENT, ownerId!!, data)
+
+            return ContactRequest(document)
+        }
+    }
+
+    companion object {
+        fun builder(platform: Platform): Builder {
+            return Builder(platform)
+        }
+    }
 }
