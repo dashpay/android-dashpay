@@ -31,22 +31,16 @@ class ContactRequests(val platform: Platform) {
             aesKey
         )
         val accountReference = fromUser.getAccountReference(aesKey, toUser)
-        val timeStamp = Date().time
 
-        val contactRequestDocument = platform.documents.create(
-            CONTACTREQUEST_DOCUMENT, fromUser.uniqueIdentifier, mutableMapOf<String, Any?>(
-                "encryptedPublicKey" to encryptedContactPubKey,
-                "recipientKeyIndex" to toUser.publicKeys[0].id,
-                "senderKeyIndex" to fromUser.identity!!.publicKeys[0].id,
-                "toUserId" to toUser.id,
-                "accountReference" to accountReference,
-                // TODO: contract requires 64 bytes, but minimum should be 32 to allow for short labels
-                // 16 bytes IV + 16 bytes for any label less than 15 characters
-                // This is a bug in the dashpay contract
-                //"encryptedAccountLabel" to encryptedAccountLabel
-                "\$createdAt" to timeStamp
-            )
-        )
+        val contactRequestDocument = ContactRequest.builder(platform)
+            .to(toUser.id)
+            .from(fromUser.uniqueIdentifier)
+            .encryptedPubKey(encryptedContactPubKey, toUser.publicKeys[0].id, fromUser.identity!!.publicKeys[0].id)
+            .accountReference(accountReference)
+            //TODO remove these comments
+            //.encryptedAccountLabel(encryptedAccountLabel)
+            .build().document
+
 
         val transitionMap = hashMapOf(
             "create" to listOf(contactRequestDocument)
