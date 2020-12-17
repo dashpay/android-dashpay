@@ -263,7 +263,7 @@ class CreateWallets {
                 blockchainIdentity.registerProfile(
                     displayNameFromUsername(blockchainIdentity).toUpperCase(),
                     "My identity is ${blockchainIdentity.uniqueIdString}.",
-                    null, null
+                    null, null, null, null
                 )
                 val profile = blockchainIdentity.watchProfile(10, 1000, RetryDelayType.SLOW20, object : UpdateProfileCallback {
                     override fun onComplete(uniqueId: String, profileDocument: Document) {
@@ -272,7 +272,7 @@ class CreateWallets {
                         blockchainIdentity.updateProfile(
                             displayNameFromUsername(blockchainIdentity),
                             "My identity is still ${blockchainIdentity.uniqueIdString}.",
-                            null, null
+                            null, null, null, null
                         )
                         blockchainIdentity.watchProfile(10, 1000, RetryDelayType.SLOW20, object : UpdateProfileCallback {
                             override fun onComplete(uniqueId: String, updatedProfileDocument: Document) {
