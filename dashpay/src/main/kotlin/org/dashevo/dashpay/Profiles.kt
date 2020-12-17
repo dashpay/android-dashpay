@@ -124,10 +124,15 @@ class Profiles(
         return get(Identifier.from(userId))
     }
 
-    fun get(userId: Identifier): Document? {
-        val query = DocumentQuery.Builder()
+    fun get(userId: Identifier, updatedAt: Long = -1): Document? {
+        val queryBuilder = DocumentQuery.Builder()
             .where("\$ownerId", "==", userId)
-            .build()
+
+        if (updatedAt != -1L) {
+            queryBuilder.where(listOf("\$updatedAt", "==", updatedAt))
+        }
+
+        val query = queryBuilder.build()
         try {
             val documents = platform.documents.get(DOCUMENT, query)
             return if (documents.isNotEmpty()) documents[0] else null
