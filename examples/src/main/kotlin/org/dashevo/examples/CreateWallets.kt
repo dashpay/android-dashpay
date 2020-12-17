@@ -249,9 +249,19 @@ class CreateWallets {
             }
         }
 
+        private fun displayNameFromUsername(blockchainIdentity: BlockchainIdentity): String {
+            val username = blockchainIdentity.currentUsername!!
+            return if (username.length > 20) {
+                username.substring(0, 20)
+            } else {
+                username
+            }
+
+        }
+
         private fun createProfile(blockchainIdentity: BlockchainIdentity) {
                 blockchainIdentity.registerProfile(
-                    "My Display Name",
+                    displayNameFromUsername(blockchainIdentity).toUpperCase(),
                     "My identity is ${blockchainIdentity.uniqueIdString}.",
                     null, null
                 )
@@ -260,7 +270,7 @@ class CreateWallets {
                         println("profile created successfully")
                         println(profileDocument.toJSON())
                         blockchainIdentity.updateProfile(
-                            "My Updated Display Name".substring(0, 20),
+                            displayNameFromUsername(blockchainIdentity),
                             "My identity is still ${blockchainIdentity.uniqueIdString}.",
                             null, null
                         )
