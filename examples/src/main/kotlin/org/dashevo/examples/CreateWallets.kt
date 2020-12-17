@@ -36,12 +36,11 @@ import java.util.concurrent.TimeUnit
 import org.bitcoinj.wallet.WalletTransaction
 import org.dashevo.dashpay.ContactRequests
 import org.dashevo.dashpay.RetryDelayType
-import org.dashevo.dashpay.callback.RegisterIdentityCallback
-import org.dashevo.dashpay.callback.RegisterNameCallback
-import org.dashevo.dashpay.callback.RegisterPreorderCallback
-import org.dashevo.dashpay.callback.UpdateProfileCallback
+import org.dashevo.dashpay.callback.*
 import org.dashevo.dpp.document.Document
+import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.toHexString
+import org.dashevo.platform.DomainDocument
 import org.json.JSONObject
 
 
@@ -68,6 +67,7 @@ class CreateWallets {
         private val PARAMS = EvoNetParams.get()
         var configurationFile: String = ""
         var network: String = ""
+        var contact: String = ""
 
         /**
          * The first argument must be the location of the configuration file that must include
@@ -79,6 +79,7 @@ class CreateWallets {
             if (args.size >= 2) {
                 network = args[0]
                 configurationFile = args[1]
+                contact = args[2]
                 sdk = Client(network)
                 println("------------------------------------------------")
                 println("CreateWallets($network: $configurationFile)")
@@ -267,6 +268,7 @@ class CreateWallets {
                             override fun onComplete(uniqueId: String, updatedProfileDocument: Document) {
                                 println("profile updated successfully")
                                 println(updatedProfileDocument.toJSON())
+                                sendContactRequest(blockchainIdentity)
                             }
 
                             override fun onTimeout() {
@@ -278,6 +280,30 @@ class CreateWallets {
                         println("create profile failed")
                     }
                 })
+        }
+
+        fun sendContactRequest(blockchainIdentity: BlockchainIdentity) {
+            if (contact.isNotEmpty()) {
+                val nameDocument = sdk.platform.names.get(contact)
+                if (nameDocument != null) {
+                    val domainDocument = DomainDocument(nameDocument)
+                    val identity = sdk.platform.identities.get(domainDocument.dashUniqueIdentityId!!)
+
+                    val cr = ContactRequests(sdk.platform)
+                    cr.create(blockchainIdentity, identity!!, null)
+
+                    cr.watchContactRequest(blockchainIdentity.uniqueIdentifier, identity.id, 10, 1000, RetryDelayType.SLOW20,
+                        object: SendContactRequestCallback {
+                            override fun onComplete(fromUser: Identifier, toUser: Identifier) {
+                                println("Contact Request Sent $fromUser->$toUser")
+                            }
+
+                            override fun onTimeout(fromUser: Identifier, toUser: Identifier) {
+                                println("Contact Request Sent $fromUser->$toUser")
+                            }
+                        })
+                }
+            }
         }
     }
 }
