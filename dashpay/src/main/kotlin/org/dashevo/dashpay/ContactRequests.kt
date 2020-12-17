@@ -1,8 +1,9 @@
 package org.dashevo.dashpay
 
-import org.bitcoinj.core.Base58
+
 import org.bouncycastle.crypto.params.KeyParameter
 import org.dashevo.dapiclient.model.DocumentQuery
+import org.dashevo.dashpay.callback.SendContactRequestCallback
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.identifier.Identifier
@@ -10,6 +11,7 @@ import org.dashevo.platform.Documents
 import org.dashevo.platform.Platform
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.concurrent.timerTask
 
 class ContactRequests(val platform: Platform) {
 
@@ -17,7 +19,7 @@ class ContactRequests(val platform: Platform) {
         const val CONTACTREQUEST_DOCUMENT = "dashpay.contactRequest"
     }
 
-    fun create(fromUser: BlockchainIdentity, toUser: Identity, aesKey: KeyParameter) {
+    fun create(fromUser: BlockchainIdentity, toUser: Identity, aesKey: KeyParameter?) {
         val contactKeyChain = fromUser.getReceiveFromContactChain(toUser, aesKey)
         val contactKey = contactKeyChain.watchingKey
         val contactPub = contactKey.serializeContactPub()
@@ -143,5 +145,35 @@ class ContactRequests(val platform: Platform) {
             }
         }
         return null
+    }
+
+    fun watchContactRequest(
+        fromUserId: Identifier,
+        toUserId: Identifier,
+        retryCount: Int,
+        delayMillis: Long,
+        retryDelayType: RetryDelayType,
+        callback: SendContactRequestCallback
+    ) {
+        val documentQuery = DocumentQuery.builder()
+        documentQuery.where("\$ownerId", "==", fromUserId)
+            .where("toUserId", "==", toUserId)
+        val result = platform.documents.get(CONTACTREQUEST_DOCUMENT, documentQuery.build())
+
+
+        if (result.isNotEmpty()) {
+            callback.onComplete(fromUserId, toUserId)
+        } else {
+            if (retryCount > 0) {
+                Timer("monitorSendContactRequestStatus", false).schedule(timerTask {
+                    val nextDelay = delayMillis * when (retryDelayType) {
+                        RetryDelayType.SLOW20 -> 5 / 4
+                        RetryDelayType.SLOW50 -> 3 / 2
+                        else -> 1
+                    }
+                    watchContactRequest(fromUserId, toUserId, retryCount - 1, nextDelay, retryDelayType, callback)
+                }, delayMillis)
+            } else callback.onTimeout(fromUserId, toUserId)
+        }
     }
 }
