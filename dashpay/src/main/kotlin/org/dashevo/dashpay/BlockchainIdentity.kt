@@ -1436,9 +1436,9 @@ class BlockchainIdentity {
         }
     }
 
-    fun getContactNextPaymentAddress(contactId: Identifier): Address {
+    fun getContactNextPaymentAddress(contactId: Identifier, accountReference: Int): Address {
         return wallet!!.currentAddress(
-            EvolutionContact(uniqueIdString, account, contactId.toString()),
+            EvolutionContact(uniqueIdString, accountReference, contactId.toString()),
             FriendKeyChain.KeyChainType.SENDING_CHAIN
         )
     }
