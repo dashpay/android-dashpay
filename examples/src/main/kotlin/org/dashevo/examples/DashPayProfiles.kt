@@ -15,10 +15,15 @@ import org.json.JSONObject
 
 class DashPayProfiles {
     companion object {
-        val sdk = Client("palinka")
+        lateinit var sdk: Client
 
         @JvmStatic
         fun main(args: Array<String>) {
+            if (args.isEmpty()) {
+                println("Usage: DashPayProfiles network")
+                return
+            }
+            sdk = Client(args[0])
             getDocuments()
         }
 
@@ -47,6 +52,7 @@ class DashPayProfiles {
                         println("-> publicMessage: " + doc.data["publicMessage"])
                         println()
                         println(JSONObject(doc.toJSON()).toString())
+                        println("------------------------------------------------------------")
                     }
 
                     startAt += Documents.DOCUMENT_LIMIT;
