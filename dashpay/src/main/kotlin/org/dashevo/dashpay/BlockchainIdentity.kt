@@ -1298,6 +1298,14 @@ class BlockchainIdentity {
         )
     }
 
+    private fun padAccountLabel() : String {
+        return if (accountLabel.length < 16) {
+            accountLabel + " ".repeat(16 - accountLabel.length)
+        } else {
+            accountLabel
+        }
+    }
+
     fun encryptExtendedPublicKey(
         xpub: ByteArray,
         contactIdentity: Identity,
@@ -1343,7 +1351,7 @@ class BlockchainIdentity {
         boas.write(encryptedData.encryptedBytes)
 
         // encrypt
-        val encryptedAccountLabel = keyCrypter.encrypt(accountLabel.toByteArray(), encryptionKey)
+        val encryptedAccountLabel = keyCrypter.encrypt(padAccountLabel().toByteArray(), encryptionKey)
 
         // format as a single byte array
         val accountLabelBoas =
@@ -1408,7 +1416,14 @@ class BlockchainIdentity {
     }
 
     fun addContactPaymentKeyChain(contactIdentity: Identity, contactRequest: Document, encryptionKey: KeyParameter?) {
-        val contact = EvolutionContact(uniqueId, account, contactIdentity.id.toSha256Hash())
+
+        val accountReference = if (contactRequest.data.containsKey("accountReference")) {
+            contactRequest.data["accountReference"] as Int
+        } else {
+            0
+        }
+
+        val contact = EvolutionContact(uniqueId, accountReference, contactIdentity.id.toSha256Hash())
 
         if (!wallet!!.hasSendingKeyChain(contact)) {
 
@@ -1467,8 +1482,6 @@ class BlockchainIdentity {
     fun getAccountReference(encryptionKey: KeyParameter?, fromIdentity: Identity): Long {
         val privateKey = maybeDecryptKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, encryptionKey)
 
-        val contact = EvolutionContact(uniqueId, account, Sha256Hash.wrap(fromIdentity.id.toBuffer()))
-
         val receiveChain = getReceiveFromContactChain(fromIdentity, encryptionKey)
 
         val extendedPublicKey = receiveChain.watchingKey.dropPrivateBytes();
@@ -1477,7 +1490,7 @@ class BlockchainIdentity {
 
         val accountSecretKey28 = Sha256Hash.wrapReversed(accountSecretKey).toBigInteger().toInt() shr 4
 
-        val shortenedAccountBits = account and 0x00FFFFFF
+        val shortenedAccountBits = account and 0x0FFFFFFF
 
         val version = 0L
 
