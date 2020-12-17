@@ -8,6 +8,7 @@ package org.dashevo.platform
 
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identifier.Identifier
+import org.dashevo.dpp.util.HashUtils
 
 abstract class AbstractDocument(val document: Document) {
 
@@ -40,7 +41,7 @@ abstract class AbstractDocument(val document: Document) {
     protected fun getFieldByteArray(fieldName: String): ByteArray? {
         val field = document.data[fieldName]
         return if (field != null)
-            field as ByteArray
+            HashUtils.byteArrayfromBase64orByteArray(field)
         else null
     }
 
