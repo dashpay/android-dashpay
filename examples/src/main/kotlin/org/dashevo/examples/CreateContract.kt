@@ -18,10 +18,15 @@ import java.util.*
 
 class CreateContract {
     companion object {
-        val sdk = Client("palinka")
+        lateinit var sdk: Client
 
         @JvmStatic
         fun main(args: Array<String>) {
+            if (args.isEmpty()) {
+                println("Usage: DisplayContracts network")
+                return
+            }
+            sdk = Client(args[0])
             createIdentity()
         }
 
