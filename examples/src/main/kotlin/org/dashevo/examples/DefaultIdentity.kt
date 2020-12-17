@@ -45,5 +45,5 @@ object DefaultIdentity {
 
     val identityPrivateKey = ECKey.fromPrivateAndPrecalculatedPublic(privateKey, publicKey)
 
-    val seed = "regular soup scene torch enrich fitness carbon praise rebuild penalty hole citizen"
+    val seed = "popular have own gorilla comfort wedding step sugar excess echo alpha modify"
 }
