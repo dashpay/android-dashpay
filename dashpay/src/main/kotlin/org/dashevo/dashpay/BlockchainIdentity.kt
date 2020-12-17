@@ -158,6 +158,10 @@ class BlockchainIdentity {
     var creditFundingTransaction: CreditFundingTransaction? = null
     lateinit var registrationFundingPrivateKey: ECKey
 
+    // profile
+    var lastProfileDocument: Document? = null
+
+
 
     constructor(platform: Platform, uniqueId: Sha256Hash) : this(platform) {
         Preconditions.checkArgument(uniqueId != Sha256Hash.ZERO_HASH, "uniqueId must not be zero");
@@ -1117,6 +1121,7 @@ class BlockchainIdentity {
         avatarUrl: String? = null
     ): DocumentsBatchTransition {
         val profileDocument = profiles.createProfileDocument(displayName, publicMessage, avatarUrl, identity!!)
+        lastProfileDocument = profileDocument
         val transitionMap = hashMapOf<String, List<Document>?>(
             "create" to listOf(profileDocument)
         )
@@ -1152,6 +1157,7 @@ class BlockchainIdentity {
         val profileDocument = Document(profileData, platform.apps["dashpay"]!!.dataContract!!)
         // a replace operation must set updatedAt
         profileDocument.updatedAt = Date().time
+        lastProfileDocument = profileDocument
 
         val transitionMap = hashMapOf<String, List<Document>?>(
             "replace" to listOf(profileDocument)
@@ -1186,7 +1192,13 @@ class BlockchainIdentity {
         retryDelayType: RetryDelayType
     ): Document? {
 
-        val profileResult = profiles.get(uniqueIdString)
+        val updatedAt = if (lastProfileDocument?.updatedAt != null) {
+            lastProfileDocument!!.updatedAt!!
+        } else {
+            -1
+        }
+
+        val profileResult = profiles.get(uniqueIdentifier, updatedAt)
 
         if (profileResult != null) {
             save()
@@ -1211,15 +1223,20 @@ class BlockchainIdentity {
         retryDelayType: RetryDelayType,
         callback: UpdateProfileCallback
     ) {
+        val updatedAt = if (lastProfileDocument?.updatedAt != null) {
+            lastProfileDocument!!.updatedAt!!
+        } else {
+            -1
+        }
 
-        val profileResult = profiles.get(uniqueIdString)
+        val profileResult = profiles.get(uniqueIdentifier, updatedAt)
 
         if (profileResult != null) {
             save()
             callback.onComplete(uniqueIdString, profileResult)
         } else {
             if (retryCount > 0) {
-                Timer("monitorBlockchainIdentityStatus", false).schedule(timerTask {
+                Timer("monitorUpdateProfileStatus", false).schedule(timerTask {
                     val nextDelay = delayMillis * when (retryDelayType) {
                         RetryDelayType.SLOW20 -> 5 / 4
                         RetryDelayType.SLOW50 -> 3 / 2
