@@ -31,6 +31,7 @@ class ContactRequests(val platform: Platform) {
             aesKey
         )
         val accountReference = fromUser.getAccountReference(aesKey, toUser)
+        println ("accountReference = $accountReference")
 
         val contactRequestDocument = ContactRequest.builder(platform)
             .to(toUser.id)

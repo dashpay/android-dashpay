@@ -37,6 +37,7 @@ import org.dashevo.dpp.identity.IdentityPublicKey
 import org.dashevo.dpp.statetransition.StateTransitionIdentitySigned
 import org.dashevo.dpp.toHexString
 import org.dashevo.dpp.util.Cbor
+import org.dashevo.dpp.util.HashUtils
 import org.dashevo.platform.Names
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
@@ -1289,12 +1290,25 @@ class BlockchainIdentity {
         )
     }
 
-    fun getSendToContactChain(contactIdentity: Identity, xpub: ByteArray): FriendKeyChain {
+    fun getReceiveFromContactChain(contactIdentity: Identity, encryptedXpub: ByteArray, aesKey: KeyParameter?): FriendKeyChain {
+        val seed = maybeDecryptSeed(aesKey)
+
+        return FriendKeyChain(
+            seed,
+            null,
+            FriendKeyChain.getRootPath(params),
+            account,
+            uniqueId,
+            contactIdentity.id.toSha256Hash()
+        )
+    }
+
+    fun getSendToContactChain(contactIdentity: Identity, xpub: ByteArray, accountReference: Int): FriendKeyChain {
         val contactIdentityPublicKey = contactIdentity.getPublicKeyById(index)
         return FriendKeyChain(
             params,
             xpub.toHexString(),
-            EvolutionContact(uniqueId, account, contactIdentity.id.toSha256Hash())
+            EvolutionContact(uniqueId, account, contactIdentity.id.toSha256Hash(), accountReference)
         )
     }
 
@@ -1420,10 +1434,10 @@ class BlockchainIdentity {
         val accountReference = if (contactRequest.data.containsKey("accountReference")) {
             contactRequest.data["accountReference"] as Int
         } else {
-            0
+            -1
         }
 
-        val contact = EvolutionContact(uniqueId, accountReference, contactIdentity.id.toSha256Hash())
+        val contact = EvolutionContact(uniqueId, account, contactIdentity.id.toSha256Hash(), accountReference)
 
         if (!wallet!!.hasSendingKeyChain(contact)) {
 
@@ -1443,30 +1457,46 @@ class BlockchainIdentity {
         contactIdentity: Identity,
         contactRequest: Document,
         encryptionKey: KeyParameter?
-    ) {
-        val contact = EvolutionContact(uniqueId, account, contactIdentity.id.toSha256Hash())
+    ): Boolean {
+        val contact = EvolutionContact(uniqueId, account, contactIdentity.id.toSha256Hash(), -1)
         if (!wallet!!.hasReceivingKeyChain(contact)) {
+            val encryptedXpub = HashUtils.byteArrayfromBase64orByteArray(contactRequest.data["encryptedPublicKey"]!!)
+            val senderKeyIndex = contactRequest.data["senderKeyIndex"] as Int
+            val recipientKeyIndex = contactRequest.data["recipientKeyIndex"] as Int
             val contactKeyChain = getReceiveFromContactChain(contactIdentity, encryptionKey)
-            addContactToWallet(contactKeyChain, encryptionKey)
+
+            val serializedContactXpub = decryptExtendedPublicKey(encryptedXpub, contactIdentity, recipientKeyIndex, senderKeyIndex, encryptionKey)
+
+            val ourContactXpub = contactKeyChain.watchingKey.serializeContactPub()
+            val ourSerializedXpub = DeterministicKey.deserializeContactPub(params, ourContactXpub).serializePubB58(params)
+
+            // check that this contactRequest is for the default account
+            if (serializedContactXpub.contentEquals(ourSerializedXpub)) {
+                addContactToWallet(contactKeyChain, encryptionKey)
+                return true
+            } else {
+                log.warn("contactRequest does not match account 0")
+            }
         }
+        return false
     }
 
     fun getContactNextPaymentAddress(contactId: Identifier, accountReference: Int): Address {
         return wallet!!.currentAddress(
-            EvolutionContact(uniqueIdString, accountReference, contactId.toString()),
+            EvolutionContact(uniqueIdString, account, contactId.toString(), accountReference),
             FriendKeyChain.KeyChainType.SENDING_CHAIN
         )
     }
 
     fun getNextPaymentAddressFromContact(contactId: Identifier): Address {
         return wallet!!.currentAddress(
-            EvolutionContact(uniqueIdString, account, contactId.toString()),
+            EvolutionContact(uniqueIdString, account, contactId.toString(), -1),
             FriendKeyChain.KeyChainType.RECEIVING_CHAIN
         )
     }
 
-    fun getContactTransactions(identityId: Identifier): List<Transaction> {
-        val contact = EvolutionContact(uniqueIdString, account, identityId.toString())
+    fun getContactTransactions(identityId: Identifier, accountReference: Int): List<Transaction> {
+        val contact = EvolutionContact(uniqueIdString, account, identityId.toString(), accountReference)
         return wallet!!.getTransactionsWithFriend(contact)
     }
 
@@ -1479,7 +1509,7 @@ class BlockchainIdentity {
     }
 
 
-    fun getAccountReference(encryptionKey: KeyParameter?, fromIdentity: Identity): Long {
+    fun getAccountReference(encryptionKey: KeyParameter?, fromIdentity: Identity): Int {
         val privateKey = maybeDecryptKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, encryptionKey)
 
         val receiveChain = getReceiveFromContactChain(fromIdentity, encryptionKey)
@@ -1488,14 +1518,14 @@ class BlockchainIdentity {
 
         val accountSecretKey = HDUtils.hmacSha256(privateKey!!.privKeyBytes, extendedPublicKey.serializeContactPub())
 
-        val accountSecretKey28 = Sha256Hash.wrapReversed(accountSecretKey).toBigInteger().toInt() shr 4
+        val accountSecretKey28 = Sha256Hash.wrapReversed(accountSecretKey).toBigInteger().toInt() ushr 4
 
         val shortenedAccountBits = account and 0x0FFFFFFF
 
-        val version = 0L
+        val version = 0
 
-        val versionBits: Long = version shl 28
+        val versionBits: Int = (version shl 28)
 
-        return versionBits or (accountSecretKey28 xor shortenedAccountBits).toLong()
+        return versionBits or (accountSecretKey28 xor shortenedAccountBits)
     }
 }

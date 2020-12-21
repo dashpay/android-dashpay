@@ -23,7 +23,7 @@ class ContactRequest(document: Document) : AbstractDocument(document) {
     val recipientKeyIndex: Int
         get() = document.data["recipientKeyIndex"] as Int
     val accountReference: Int
-        get() = (document.data["accountReference"] as Long).toInt()
+        get() = (document.data["accountReference"] as Int).toInt()
     val version: Int
         get() = accountReference shr 28
     val encryptedAccountLabel: ByteArray?
@@ -49,7 +49,7 @@ class ContactRequest(document: Document) : AbstractDocument(document) {
             data["recipientKeyIndex"] = recipientKeyIndex
         }
 
-        fun accountReference(accountReference: Long) = apply {
+        fun accountReference(accountReference: Int) = apply {
             data["accountReference"] = accountReference
         }
 
