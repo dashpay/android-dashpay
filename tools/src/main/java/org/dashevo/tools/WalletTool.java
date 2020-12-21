@@ -1768,7 +1768,7 @@ public class WalletTool {
             int inboundTx = 0, outboundTx = 0;
             Transaction firstOutboundTx = null;
             for (Identifier id : ids) {
-                List<Transaction> list = blockchainIdentity.getContactTransactions(id);
+                List<Transaction> list = blockchainIdentity.getContactTransactions(id, 0);
                 for (Transaction contactTx : list) {
                     if (contactTx.getValue(wallet).isPositive())
                         inboundTx++;
