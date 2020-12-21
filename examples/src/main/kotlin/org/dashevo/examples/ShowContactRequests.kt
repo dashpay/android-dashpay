@@ -10,6 +10,7 @@ import org.dashevo.Client
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dashpay.ContactRequests
 import org.dashevo.dpp.document.Document
+import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.toBase58
 import org.dashevo.dpp.toBase64
 import org.dashevo.platform.Documents
@@ -71,7 +72,7 @@ class ShowContactRequests {
                             val nameDocument = platform.names.resolve(id)
                             if (nameDocument != null) {
                                 val records = nameDocument.data["records"] as MutableMap<String, Any?>
-                                identityId = records["dashIdentity"] as String
+                                identityId = Identifier.from(records["dashIdentity"]).toString()
                             }
                         }
                         ContactRequests(platform).get(identityId, false, 0L, false, startAt)
