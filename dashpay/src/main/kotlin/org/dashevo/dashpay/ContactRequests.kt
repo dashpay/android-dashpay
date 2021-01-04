@@ -38,8 +38,7 @@ class ContactRequests(val platform: Platform) {
             .from(fromUser.uniqueIdentifier)
             .encryptedPubKey(encryptedContactPubKey, toUser.publicKeys[0].id, fromUser.identity!!.publicKeys[0].id)
             .accountReference(accountReference)
-            //TODO remove these comments
-            //.encryptedAccountLabel(encryptedAccountLabel)
+            .encryptedAccountLabel(encryptedAccountLabel)
             .build().document
 
 
