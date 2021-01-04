@@ -1119,9 +1119,11 @@ class BlockchainIdentity {
     private fun createProfileTransition(
         displayName: String?,
         publicMessage: String?,
-        avatarUrl: String? = null
+        avatarUrl: String? = null,
+        avatarHash: ByteArray? = null,
+        avatarFingerprint: ByteArray?
     ): DocumentsBatchTransition {
-        val profileDocument = profiles.createProfileDocument(displayName, publicMessage, avatarUrl, identity!!)
+        val profileDocument = profiles.createProfileDocument(displayName, publicMessage, avatarUrl, avatarHash, avatarFingerprint, identity!!)
         lastProfileDocument = profileDocument
         val transitionMap = hashMapOf<String, List<Document>?>(
             "create" to listOf(profileDocument)
@@ -1129,8 +1131,8 @@ class BlockchainIdentity {
         return platform.dpp.document.createStateTransition(transitionMap)
     }
 
-    fun registerProfile(displayName: String?, publicMessage: String?, avatarUrl: String?, keyParameter: KeyParameter?) {
-        val transition = createProfileTransition(displayName, publicMessage, avatarUrl)
+    fun registerProfile(displayName: String?, publicMessage: String?, avatarUrl: String?, avatarHash: ByteArray? = null, avatarFingerprint: ByteArray?, keyParameter: KeyParameter?) {
+        val transition = createProfileTransition(displayName, publicMessage, avatarUrl, avatarHash, avatarFingerprint)
 
         signStateTransition(transition!!, keyParameter)
 
@@ -1142,7 +1144,9 @@ class BlockchainIdentity {
     private fun replaceProfileTransition(
         displayName: String?,
         publicMessage: String?,
-        avatarUrl: String? = null
+        avatarUrl: String? = null,
+        avatarHash: ByteArray? = null,
+        avatarFingerprint: ByteArray?
     ): DocumentsBatchTransition {
 
         // first obtain the current document
@@ -1154,6 +1158,8 @@ class BlockchainIdentity {
         profileData["displayName"] = displayName
         profileData["publicMessage"] = publicMessage
         profileData["avatarUrl"] = avatarUrl
+        profileData["avatarHash"] = avatarHash
+        profileData["avatarFingerprint"] = avatarFingerprint
 
         val profileDocument = Document(profileData, platform.apps["dashpay"]!!.dataContract!!)
         // a replace operation must set updatedAt
@@ -1166,8 +1172,8 @@ class BlockchainIdentity {
         return platform.dpp.document.createStateTransition(transitionMap)
     }
 
-    fun updateProfile(displayName: String?, publicMessage: String?, avatarUrl: String?, keyParameter: KeyParameter?) {
-        val transition = replaceProfileTransition(displayName, publicMessage, avatarUrl)
+    fun updateProfile(displayName: String?, publicMessage: String?, avatarUrl: String?, avatarHash: ByteArray? = null, avatarFingerprint: ByteArray?, keyParameter: KeyParameter?) {
+        val transition = replaceProfileTransition(displayName, publicMessage, avatarUrl, avatarHash, avatarFingerprint)
 
         signStateTransition(transition!!, keyParameter)
 

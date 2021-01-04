@@ -11,5 +11,8 @@ class Profile(document: Document) : AbstractDocument(document) {
         get() = getFieldString("publicMessage")
     val avatarUrl: String?
         get() = getFieldString("avatarUrl")
-
+    val avatarHash: ByteArray?
+        get() = getFieldByteArray("avatarHash")
+    val avatarFingerprint: ByteArray?
+        get() = getFieldByteArray("avatarFingerprint")
 }

@@ -31,11 +31,13 @@ class Profiles(
         displayName: String,
         publicMessage: String,
         avatarUrl: String?,
+        avatarHash: ByteArray?,
+        avatarFingerprint: ByteArray?,
         identity: Identity,
         id: Int,
         signingKey: ECKey
     ) : Document {
-        val profileDocument = createProfileDocument(displayName, publicMessage, avatarUrl, identity)
+        val profileDocument = createProfileDocument(displayName, publicMessage, avatarUrl, avatarHash, avatarFingerprint, identity)
         profileDocument.createdAt = Date().time
 
         val transitionMap = hashMapOf(
@@ -54,6 +56,8 @@ class Profiles(
         displayName: String,
         publicMessage: String,
         avatarUrl: String?,
+        avatarHash: ByteArray?,
+        avatarFingerprint: ByteArray?,
         identity: Identity,
         id: Int,
         signingKey: ECKey
@@ -65,6 +69,8 @@ class Profiles(
         profileData["displayName"] = displayName
         profileData["publicMessage"] = publicMessage
         profileData["avatarUrl"] = avatarUrl
+        profileData["avatarHash"] = avatarHash
+        profileData["avatarFingerprint"] = avatarFingerprint
 
         val profileDocument = platform.dpp.document.createFromObject(profileData)
         profileDocument.updatedAt = Date().time
@@ -99,6 +105,8 @@ class Profiles(
         displayName: String?,
         publicMessage: String?,
         avatarUrl: String?,
+        avatarHash: ByteArray?,
+        avatarFingerprint: ByteArray?,
         identity: Identity,
         revision: Int = DocumentCreateTransition.INITIAL_REVISION
     ): Document {
@@ -107,7 +115,9 @@ class Profiles(
             mutableMapOf<String, Any?>(
                 "publicMessage" to publicMessage,
                 "displayName" to displayName,
-                "avatarUrl" to avatarUrl
+                "avatarUrl" to avatarUrl,
+                "avatarHash" to avatarHash,
+                "avatarFingerprint" to avatarFingerprint
             )
         )
         document.revision = revision
