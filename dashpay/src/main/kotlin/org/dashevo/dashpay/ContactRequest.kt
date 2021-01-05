@@ -23,13 +23,15 @@ class ContactRequest(document: Document) : AbstractDocument(document) {
     val recipientKeyIndex: Int
         get() = document.data["recipientKeyIndex"] as Int
     val accountReference: Int
-        get() = (document.data["accountReference"] as Int).toInt()
+        get() = document.data["accountReference"] as Int
     val version: Int
-        get() = accountReference shr 28
+        get() = accountReference ushr 28
     val encryptedAccountLabel: ByteArray?
         get() = getFieldByteArray("encryptedAccountLabel")
     val autoAcceptProof: ByteArray?
         get() = getFieldByteArray("autoAcceptProof")
+    val coreHeightCreatedAt: Int
+        get() = document.data["coreHeightCreatedAt"] as Int
 
     class Builder(val platform: Platform) {
         val data = hashMapOf<String, Any?>()
@@ -59,6 +61,10 @@ class ContactRequest(document: Document) : AbstractDocument(document) {
 
         fun autoAcceptProof(autoAcceptProof: ByteArray) = apply {
             data["autoAcceptProof"] = autoAcceptProof
+        }
+
+        fun coreHeightCreatedAt(coreHeightCreatedAt: Int) = apply {
+            data["coreHeightCreatedAt"] = coreHeightCreatedAt
         }
 
         fun build(): ContactRequest {
