@@ -9,13 +9,15 @@ package org.dashevo
 import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.params.MobileDevNetParams
 import org.bitcoinj.params.PalinkaDevNetParams
+import org.bitcoinj.params.TestNet3Params
 import org.dashevo.platform.Platform
 
 class Client(network: String) {
     val platform = Platform( when (network) {
-        "testnet", "evonet" -> EvoNetParams.get()
+        "evonet" -> EvoNetParams.get()
         "palinka" -> PalinkaDevNetParams.get()
         "mobile" -> MobileDevNetParams.get()
+        "testnet" -> TestNet3Params.get()
         else -> throw IllegalArgumentException("network $network is not valid")
     })
 
