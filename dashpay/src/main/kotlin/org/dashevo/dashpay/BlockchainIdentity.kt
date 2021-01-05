@@ -814,7 +814,6 @@ class BlockchainIdentity {
     ): String? {
 
         val identityResult = platform.identities.get(uniqueIdString)
-
         if (identityResult != null) {
             identity = identityResult
             registrationStatus = RegistrationStatus.REGISTERED
@@ -827,8 +826,8 @@ class BlockchainIdentity {
                     RetryDelayType.SLOW50 -> 3 / 2
                     else -> 1
                 }
-                kotlinx.coroutines.delay(nextDelay)
-                watchIdentity(retryCount - 1, nextDelay, retryDelayType)
+                delay(nextDelay)
+                return watchIdentity(retryCount - 1, nextDelay, retryDelayType)
             }
         }
         return null
@@ -967,7 +966,7 @@ class BlockchainIdentity {
                     else -> 1
                 }
                 delay(nextDelay)
-                watchPreorder(
+                return watchPreorder(
                     saltedDomainHashesLeft,
                     retryCount - 1,
                     nextDelay,
@@ -988,7 +987,7 @@ class BlockchainIdentity {
                     else -> 1
                 }
                 delay(nextDelay)
-                watchPreorder(
+                return watchPreorder(
                     saltedDomainHashes,
                     retryCount - 1,
                     nextDelay,
@@ -1109,7 +1108,7 @@ class BlockchainIdentity {
                     else -> 1
                 }
                 delay(nextDelay)
-                watchUsernames(usernamesLeft, retryCount - 1, nextDelay, retryDelayType)
+                return watchUsernames(usernamesLeft, retryCount - 1, nextDelay, retryDelayType)
             } else if (usernamesLeft.size > 0) {
                 return Pair(false, usernamesLeft)
             } else {
@@ -1123,7 +1122,7 @@ class BlockchainIdentity {
                     else -> 1
                 }
                 delay(nextDelay)
-                watchUsernames(usernames, retryCount - 1, nextDelay, retryDelayType)
+                return watchUsernames(usernames, retryCount - 1, nextDelay, retryDelayType)
             } else {
                 return Pair(false, usernames)
             }
