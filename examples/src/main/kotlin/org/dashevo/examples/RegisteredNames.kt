@@ -48,9 +48,10 @@ class RegisteredNames {
                     startAt += Documents.DOCUMENT_LIMIT
                 } catch (e: Exception) {
                     println("\nError retrieving results (startAt =  $startAt)")
-                    println(e.message);
+                    println(e.message)
+                    return
                 }
-            } while (requests == 0 || documents!!.size >= 100);
+            } while (requests == 0 || documents!!.size >= 100)
         }
     }
 }
