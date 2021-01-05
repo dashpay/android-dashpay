@@ -39,8 +39,8 @@ class ContactRequests(val platform: Platform) {
             .encryptedPubKey(encryptedContactPubKey, toUser.publicKeys[0].id, fromUser.identity!!.publicKeys[0].id)
             .accountReference(accountReference)
             .encryptedAccountLabel(encryptedAccountLabel)
+            .coreHeightCreatedAt(fromUser.wallet!!.lastBlockSeenHeight)
             .build().document
-
 
         val transitionMap = hashMapOf(
             "create" to listOf(contactRequestDocument)
