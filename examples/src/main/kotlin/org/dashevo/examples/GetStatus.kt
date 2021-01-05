@@ -7,7 +7,6 @@
 package org.dashevo.examples
 
 import com.google.common.base.Stopwatch
-import org.bitcoinj.params.DevNetParams
 import org.dashevo.Client
 import org.dashevo.dapiclient.model.GetStatusResponse
 import org.dashevo.dapiclient.provider.DAPIAddress
@@ -35,7 +34,7 @@ class GetStatus {
             sdk.isReady()
             val results = hashMapOf<DAPIAddress, GetStatusResponse?>()
 
-            val nodeList = (sdk.platform.params as DevNetParams).defaultMasternodeList.toMutableList()
+            val nodeList = sdk.platform.params.defaultMasternodeList.toMutableList()
             val total = nodeList.size
             var success = 0
             var successFallback = 0
