@@ -12,6 +12,7 @@ import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.params.MobileDevNetParams
 import org.bitcoinj.params.PalinkaDevNetParams
+import org.bitcoinj.params.TestNet3Params
 import org.dashevo.dapiclient.DapiClient
 import org.dashevo.dapiclient.grpc.DefaultBroadcastRetryCallback
 import org.dashevo.dapiclient.model.DocumentQuery
@@ -26,6 +27,10 @@ import org.dashevo.dpp.statetransition.StateTransitionIdentitySigned
 class Platform(val params: NetworkParameters) {
 
     val stateRepository: StateRepository = object : StateRepository {
+        override fun checkAssetLockTransactionOutPointExists(outPointBuffer: ByteArray) {
+            TODO("Not yet implemented")
+        }
+
         override fun fetchDataContract(id: Identifier): DataContract? {
             val contractInfo = apps.values.find { it.contractId == id }
             if (contractInfo?.dataContract != null)
@@ -42,6 +47,10 @@ class Platform(val params: NetworkParameters) {
         }
 
         override fun removeDocument(contractId: Identifier, type: String, id: Identifier) {
+            TODO("Not yet implemented")
+        }
+
+        override fun storeAssetLockTransactionOutPoint(outPointBuffer: ByteArray) {
             TODO("Not yet implemented")
         }
 
