@@ -7,37 +7,44 @@
 package org.dashevo.platform
 
 import org.bitcoinj.core.ECKey
-import org.bitcoinj.core.TransactionOutPoint
-import org.bitcoinj.crypto.KeyCrypter
+import org.bitcoinj.core.Transaction
 import org.bitcoinj.evolution.CreditFundingTransaction
-import org.bouncycastle.crypto.params.KeyParameter
+import org.bitcoinj.quorums.InstantSendLock
 import org.dashevo.dpp.identifier.Identifier
+import org.dashevo.dpp.identity.AssetLock
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.identity.IdentityPublicKey
+import org.dashevo.dpp.identity.InstantAssetLockProof
 
 class Identities(val platform: Platform) {
 
     fun register(
         signedLockTransaction: CreditFundingTransaction,
+        instantLock: InstantSendLock,
         identityPublicKeys: List<IdentityPublicKey>
     ): String {
         return register(
-            signedLockTransaction.lockedOutpoint,
+            signedLockTransaction.outputIndex,
+            signedLockTransaction,
+            instantLock,
             signedLockTransaction.creditBurnPublicKey,
             identityPublicKeys
         )
     }
 
     fun register(
-        lockedOutpoint: TransactionOutPoint,
+        outputIndex: Long,
+        transaction: Transaction,
+        instantLock: InstantSendLock,
         assetLockPrivateKey: ECKey,
         identityPublicKeys: List<IdentityPublicKey>
     ): String {
 
         try {
-            val outPoint = lockedOutpoint.bitcoinSerialize()
+            val instantAssetLockProof = InstantAssetLockProof(instantLock)
+            val assetLock = AssetLock(outputIndex, transaction, instantAssetLockProof)
 
-            val identityCreateTransition = platform.dpp.identity.createIdentityCreateTransition(outPoint, identityPublicKeys)
+            val identityCreateTransition = platform.dpp.identity.createIdentityCreateTransition(assetLock, identityPublicKeys)
 
             identityCreateTransition.signByPrivateKey(assetLockPrivateKey)
 
@@ -64,23 +71,31 @@ class Identities(val platform: Platform) {
 
     fun topUp(
         identityId: Identifier,
-        signedLockTransaction: CreditFundingTransaction
+        signedLockTransaction: CreditFundingTransaction,
+        instantLock: InstantSendLock
     ): Boolean {
         return topUp(
             identityId,
-            signedLockTransaction.lockedOutpoint,
+            signedLockTransaction.outputIndex,
+            signedLockTransaction,
+            instantLock,
             signedLockTransaction.creditBurnPublicKey
         )
     }
 
     fun topUp(
         identityId: Identifier,
-        lockedOutpoint: TransactionOutPoint,
+        outputIndex: Long,
+        transaction: Transaction,
+        instantLock: InstantSendLock,
         assetLockPrivateKey: ECKey
     ): Boolean {
 
         try {
-            val identityTopupTransition = platform.dpp.identity.createIdentityTopupTransition(identityId, lockedOutpoint)
+            val instantAssetLockProof = InstantAssetLockProof(instantLock)
+            val assetLock = AssetLock(outputIndex, transaction, instantAssetLockProof)
+
+            val identityTopupTransition = platform.dpp.identity.createIdentityTopupTransition(identityId, assetLock)
 
             identityTopupTransition.signByPrivateKey(assetLockPrivateKey)
 
