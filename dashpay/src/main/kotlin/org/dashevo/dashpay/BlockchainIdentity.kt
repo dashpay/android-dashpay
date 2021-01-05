@@ -9,10 +9,21 @@ package org.dashevo.dashpay
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import kotlinx.coroutines.delay
-import org.bitcoinj.core.*
-import org.bitcoinj.crypto.*
+import org.bitcoinj.core.Address
+import org.bitcoinj.core.Coin
+import org.bitcoinj.core.ECKey
+import org.bitcoinj.core.NetworkParameters
+import org.bitcoinj.core.Sha256Hash
+import org.bitcoinj.core.Transaction
+import org.bitcoinj.core.TransactionOutPoint
+import org.bitcoinj.crypto.ChildNumber
+import org.bitcoinj.crypto.DeterministicKey
+import org.bitcoinj.crypto.EncryptedData
+import org.bitcoinj.crypto.HDUtils
+import org.bitcoinj.crypto.KeyCrypterECDH
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.evolution.EvolutionContact
+import org.bitcoinj.quorums.InstantSendLock
 import org.bitcoinj.wallet.AuthenticationKeyChain
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.DeterministicSeed
@@ -22,15 +33,14 @@ import org.bitcoinj.wallet.Wallet
 import org.bitcoinj.wallet.ZeroConfCoinSelector
 import org.bouncycastle.crypto.params.KeyParameter
 import org.dashevo.dapiclient.grpc.DefaultBroadcastRetryCallback
-import org.dashevo.dapiclient.grpc.GrpcMethodShouldRetryCallback
+import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dashpay.callback.RegisterIdentityCallback
 import org.dashevo.dashpay.callback.RegisterNameCallback
 import org.dashevo.dashpay.callback.RegisterPreorderCallback
-import org.dashevo.platform.Platform
-import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dashpay.callback.UpdateProfileCallback
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.document.DocumentsBatchTransition
+import org.dashevo.dpp.errors.InvalidIdentityAssetLockProofError
 import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.identity.IdentityPublicKey
@@ -39,6 +49,7 @@ import org.dashevo.dpp.toHexString
 import org.dashevo.dpp.util.Cbor
 import org.dashevo.dpp.util.HashUtils
 import org.dashevo.platform.Names
+import org.dashevo.platform.Platform
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.util.*
@@ -307,8 +318,14 @@ class BlockchainIdentity {
 
         val signingKey = maybeDecryptKey(creditFundingTransaction!!.creditBurnPublicKey, keyParameter)
 
+        var instantLock: InstantSendLock? = //if (wallet!!.context.instantSendManager != null)
+            wallet!!.context.instantSendManager.getInstantSendLockByTxId(creditFundingTransaction!!.txId)
+                ?: throw InvalidIdentityAssetLockProofError("instantLock == null")
+
         platform.identities.register(
-            creditFundingTransaction!!.lockedOutpoint,
+            creditFundingTransaction!!.outputIndex,
+            creditFundingTransaction!!,
+            instantLock!!,
             signingKey!!,
             identityPublicKeys
         )
