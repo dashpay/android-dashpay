@@ -14,10 +14,11 @@ import org.dashevo.platform.Documents
 
 class PreorderedNames {
     companion object {
-        val sdk = Client("palinka")
+        lateinit var sdk: Client
 
         @JvmStatic
         fun main(args: Array<String>) {
+            sdk = Client(args[0])
             getDocuments()
         }
 
