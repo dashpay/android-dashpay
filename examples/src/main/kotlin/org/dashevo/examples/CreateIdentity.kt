@@ -7,9 +7,9 @@
 package org.dashevo.examples
 
 import org.bitcoinj.evolution.CreditFundingTransaction
+import org.bitcoinj.quorums.InstantSendLock
 import org.dashevo.Client
 import org.dashevo.dpp.identity.IdentityPublicKey
-import org.dashevo.dpp.toBase64
 import org.json.JSONObject
 import java.lang.Thread.sleep
 
@@ -28,13 +28,14 @@ class CreateIdentity {
 
             val cftx = CreditFundingTransaction(platform.params, DefaultIdentity.creditBurnTx)
             cftx.setCreditBurnPublicKeyAndIndex(DefaultIdentity.identityPrivateKey, 0)
+            val islock = InstantSendLock(platform.params, DefaultIdentity.islock)
 
             try {
                 var identity = platform.identities.get(cftx.creditBurnIdentityIdentifier.toStringBase58())
 
                 if (identity == null) {
                     // only create the identity if it does not exist
-                    platform.identities.register(cftx, listOf(IdentityPublicKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, DefaultIdentity.publicKey)))
+                    platform.identities.register(cftx, islock, listOf(IdentityPublicKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, DefaultIdentity.publicKey)))
                     sleep(10000)
                     identity = platform.identities.get(cftx.creditBurnIdentityIdentifier.toString())
                 }
