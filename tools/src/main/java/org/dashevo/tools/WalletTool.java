@@ -27,6 +27,7 @@ package org.dashevo.tools;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.Resources;
@@ -75,6 +76,8 @@ import org.bitcoinj.crypto.MnemonicCode;
 import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.evolution.CreditFundingTransaction;
+import org.bitcoinj.evolution.SimplifiedMasternodeList;
+import org.bitcoinj.evolution.SimplifiedMasternodeListEntry;
 import org.bitcoinj.params.EvoNetParams;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.MobileDevNetParams;
@@ -113,6 +116,8 @@ import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
 import org.bitcoinj.wallet.listeners.WalletReorganizeEventListener;
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.dashevo.dapiclient.model.GetStatusResponse;
+import org.dashevo.dapiclient.provider.DAPIAddress;
 import org.dashevo.dashpay.BlockchainIdentity;
 import org.dashevo.dashpay.Contact;
 import org.dashevo.dashpay.Profile;
@@ -139,10 +144,13 @@ import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -266,6 +274,7 @@ public class WalletTool {
         ROTATE,
         SET_CREATION_TIME,
         DUMP_DASHPAY,
+        STATUS,
     }
 
     public enum WaitForEnum {
@@ -473,6 +482,7 @@ public class WalletTool {
         switch (action) {
             case DUMP: dumpWallet(); break;
             case DUMP_DASHPAY: dumpDashPay(); break;
+            case STATUS: status(); break;
             case ADD_KEY: addKey(); break;
             case ADD_ADDR: addAddr(); break;
             case DELETE_KEY: deleteKey(); break;
@@ -1892,5 +1902,38 @@ public class WalletTool {
         }
     };
 
+    static void status() {
+        HashMap<DAPIAddress, org.dashevo.dapiclient.model.GetStatusResponse> results = new HashMap();
+
+        ArrayList<String> nodeList = new ArrayList<>();
+
+        context.masternodeListManager.getListAtChainTip().forEachMN(true, new SimplifiedMasternodeList.ForeachMNCallback() {
+            @Override
+            public void processMN(SimplifiedMasternodeListEntry mn) {
+                nodeList.add(mn.getService().toSocketAddress().getHostString());
+            }
+        });
+        int total = nodeList.size();
+        int success = 0;
+        int successFallback = 0;
+        for (String node :nodeList) {
+            Stopwatch watch = Stopwatch.createStarted();
+            try {
+                GetStatusResponse status = platform.client.getStatus(new DAPIAddress(node), 0);
+                success++;
+                results.put(status.getAddress(), status);
+                System.out.println(node + ": Get status successful: "+ watch);
+            } catch (Exception e) {
+                watch.stop();
+                System.out.println(node +" : Get status failed: " + e.getMessage() + " after "+ watch);
+                results.put(new DAPIAddress(node), null);
+            }
+        }
+        System.out.println("getStatus() Results: " + success + "/" + total + "(" + ((double)success)/total + ")");
+
+        for (Map.Entry<DAPIAddress, GetStatusResponse> s : results.entrySet()) {
+            System.out.println(s.getKey().getHost() +": " + (s.getValue() != null? s.getValue().getDuration() : "invalid") + " ms");
+        }
+    }
 
 }
