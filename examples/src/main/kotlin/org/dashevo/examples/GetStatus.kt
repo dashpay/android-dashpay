@@ -12,7 +12,7 @@ import org.dashevo.dapiclient.model.GetStatusResponse
 import org.dashevo.dapiclient.provider.DAPIAddress
 
 /*
-    Calls getStatus on every masternode in the default list for a devnet
+    Calls getStatus on every masternode in the default list for a network
 
     Reports time to reply in ms for each node
  */
@@ -44,7 +44,7 @@ class GetStatus {
                     val status = sdk.platform.client.getStatus(DAPIAddress(node), 0)
                     success++
                     results[status!!.address!!] = status
-                    println("$node: Get status successful: $watch")
+                    println("$node: Get status successful: $watch; errors: ${status?.errors}")
                 } catch (e: Exception) {
                     watch.stop()
                     println("$node: Get status failed: ${e.message} after $watch")
@@ -62,7 +62,7 @@ class GetStatus {
             println("getBlockByHeight() Results: $successFallback/$total (${successFallback.toDouble()/total})")
             println("Overall Results: ${(success + successFallback)}/$total (${(successFallback + success).toDouble()/total})")
             for (s in results) {
-                println("${s.key.host}: ${s.value?.duration} ms")
+                println("${s.key.host}: ${s.value?.duration} ms; errors: ${s.value?.errors}")
             }
         }
     }
