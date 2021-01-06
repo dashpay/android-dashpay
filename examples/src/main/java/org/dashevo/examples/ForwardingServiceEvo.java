@@ -390,7 +390,15 @@ public class ForwardingServiceEvo {
             lastBlockchainIdentity = new BlockchainIdentity(platform, lastTx, kit.wallet(), null);
 
             System.out.println("Creating identity");
-            registerIdentity();
+
+            lastTx.getConfidence().addEventListener(new TransactionConfidence.Listener() {
+                @Override
+                public void onConfidenceChanged(TransactionConfidence confidence, ChangeReason reason) {
+                    if (reason == ChangeReason.IX_TYPE && confidence.getIXType() != TransactionConfidence.IXType.IX_NONE) {
+                        registerIdentity();
+                    }
+                }
+            });
 
         } catch (KeyCrypterException | InsufficientMoneyException e) {
             // We don't use encrypted wallets in this example - can never happen.
@@ -467,6 +475,16 @@ public class ForwardingServiceEvo {
     }
 
     static StateRepository dataProvider = new StateRepository() {
+        @Override
+        public void storeAssetLockTransactionOutPoint(@NotNull byte[] bytes) {
+
+        }
+
+        @Override
+        public void checkAssetLockTransactionOutPointExists(@NotNull byte[] bytes) {
+
+        }
+
         @Override
         public void storeIdentityPublicKeyHashes(@NotNull Identifier identifier, @NotNull List<byte[]> list) {
 
