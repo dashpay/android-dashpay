@@ -27,10 +27,10 @@ class CreateContract {
                 return
             }
             sdk = Client(args[0])
-            createIdentity()
+            createContract()
         }
 
-        fun createIdentity() {
+        fun createContract() {
             val platform = sdk.platform
             sdk.isReady()
 
@@ -56,12 +56,12 @@ class CreateContract {
 
             println("DataContractCreateTransition: ----------------------")
             println(JSONObject(transition.toJSON()).toString(2))
-            sleep(3000)
+            sleep(10000)
 
             val publishedContract = platform.contracts.get(dataContract.id)
 
             println("DataContract: -----------------------------------")
-            println(JSONObject(publishedContract!!.toJSON()).toString())
+            println(JSONObject(publishedContract!!.toJSON()).toString(2))
         }
     }
 }

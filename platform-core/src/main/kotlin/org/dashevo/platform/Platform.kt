@@ -93,7 +93,8 @@ class Platform(val params: NetworkParameters) {
         when {
             params.id.contains("test") -> {
                 apps["dpns"] = ContractInfo("36ez8VqoDbR8NkdXwFaf9Tp8ukBdQxN8eYs8JNMnUyKz")
-                apps["dashpay"] = ContractInfo("matk8g1YRpzZskecRfpG5GCAgRmWCGJfjUemrsLkFDg")
+                // matk8g1YRpzZskecRfpG5GCAgRmWCGJfjUemrsLkFDg - contract with coreHeightCreatedAt required field
+                apps["dashpay"] = ContractInfo("2DAncD4YTjfhSQZYrsQ659xbM7M5dNEkyfBEAg9SsS3W")
                 client = DapiClient(TestNet3Params.MASTERNODES.toList(), true)
             }
             params.id.contains("evonet") -> {
