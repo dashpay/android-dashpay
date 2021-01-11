@@ -7,7 +7,7 @@ plugins {
 }
 
 group 'org.dashevo'
-version '0.15-SNAPSHOT'
+version '0.17-SNAPSHOT'
 
 repositories {
     mavenLocal()
