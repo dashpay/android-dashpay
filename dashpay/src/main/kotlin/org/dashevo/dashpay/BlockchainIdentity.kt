@@ -1456,7 +1456,7 @@ class BlockchainIdentity {
         val accountReference = if (contactRequest.data.containsKey("accountReference")) {
             contactRequest.data["accountReference"] as Int
         } else {
-            -1
+            0 //default account reference
         }
 
         val contact = EvolutionContact(uniqueId, account, contactIdentity.id.toSha256Hash(), accountReference)
