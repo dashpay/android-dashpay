@@ -481,8 +481,8 @@ public class ForwardingServiceEvo {
         }
 
         @Override
-        public void checkAssetLockTransactionOutPointExists(@NotNull byte[] bytes) {
-
+        public boolean checkAssetLockTransactionOutPointExists(@NotNull byte[] bytes) {
+            return false;
         }
 
         @Override
@@ -525,15 +525,14 @@ public class ForwardingServiceEvo {
         @NotNull
         @Override
         public List<Document> fetchDocuments(@NotNull Identifier s, @NotNull String s1, @NotNull Object o) {
-            return null;
+            return new ArrayList<>();
         }
 
         @Override
-        public int fetchTransaction(@NotNull String s) {
-            return 0;
+        public Transaction fetchTransaction(@NotNull String s) {
+            return null;
         }
 
-        @NotNull
         @Override
         public Identity fetchIdentity(@NotNull Identifier s) {
             return null;
