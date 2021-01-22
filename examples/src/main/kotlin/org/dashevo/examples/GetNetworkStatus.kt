@@ -54,21 +54,18 @@ class GetNetworkStatus {
         private fun start() {
             // Get full masternode list
             val mnList = getMnList()
+            val invalidNodes = mnList.filter { it["isValid"] == false }
+            val validNodes = mnList.filter { it["isValid"] == true }
+
 
             println("${mnList.size} masternodes found")
             println("Ignoring ${mnList.filter { it["isValid"] == false }.size} invalid masternodes")
             println("Checking RPC connections for ${mnList.filter { it["isValid"] == true }.size} valid masternodes\n****************")
 
             val badNodes = arrayListOf<Map<String, Any>>()
-            val invalidNodes = arrayListOf<String>()
             val goodNodes = arrayListOf<String>()
-            for (mn in mnList) {
+            for (mn in validNodes) {
                 val service = (mn["service"] as String).split(":")[0]
-
-                if (mn["isValid"] == false) {
-                    invalidNodes.add(service)
-                    continue
-                }
 
                 val rpcClient = DapiClient(service)
 
