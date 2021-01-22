@@ -101,7 +101,7 @@ class Documents(val platform: Platform) {
 
     fun get(dataContractId: Identifier, documentType: String, opts: DocumentQuery): List<Document> {
         try {
-            val rawDocuments = platform.client.getDocuments(dataContractId.toBuffer(), documentType, opts)
+            val rawDocuments = platform.client.getDocuments(dataContractId.toBuffer(), documentType, opts, platform.documentsRetryCallback)
 
             return rawDocuments!!.map {
                 platform.dpp.document.createFromBuffer(it, Factory.Options(true))

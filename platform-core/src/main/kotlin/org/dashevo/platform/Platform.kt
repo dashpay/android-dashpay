@@ -15,6 +15,7 @@ import org.bitcoinj.params.PalinkaDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.dashevo.dapiclient.DapiClient
 import org.dashevo.dapiclient.grpc.DefaultBroadcastRetryCallback
+import org.dashevo.dapiclient.grpc.DefaultGetDocumentsWithContractIdRetryCallback
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.DashPlatformProtocol
 import org.dashevo.dpp.StateRepository
@@ -88,6 +89,10 @@ class Platform(val params: NetworkParameters) {
     val identities = Identities(this)
     var names = Names(this)
     lateinit var client: DapiClient
+    val documentsRetryCallback = object : DefaultGetDocumentsWithContractIdRetryCallback(apps.map { it.value.contractId }) {
+        override val retryContractIds
+            get() = apps.map { it.value.contractId } // always use the latest app list
+    }
 
     init {
         when {
