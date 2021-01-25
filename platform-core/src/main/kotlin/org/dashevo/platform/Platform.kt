@@ -21,6 +21,7 @@ import org.dashevo.dpp.DashPlatformProtocol
 import org.dashevo.dpp.StateRepository
 import org.dashevo.dpp.contract.DataContract
 import org.dashevo.dpp.document.Document
+import org.dashevo.dpp.document.DocumentsBatchTransition
 import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.statetransition.StateTransitionIdentitySigned
@@ -80,8 +81,6 @@ class Platform(val params: NetworkParameters) {
         }
     }
 
-    val broadcastRetryCallback = DefaultBroadcastRetryCallback(stateRepository)
-
     val dpp = DashPlatformProtocol(stateRepository)
     val apps = HashMap<String, ContractInfo>()
     val contracts = Contracts(this)
@@ -91,7 +90,11 @@ class Platform(val params: NetworkParameters) {
     lateinit var client: DapiClient
     val documentsRetryCallback = object : DefaultGetDocumentsWithContractIdRetryCallback(apps.map { it.value.contractId }) {
         override val retryContractIds
-            get() = apps.map { it.value.contractId } // always use the latest app list
+            get() = getAppList() // always use the latest app list
+    }
+    val broadcastRetryCallback = object : DefaultBroadcastRetryCallback(stateRepository) {
+        override val retryContractIds
+            get() = getAppList() // always use the latest app list
     }
 
     init {
@@ -119,6 +122,10 @@ class Platform(val params: NetworkParameters) {
                 client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList(), true)
             }
         }
+    }
+
+    fun getAppList() : List<Identifier> {
+        return apps.map { it.value.contractId }
     }
 
     fun broadcastStateTransition(

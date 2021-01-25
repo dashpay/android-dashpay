@@ -412,7 +412,7 @@ class BlockchainIdentity {
         signStateTransition(transition, keyParameter)
 
         platform.client.broadcastStateTransition(transition,
-            retryCallback = DefaultBroadcastRetryCallback(platform.stateRepository)
+            retryCallback = DefaultBroadcastRetryCallback(platform.stateRepository, retryContractIds = platform.apps.map { it.value.contractId })
         )
 
         for (string in usernames) {

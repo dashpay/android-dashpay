@@ -46,7 +46,7 @@ class Profiles(
 
         val transition = signAndBroadcast(
             transitionMap, identity, id, signingKey,
-            DefaultBroadcastRetryCallback(platform.stateRepository)
+            DefaultBroadcastRetryCallback(platform.stateRepository, retryContractIds = platform.apps.map { it.value.contractId })
         )
 
         return platform.dpp.document.createFromObject(transition.transitions[0].toObject().toMutableMap())
@@ -81,7 +81,7 @@ class Profiles(
 
         val transition = signAndBroadcast(
             transitionMap, identity, id, signingKey,
-            DefaultBroadcastRetryCallback(platform.stateRepository, profileDocument.updatedAt!!)
+            DefaultBroadcastRetryCallback(platform.stateRepository, profileDocument.updatedAt!!, retryContractIds = platform.apps.map { it.value.contractId })
         )
 
         return platform.dpp.document.createFromObject(transition.transitions[0].toJSON().toMutableMap())
