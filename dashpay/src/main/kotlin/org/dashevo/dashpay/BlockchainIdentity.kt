@@ -9,13 +9,7 @@ package org.dashevo.dashpay
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import kotlinx.coroutines.delay
-import org.bitcoinj.core.Address
-import org.bitcoinj.core.Coin
-import org.bitcoinj.core.ECKey
-import org.bitcoinj.core.NetworkParameters
-import org.bitcoinj.core.Sha256Hash
-import org.bitcoinj.core.Transaction
-import org.bitcoinj.core.TransactionOutPoint
+import org.bitcoinj.core.*
 import org.bitcoinj.crypto.ChildNumber
 import org.bitcoinj.crypto.DeterministicKey
 import org.bitcoinj.crypto.EncryptedData
@@ -291,8 +285,21 @@ class BlockchainIdentity {
             registrationStatus == RegistrationStatus.UNKNOWN,
             "The identity must not be registered"
         )
+        return createFundingTransaction(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING, credits, keyParameter)
+    }
+
+    fun createTopupFundingTransaction(credits: Coin, keyParameter: KeyParameter?): CreditFundingTransaction {
+        return createFundingTransaction(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_TOPUP, credits, keyParameter)
+    }
+
+    fun createInviteFundingTransaction(credits: Coin, keyParameter: KeyParameter?): CreditFundingTransaction {
+        return createFundingTransaction(AuthenticationKeyChain.KeyChainType.INVITATION_FUNDING, credits, keyParameter)
+    }
+
+    private fun createFundingTransaction(type: AuthenticationKeyChain.KeyChainType,
+                                         credits: Coin, keyParameter: KeyParameter?): CreditFundingTransaction {
         Preconditions.checkArgument(if (wallet!!.isEncrypted) keyParameter != null else true)
-        val privateKey = wallet!!.blockchainIdentityFundingKeyChain.currentAuthenticationKey() as ECKey
+        val privateKey = wallet!!.currentAuthenticationKey(type)
         val request = SendRequest.creditFundingTransaction(wallet!!.params, privateKey, credits)
         request.aesKey = keyParameter
         request.coinSelector = ZeroConfCoinSelector.get()
@@ -1549,5 +1556,18 @@ class BlockchainIdentity {
         val versionBits: Int = (version shl 28)
 
         return versionBits or (accountSecretKey28 xor shortenedAccountBits)
+    }
+
+    fun getInvitationHistory() : Map<Identifier, Identity?> {
+        val inviteTxs = wallet!!.identityFundingTransactions
+        val listIds = inviteTxs.map { Identifier.from(it.creditBurnIdentityIdentifier) }
+
+        return listIds.associateBy({ it }, { platform.identities.get(it) })
+    }
+
+    fun getInvitationString(cftx: CreditFundingTransaction): String {
+        val txid = cftx.txId
+        val privateKey = cftx.creditBurnPublicKey.getPrivateKeyEncoded(wallet!!.params)
+        return "ivt:$txid:$privateKey"
     }
 }
