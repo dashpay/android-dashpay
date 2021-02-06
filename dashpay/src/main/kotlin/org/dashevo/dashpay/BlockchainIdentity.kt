@@ -325,10 +325,13 @@ class BlockchainIdentity {
 
         val signingKey = maybeDecryptKey(creditFundingTransaction!!.creditBurnPublicKey, keyParameter)
 
-        var instantLock: InstantSendLock? = //if (wallet!!.context.instantSendManager != null)
+        var instantLock: InstantSendLock? =
             wallet!!.context.instantSendManager.getInstantSendLockByTxId(creditFundingTransaction!!.txId)
-                ?: throw InvalidIdentityAssetLockProofError("instantLock == null")
 
+        if (instantLock == null) {
+            instantLock = creditFundingTransaction!!.confidence?.instantSendlock
+                ?: throw InvalidIdentityAssetLockProofError("instantLock == null")
+        }
         platform.identities.register(
             creditFundingTransaction!!.outputIndex,
             creditFundingTransaction!!,
