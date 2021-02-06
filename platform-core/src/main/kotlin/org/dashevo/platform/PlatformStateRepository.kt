@@ -17,6 +17,7 @@ import org.dashevo.dpp.identity.Identity
 
 open class PlatformStateRepository(val platform: Platform) : StateRepository {
     private val identityMap = hashMapOf<Identifier, Identity>()
+    private val validIdentities = hashSetOf<Identifier>()
     private val identityHashesMap = hashMapOf<Identifier, List<ByteArray>>()
     private val contractsMap = hashMapOf<Identifier, DataContract>()
     private val outPointBufferSet = hashSetOf<ByteArray>()
@@ -89,5 +90,15 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
 
     override fun fetchLatestPlatformBlockHeader(): Block {
         TODO("Not yet implemented")
+    }
+
+    fun addValidIdentity(identityId: Identifier) {
+        validIdentities.add(identityId)
+    }
+
+    fun validIdentityIdList(): List<Identifier> {
+        val result = identityMap.keys.toMutableList()
+        result.addAll(validIdentities)
+        return result
     }
 }
