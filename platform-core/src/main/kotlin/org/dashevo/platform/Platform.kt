@@ -14,16 +14,17 @@ import org.bitcoinj.params.PalinkaDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.dashevo.dapiclient.DapiClient
 import org.dashevo.dapiclient.grpc.DefaultBroadcastRetryCallback
+import org.dashevo.dapiclient.grpc.DefaultGetDataContractWithContractIdRetryCallback
 import org.dashevo.dapiclient.grpc.DefaultGetDocumentsWithContractIdRetryCallback
+import org.dashevo.dapiclient.grpc.DefaultGetIdentityWithIdentitiesRetryCallback
 import org.dashevo.dpp.DashPlatformProtocol
-import org.dashevo.dpp.StateRepository
 import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.statetransition.StateTransitionIdentitySigned
 
 class Platform(val params: NetworkParameters) {
 
-    var stateRepository: StateRepository = PlatformStateRepository(this)
+    var stateRepository = PlatformStateRepository(this)
 
     val dpp = DashPlatformProtocol(stateRepository)
     val apps = HashMap<String, ContractInfo>()
@@ -39,6 +40,16 @@ class Platform(val params: NetworkParameters) {
     val broadcastRetryCallback = object : DefaultBroadcastRetryCallback(stateRepository) {
         override val retryContractIds
             get() = getAppList() // always use the latest app list
+        override val retryIdentityIds: List<Identifier>
+            get() = stateRepository.validIdentityIdList()
+    }
+    val identitiesRetryCallback = object : DefaultGetIdentityWithIdentitiesRetryCallback() {
+        override val retryIdentityIds: List<Identifier>
+            get() = stateRepository.validIdentityIdList()
+    }
+    val contractsRetryCallback = object : DefaultGetDataContractWithContractIdRetryCallback() {
+        override val retryContractIds: List<Identifier>
+            get() = getAppList()
     }
 
     init {
