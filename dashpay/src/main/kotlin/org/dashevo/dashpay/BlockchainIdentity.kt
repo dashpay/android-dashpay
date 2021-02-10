@@ -1565,9 +1565,11 @@ class BlockchainIdentity {
         return listIds.associateBy({ it }, { platform.identities.get(it) })
     }
 
-    fun getInvitationString(cftx: CreditFundingTransaction): String {
+    fun getInvitationString(cftx: CreditFundingTransaction, encryptionKey: KeyParameter?): String {
         val txid = cftx.txId
-        val privateKey = cftx.creditBurnPublicKey.getPrivateKeyEncoded(wallet!!.params)
-        return "ivt:$txid:$privateKey"
+
+        val privateKey = maybeDecryptKey(cftx.creditBurnPublicKey, encryptionKey)
+        val wif = privateKey?.getPrivateKeyEncoded(wallet!!.params)
+        return "ivt:$txid:$wif"
     }
 }
