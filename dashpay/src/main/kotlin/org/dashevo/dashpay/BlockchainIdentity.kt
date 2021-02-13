@@ -778,6 +778,24 @@ class BlockchainIdentity {
         saveUsername(username, status, null, true)
     }
 
+    private fun multiWatchIdentity(): MulticallQuery<Identity> {
+        val identityResults = hashSetOf<Identity?>()
+        val max = 3
+        var notFound: Int = 0
+        for (i in 0 until max) {
+            log.info("watchIdentity making first query ${i + 1} of $max")
+            val identity = platform.identities.get(uniqueIdString)
+
+            if (identity == null) {
+                notFound++
+            } else {
+                identityResults.add(identity)
+            }
+        }
+
+        return MulticallQuery(max, notFound, identityResults)
+    }
+
     /**
      * This method will determine if the associated identity exists by making a platform query
      * the specified number of times with the specified delay between attempts.  If the identity
@@ -794,11 +812,12 @@ class BlockchainIdentity {
         retryDelayType: RetryDelayType,
         callback: RegisterIdentityCallback
     ) {
+        val query = multiWatchIdentity()
 
-        val identityResult = platform.identities.get(uniqueIdString)
-
-        if (identityResult != null) {
-            identity = identityResult
+        log.info("watch identity: ${query.successRate * 100}% with ${query.results.size}")
+        // have more than half the nodes returned success and do they all agree?
+        if (query.success()) {
+            identity = query.results.first()
             registrationStatus = RegistrationStatus.REGISTERED
             save()
             callback.onComplete(uniqueIdString)
@@ -822,10 +841,11 @@ class BlockchainIdentity {
         delayMillis: Long,
         retryDelayType: RetryDelayType
     ): String? {
+        val query = multiWatchIdentity()
+        log.info("watch identity: ${query.successRate * 100}% with ${query.results.size}")
 
-        val identityResult = platform.identities.get(uniqueIdString)
-        if (identityResult != null) {
-            identity = identityResult
+        if (query.success()) {
+            identity = query.results.first()
             registrationStatus = RegistrationStatus.REGISTERED
             save()
             return uniqueIdString
