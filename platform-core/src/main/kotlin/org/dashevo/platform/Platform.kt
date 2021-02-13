@@ -8,6 +8,7 @@ package org.dashevo.platform
 
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
+import org.bitcoinj.evolution.SimplifiedMasternodeListManager
 import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.params.MobileDevNetParams
 import org.bitcoinj.params.PalinkaDevNetParams
@@ -21,6 +22,7 @@ import org.dashevo.dpp.DashPlatformProtocol
 import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.statetransition.StateTransitionIdentitySigned
+import kotlin.collections.HashMap
 
 class Platform(val params: NetworkParameters) {
 
@@ -33,6 +35,7 @@ class Platform(val params: NetworkParameters) {
     val identities = Identities(this)
     var names = Names(this)
     lateinit var client: DapiClient
+    private var permanentBanList: List<String> = listOf()
     val documentsRetryCallback = object : DefaultGetDocumentsWithContractIdRetryCallback(apps.map { it.value.contractId }) {
         override val retryContractIds
             get() = getAppList() // always use the latest app list
@@ -59,6 +62,7 @@ class Platform(val params: NetworkParameters) {
                 // matk8g1YRpzZskecRfpG5GCAgRmWCGJfjUemrsLkFDg - contract with coreHeightCreatedAt required field
                 apps["dashpay"] = ContractInfo("2DAncD4YTjfhSQZYrsQ659xbM7M5dNEkyfBEAg9SsS3W")
                 client = DapiClient(TestNet3Params.MASTERNODES.toList(), true)
+                permanentBanList = listOf("45.48.168.16", "71.239.154.151", "174.34.233.98")
             }
             params.id.contains("evonet") -> {
                 apps["dpns"] = ContractInfo("3VvS19qomuGSbEYWbTsRzeuRgawU3yK4fPMzLrbV62u8")
@@ -119,5 +123,25 @@ class Platform(val params: NetworkParameters) {
             fieldType = typeLocator
         }
         return Pair(appName, fieldType)
+    }
+
+    /**
+     * Sets the DAPI clients masternode list manager from which it will obtain masternodes
+     *
+     * @param masternodeListManager SimplifiedMasternodeListManager
+     */
+    fun setMasternodeListManager(masternodeListManager: SimplifiedMasternodeListManager) {
+        client.setSimplifiedMasternodeListManager(masternodeListManager, params.defaultMasternodeList.toList())
+        banMasternodes(permanentBanList)
+    }
+
+    /**
+     * Permanently ban a list of masternodes from being used by the DAPI client
+     * @param banList List<String> a list of IP addresses of masternodes to ban
+     */
+    fun banMasternodes(banList: List<String>) {
+        banList.forEach {
+            client.dapiAddressListProvider.addBannedAddress(it)
+        }
     }
 }
