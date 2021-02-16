@@ -819,6 +819,7 @@ class BlockchainIdentity {
         if (query.success()) {
             identity = query.results.first()
             registrationStatus = RegistrationStatus.REGISTERED
+            platform.stateRepository.addValidIdentity(identity!!.id)
             save()
             callback.onComplete(uniqueIdString)
         } else {
@@ -847,6 +848,7 @@ class BlockchainIdentity {
         if (query.success()) {
             identity = query.results.first()
             registrationStatus = RegistrationStatus.REGISTERED
+            platform.stateRepository.addValidIdentity(identity!!.id)
             save()
             return uniqueIdString
         } else {
