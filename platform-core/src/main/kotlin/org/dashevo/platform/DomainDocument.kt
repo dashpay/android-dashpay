@@ -45,4 +45,8 @@ class DomainDocument(document: Document) : AbstractDocument(document) {
         }
     val preorderSalt: ByteArray
         get() = getFieldByteArray("preorderSalt")!!
+
+    override fun toString(): String {
+        return "DomainDocument(label=$label, records.dashUniqueIdentityId=$dashUniqueIdentityId)"
+    }
 }
