@@ -45,6 +45,8 @@ class Platform(val params: NetworkParameters) {
             get() = getAppList() // always use the latest app list
         override val retryIdentityIds: List<Identifier>
             get() = stateRepository.validIdentityIdList()
+        override val retryDocumentIds: List<Identifier>
+            get() = stateRepository.validDocumentIdList()
     }
     val identitiesRetryCallback = object : DefaultGetIdentityWithIdentitiesRetryCallback() {
         override val retryIdentityIds: List<Identifier>
