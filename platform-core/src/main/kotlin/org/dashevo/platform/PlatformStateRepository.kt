@@ -18,6 +18,8 @@ import org.dashevo.dpp.identity.Identity
 open class PlatformStateRepository(val platform: Platform) : StateRepository {
     private val identityMap = hashMapOf<Identifier, Identity>()
     private val validIdentities = hashSetOf<Identifier>()
+    private val documentsMap = hashMapOf<Identifier, Document>()
+    private val validDocuments = hashSetOf<Identifier>()
     private val identityHashesMap = hashMapOf<Identifier, List<ByteArray>>()
     private val contractsMap = hashMapOf<Identifier, DataContract>()
     private val outPointBufferSet = hashSetOf<ByteArray>()
@@ -64,7 +66,7 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
     }
 
     override fun storeDocument(document: Document) {
-        // do nothing for now
+        documentsMap[document.id] = document
     }
 
     override fun storeIdentity(identity: Identity) {
@@ -99,6 +101,16 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
     fun validIdentityIdList(): List<Identifier> {
         val result = identityMap.keys.toMutableList()
         result.addAll(validIdentities)
+        return result
+    }
+
+    fun addValidDocument(identityId: Identifier) {
+        validDocuments.add(identityId)
+    }
+
+    fun validDocumentIdList(): List<Identifier> {
+        val result = documentsMap.keys.toMutableList()
+        result.addAll(validDocuments)
         return result
     }
 }
