@@ -12,6 +12,10 @@ import org.dashevo.dpp.Factory
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
+import org.dashevo.platform.multicall.MulticallException
+import org.dashevo.platform.multicall.MulticallListQuery
+import org.dashevo.platform.multicall.MulticallMethod
+import org.dashevo.platform.multicall.MulticallQuery
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -107,13 +111,30 @@ class Documents(val platform: Platform) {
 
     fun get(dataContractId: Identifier, documentType: String, opts: DocumentQuery, callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.MAJORITY): List<Document> {
         try {
-            val rawDocuments = platform.client.getDocuments(dataContractId.toBuffer(), documentType, opts, platform.documentsRetryCallback)
-
-            return rawDocuments!!.map {
-                platform.dpp.document.createFromBuffer(it, Factory.Options(true))
+            val domainQuery = MulticallListQuery(object: MulticallMethod<List<ByteArray>> {
+                override fun execute(): List<ByteArray>{
+                    return platform.client.getDocuments(dataContractId.toBuffer(), documentType, opts, platform.documentsRetryCallback)
+                }
+            }, callType)
+            return when (domainQuery.query()) {
+                MulticallQuery.Companion.Status.AGREE,
+                MulticallQuery.Companion.Status.FOUND -> {
+                    domainQuery.getResult()!!.map {
+                        platform.dpp.document.createFromBuffer(it, Factory.Options(true))
+                    }
+                }
+                MulticallQuery.Companion.Status.NOT_FOUND -> {
+                    listOf()
+                }
+                MulticallQuery.Companion.Status.DISAGREE -> {
+                    throw MulticallException(listOf())
+                }
+                MulticallQuery.Companion.Status.ERRORS -> {
+                    throw domainQuery.exception()
+                }
             }
         } catch (e: Exception) {
-            log.error("Document creation: unable to get documents of ${dataContractId}: $e")
+            log.error("Document query: unable to get documents of ${dataContractId}: $e")
             throw e
         }
     }
