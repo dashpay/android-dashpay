@@ -25,6 +25,8 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.1.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.1.0'
     testImplementation 'org.assertj:assertj-core:3.10.0'
+    testImplementation 'org.slf4j:slf4j-jdk14:1.7.28'
+
 }
 
 compileKotlin {
