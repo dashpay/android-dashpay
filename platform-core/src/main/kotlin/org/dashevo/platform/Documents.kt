@@ -82,24 +82,30 @@ class Documents(val platform: Platform) {
     }
 
     fun get(typeLocator: String, opts: DocumentQuery): List<Document> {
+        return get(typeLocator, opts, MulticallQuery.Companion.CallType.MAJORITY)
+    }
+
+    fun get(typeLocator: String, opts: DocumentQuery, callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.MAJORITY): List<Document> {
         val appNames = platform.apps.keys
 
         val (appName, fieldType) = getAppnameAndType(typeLocator, appNames)
+        println("$appName and $fieldType")
 
         if (!platform.apps.containsKey(appName)) {
             throw Exception("No app named $appName specified.")
         }
         val appDefinition = platform.apps[appName];
+        println("appDefinition is $appDefinition");
         if (appDefinition == null || appDefinition.contractId.toBuffer().isEmpty()) {
             throw Exception("Missing contract ID for $appName")
         }
 
         val contractId = appDefinition.contractId
 
-        return get(contractId, fieldType, opts)
+        return get(contractId, fieldType, opts, callType)
     }
 
-    fun get(dataContractId: Identifier, documentType: String, opts: DocumentQuery): List<Document> {
+    fun get(dataContractId: Identifier, documentType: String, opts: DocumentQuery, callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.MAJORITY): List<Document> {
         try {
             val rawDocuments = platform.client.getDocuments(dataContractId.toBuffer(), documentType, opts, platform.documentsRetryCallback)
 
