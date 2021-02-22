@@ -146,4 +146,28 @@ class Platform(val params: NetworkParameters) {
             client.dapiAddressListProvider.addBannedAddress(it)
         }
     }
+
+    fun useValidNodes() {
+        val mnList = getMnList()
+        val validList = mnList.filter {
+            it["isValid"] == true
+        }
+        client = DapiClient(validList.map { (it["service"] as String).split(":")[0] })
+    }
+
+    private fun getMnList(): List<Map<String, Any>> {
+        val success = 0
+        do {
+            try {
+                val baseBlockHash = client.getBlockHash(0)
+                val blockHash = client.getBestBlockHash()
+
+                val mnListDiff = client.getMnListDiff(baseBlockHash!!, blockHash!!)
+                return mnListDiff!!["mnList"] as List<Map<String, Any>>
+            } catch (e: Exception) {
+                println("Error: $e")
+            }
+        } while (success == 0)
+        return listOf()
+    }
 }
