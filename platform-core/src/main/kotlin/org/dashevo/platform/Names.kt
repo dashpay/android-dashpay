@@ -13,6 +13,7 @@ import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.util.Entropy
+import org.dashevo.platform.multicall.MulticallQuery
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
@@ -218,8 +219,12 @@ class Names(val platform: Platform) {
      * @param parentDomain String
      * @return Document? The document for the given name or null if the name does not exist
      */
-    fun get(name: String, parentDomain: String): Document? {
-        val documents = platform.documents.get(DPNS_DOMAIN_DOCUMENT, getDocumentQuery(name, parentDomain))
+    fun get(name:String, parentDomain: String): Document? {
+        return get(name, parentDomain, MulticallQuery.Companion.CallType.MAJORITY_FOUND)
+    }
+
+    fun get(name: String, parentDomain: String, callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.MAJORITY): Document? {
+        val documents = platform.documents.get(DPNS_DOMAIN_DOCUMENT, getDocumentQuery(name, parentDomain), callType)
         return if (documents.isNotEmpty()) documents[0] else null
     }
 
@@ -245,7 +250,7 @@ class Names(val platform: Platform) {
         var requests = 0
 
         do {
-            documentList = platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.startAt(startAt).build())
+            documentList = platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.startAt(startAt).build(), MulticallQuery.Companion.CallType.FIRST)
             requests += 1
             startAt += Documents.DOCUMENT_LIMIT
             if (documentList.isNotEmpty())
