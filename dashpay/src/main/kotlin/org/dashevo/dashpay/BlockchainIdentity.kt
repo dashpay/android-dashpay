@@ -44,6 +44,8 @@ import org.dashevo.dpp.util.Cbor
 import org.dashevo.dpp.util.HashUtils
 import org.dashevo.platform.Names
 import org.dashevo.platform.Platform
+import org.dashevo.platform.multicall.MulticallMethod
+import org.dashevo.platform.multicall.MulticallQuery
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.util.*
@@ -778,24 +780,6 @@ class BlockchainIdentity {
         saveUsername(username, status, null, true)
     }
 
-    private fun multiWatchIdentity(): MulticallQuery<Identity> {
-        val identityResults = hashSetOf<Identity?>()
-        val max = 3
-        var notFound: Int = 0
-        for (i in 0 until max) {
-            log.info("watchIdentity making first query ${i + 1} of $max")
-            val identity = platform.identities.get(uniqueIdString)
-
-            if (identity == null) {
-                notFound++
-            } else {
-                identityResults.add(identity)
-            }
-        }
-
-        return MulticallQuery(max, notFound, identityResults)
-    }
-
     /**
      * This method will determine if the associated identity exists by making a platform query
      * the specified number of times with the specified delay between attempts.  If the identity
@@ -812,12 +796,16 @@ class BlockchainIdentity {
         retryDelayType: RetryDelayType,
         callback: RegisterIdentityCallback
     ) {
-        val query = multiWatchIdentity()
+        val identityQuery = MulticallQuery(object: MulticallMethod<Identity?> {
+            override fun execute(): Identity? {
+                return platform.identities.get(uniqueIdString)
+            }
+        }, MulticallQuery.Companion.CallType.MAJORITY_FOUND)
 
-        log.info("watch identity: ${query.successRate * 100}% with ${query.results.size}")
+
         // have more than half the nodes returned success and do they all agree?
-        if (query.success()) {
-            identity = query.results.first()
+        if (identityQuery.queryFound()) {
+            identity = identityQuery.getResult()
             registrationStatus = RegistrationStatus.REGISTERED
             platform.stateRepository.addValidIdentity(identity!!.id)
             save()
@@ -842,11 +830,15 @@ class BlockchainIdentity {
         delayMillis: Long,
         retryDelayType: RetryDelayType
     ): String? {
-        val query = multiWatchIdentity()
-        log.info("watch identity: ${query.successRate * 100}% with ${query.results.size}")
 
-        if (query.success()) {
-            identity = query.results.first()
+        val identityQuery = MulticallQuery(object: MulticallMethod<Identity?> {
+            override fun execute(): Identity? {
+                return platform.identities.get(uniqueIdString)
+            }
+        }, MulticallQuery.Companion.CallType.MAJORITY_FOUND)
+
+        if (identityQuery.queryFound()) {
+            identity = identityQuery.getResult()
             registrationStatus = RegistrationStatus.REGISTERED
             platform.stateRepository.addValidIdentity(identity!!.id)
             save()
@@ -895,7 +887,7 @@ class BlockchainIdentity {
             ).build()
         val preorderDocuments = platform.documents.get(Names.DPNS_PREORDER_DOCUMENT, query)
 
-        if (preorderDocuments != null && preorderDocuments.isNotEmpty()) {
+        if (preorderDocuments.isNotEmpty()) {
             val usernamesLeft = HashMap(saltedDomainHashes)
             for (username in saltedDomainHashes.keys) {
                 val saltedDomainHashData = saltedDomainHashes[username] as ByteArray
@@ -1055,7 +1047,7 @@ class BlockchainIdentity {
         val query = DocumentQuery.Builder()
             .where("normalizedParentDomainName", "==", Names.DEFAULT_PARENT_DOMAIN)
             .where(listOf("normalizedLabel", "in", usernames.map { "${it.toLowerCase()}" })).build()
-        val nameDocuments = platform.documents.get("dpns.domain", query)
+        val nameDocuments = platform.documents.get(Names.DPNS_DOMAIN_DOCUMENT, query)
 
         if (nameDocuments != null && nameDocuments.isNotEmpty()) {
             val usernamesLeft = ArrayList(usernames)
@@ -1116,13 +1108,13 @@ class BlockchainIdentity {
             .where(listOf("normalizedLabel", "in", usernames.map { "${it.toLowerCase()}" })).build()
         val nameDocuments = platform.documents.get(Names.DPNS_DOMAIN_DOCUMENT, query)
 
-        if (nameDocuments != null && nameDocuments.isNotEmpty()) {
+        if (nameDocuments.isNotEmpty()) {
             val usernamesLeft = ArrayList(usernames)
             for (username in usernames) {
                 val normalizedName = username.toLowerCase()
                 for (nameDocument in nameDocuments) {
                     if (nameDocument.data["normalizedLabel"] == normalizedName) {
-                        var usernameStatus = if (usernameStatuses.containsKey(username))
+                        val usernameStatus = if (usernameStatuses.containsKey(username))
                             usernameStatuses[username] as MutableMap<String, Any>
                         else HashMap()
                         usernameStatus[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.CONFIRMED
