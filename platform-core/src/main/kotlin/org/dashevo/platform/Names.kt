@@ -93,9 +93,9 @@ class Names(val platform: Platform) {
     fun normalizedNames(name: String): Pair<String, String> {
         val nameSlice = name.indexOf('.')
         val normalizedParentDomainName =
-            if (nameSlice == -1) DEFAULT_PARENT_DOMAIN else name.slice(nameSlice + 1..name.length)
+            if (nameSlice == -1) DEFAULT_PARENT_DOMAIN else name.slice(nameSlice + 1 until name.length)
 
-        val label = if (nameSlice == -1) name else name.slice(0..nameSlice)
+        val label = if (nameSlice == -1) name else name.slice(0 until nameSlice)
 
         val normalizedLabel = label.toLowerCase()
         return Pair(normalizedParentDomainName, normalizedLabel)
@@ -209,7 +209,7 @@ class Names(val platform: Platform) {
      */
 
     fun resolve(name: String): Document? {
-        val (label, domain) = normalizedNames(name)
+        val (domain, label) = normalizedNames(name)
         return get(label, domain)
     }
 
