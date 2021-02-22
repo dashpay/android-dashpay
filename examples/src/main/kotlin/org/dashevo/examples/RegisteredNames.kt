@@ -18,6 +18,7 @@ class RegisteredNames {
         @JvmStatic
         fun main(args: Array<String>) {
             sdk = Client(args[0])
+            sdk.platform.useValidNodes()
             getDocuments()
         }
 
