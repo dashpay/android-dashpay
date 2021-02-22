@@ -44,12 +44,12 @@ class Contracts(val platform: Platform) {
             val app = platform.apps[appName]
             if (app!!.contractId == identifier) {
                 localContract = app
-                break;
+                break
             }
         }
 
         if (localContract?.dataContract != null) {
-            return localContract!!.dataContract;
+            return localContract.dataContract;
         } else {
             try {
                 val rawContract = platform.client.getDataContract(identifier.toBuffer(), platform.contractsRetryCallback) ?: return null
