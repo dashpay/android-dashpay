@@ -60,9 +60,11 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Peer;
 import org.bitcoinj.core.PeerAddress;
 import org.bitcoinj.core.PeerGroup;
+import org.bitcoinj.core.RejectMessage;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.StoredBlock;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.Utils;
@@ -120,10 +122,20 @@ import org.dashevo.dapiclient.model.GetStatusResponse;
 import org.dashevo.dapiclient.provider.DAPIAddress;
 import org.dashevo.dashpay.BlockchainIdentity;
 import org.dashevo.dashpay.Contact;
+import org.dashevo.dashpay.ContactRequest;
+import org.dashevo.dashpay.ContactRequests;
 import org.dashevo.dashpay.Profile;
+import org.dashevo.dashpay.RetryDelayType;
+import org.dashevo.dashpay.callback.RegisterIdentityCallback;
+import org.dashevo.dashpay.callback.RegisterNameCallback;
+import org.dashevo.dashpay.callback.RegisterPreorderCallback;
+import org.dashevo.dpp.document.Document;
 import org.dashevo.dpp.identifier.Identifier;
 import org.dashevo.dpp.identity.Identity;
+import org.dashevo.platform.DomainDocument;
+import org.dashevo.platform.Names;
 import org.dashevo.platform.Platform;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -151,6 +163,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -160,6 +173,7 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.lang.Thread.sleep;
 import static org.bitcoinj.core.Coin.parseCoin;
 
 /**
@@ -274,6 +288,7 @@ public class WalletTool {
         ROTATE,
         SET_CREATION_TIME,
         DUMP_DASHPAY,
+        CREATE_USERNAME,
         STATUS,
     }
 
@@ -398,6 +413,8 @@ public class WalletTool {
         Context.propagate(context);
 
         platform = new Platform(params);
+
+        platform.setMasternodeListManager(context.masternodeListManager);
 
         mode = modeFlag.value(options);
 
@@ -589,6 +606,8 @@ public class WalletTool {
             case UPGRADE: upgrade(); break;
             case ROTATE: rotate(); break;
             case SET_CREATION_TIME: setCreationTime(); break;
+            // dashpay related commands
+            case CREATE_USERNAME: createUsername(waitForFlag); break;
         }
 
         if (!wallet.isConsistent()) {
@@ -1830,6 +1849,208 @@ public class WalletTool {
             }
         }
     }
+
+    private static void createUsername(OptionSpec<WaitForEnum> waitForFlag) {
+        initializeIdentity();
+
+        if (blockchainIdentity == null) {
+            try {
+                blockchainIdentity = new BlockchainIdentity(platform, 0, wallet);
+
+
+                CreditFundingTransaction cftx = blockchainIdentity.createCreditFundingTransaction(Coin.valueOf(100000), null);
+                boolean wait = true;
+                cftx.getConfidence().addEventListener(new TransactionConfidence.Listener() {
+                    @Override
+                    public void onConfidenceChanged(TransactionConfidence confidence, ChangeReason reason) {
+                        // If this transaction is InstantSend Locked, then it has been sent successfully
+                        switch (reason) {
+                            case IX_TYPE:
+                                // TODO: allow for received (IX_REQUEST) instantsend locks
+                                // until the bug related to instantsend lock verification is fixed.
+                                if (confidence.isTransactionLocked() || confidence.getIXType() == TransactionConfidence.IXType.IX_REQUEST) {
+                                    confidence.removeEventListener(this);
+                                    blockchainIdentity.setCreditFundingTransaction(cftx);
+                                    createIdentity(waitForFlag);
+                                }
+                                break;
+                            case DEPTH:
+                                // TODO: work with chainlocks
+                                break;
+                            case REJECT:
+                                if (confidence.hasRejections() && confidence.getRejections().size() >= 1) {
+                                    confidence.removeEventListener(this);
+                                    System.out.println("Error sending ${cftx.txId}: ${confidence.rejectedTransactionException.rejectMessage.reasonString}");
+                                }
+                                break;
+                            case TYPE:
+                                if (confidence.hasErrors()) {
+                                    confidence.removeEventListener(this);
+                                    RejectMessage.RejectCode code;
+                                    switch (confidence.getConfidenceType()) {
+                                        case DEAD:
+                                            code = RejectMessage.RejectCode.INVALID;
+                                            break;
+                                        case IN_CONFLICT:
+                                            code = RejectMessage.RejectCode.DUPLICATE;
+                                            break;
+                                        default:
+                                            code = RejectMessage.RejectCode.OTHER;
+                                            break;
+                                    }
+                                    RejectMessage rejectMessage = new RejectMessage(params, code, confidence.getTransactionHash(),
+                                            "Credit funding transaction is dead or double-spent", "cftx-dead-or-double-spent");
+                                    System.out.println("Error sending ${cftx.txId}: " + rejectMessage.getReasonString());
+                                }
+
+                            default:
+                                // ignore
+                                break;
+
+                        }
+                    }
+                });
+                setup();
+                peerGroup.start();
+                // Wait for peers to connect, the tx to be sent to one of them and for it to be propagated across the
+                // network. Once propagation is complete and we heard the transaction back from all our peers, it will
+                // be committed to the wallet.
+                peerGroup.broadcastTransaction(cftx).future().get();
+                // Hack for regtest/single peer mode, as we're about to shut down and won't get an ACK from the remote end.
+                List<Peer> peerList = peerGroup.getConnectedPeers();
+                if (peerList.size() == 1)
+                    peerList.get(0).ping().get();
+
+                //while (!waitAndShutdownFuture.isDone())
+                //    sleep(1000);
+                sleep(10 * 60 * 1000);
+            } catch (BlockStoreException x) {
+                throw new RuntimeException(x);
+            } catch (InterruptedException | ExecutionException x) {
+                throw new RuntimeException(x);
+            } catch (Exception x) {
+                if (x instanceof InsufficientMoneyException)
+                    System.out.println("There is not enough money in the wallet: " + wallet.getBalance() +" of "+wallet.getBalance(BalanceType.ESTIMATED_SPENDABLE));
+            }
+        } else {
+            System.out.println("This wallet already has an identity");
+
+            // check for username
+
+            //if (blockchainIdentity.getRegistered()) {
+                System.out.println("This wallet already has registered an identity");
+
+                if (blockchainIdentity.getCurrentUsername() == null) {
+                    createPreorder("x-hash-eng-1-" + new Random().nextInt(999999999), waitForFlag);
+                } else {
+                    System.out.println("This wallet already has a username");
+                }
+            //}
+        }
+    }
+
+    private static void createIdentity(OptionSpec<WaitForEnum> waitForFlag) {
+        blockchainIdentity.registerIdentity(null);
+        blockchainIdentity.watchIdentity(10, 2000, RetryDelayType.SLOW20, new RegisterIdentityCallback() {
+            @Override
+            public void onComplete(@NotNull String uniqueId) {
+                System.out.println("Identity " + uniqueId + " has successfully been created");
+                createPreorder("x-hash-eng-1-" + new Random().nextInt(999999999), waitForFlag);
+            }
+
+            @Override
+            public void onTimeout() {
+                System.out.println("Failed to create identity.");
+                waitAndShutdownFuture.set(waitForFlag);
+            }
+        });
+    }
+
+    private static void createPreorder(String name, final OptionSpec<WaitForEnum> waitForFlag) {
+        blockchainIdentity.addUsername(name, false);
+        List<String> names = blockchainIdentity.getUnregisteredUsernames();
+        blockchainIdentity.registerPreorderedSaltedDomainHashesForUsernames(names, null);
+
+        Map<String, byte[]> saltedDomainHashes = blockchainIdentity.saltedDomainHashesForUsernames(names);
+
+        blockchainIdentity.watchPreorder(saltedDomainHashes, 10, 2000, RetryDelayType.SLOW20, new RegisterPreorderCallback() {
+            @Override
+            public void onTimeout(@NotNull List<String> incompleteNames) {
+                System.out.println("These usernames were not preordered: " + incompleteNames);
+                waitAndShutdownFuture.set(waitForFlag);
+            }
+
+            @Override
+            public void onComplete(@NotNull List<String> names) {
+                System.out.println("These usernames were preordered: " + names);
+                createDomain(waitForFlag);
+            }
+        });
+    }
+
+    private static void createDomain(OptionSpec<WaitForEnum> waitForFlag) {
+        List<String> names = blockchainIdentity.getUsernamesWithStatus(BlockchainIdentity.UsernameStatus.PREORDERED);
+        blockchainIdentity.registerUsernameDomainsForUsernames(names, null);
+        blockchainIdentity.watchUsernames(names, 10, 2000, RetryDelayType.SLOW20, new RegisterNameCallback() {
+            @Override
+            public void onTimeout(@NotNull List<String> incompleteNames) {
+                System.out.println("These usernames were not registered: " + incompleteNames);
+                waitAndShutdownFuture.set(waitForFlag);
+            }
+
+            @Override
+            public void onComplete(@NotNull List<String> names) {
+                System.out.println("These usernames were registered: " + names);
+                sendContactRequests(waitForFlag);
+            }
+        });
+    }
+
+    static void sendContactRequests(OptionSpec<WaitForEnum> waitForFlag) {
+
+        List<Document> names = platform.getNames().search("x-hash-eng-1-", Names.DEFAULT_PARENT_DOMAIN, false, 100, 0);
+
+        ContactRequests contacts = new ContactRequests(platform);
+        for (Document name : names) {
+            DomainDocument nameDoc = new DomainDocument(name);
+            System.out.println("user: " + nameDoc.getLabel() + " " + nameDoc.getDashUniqueIdentityId());
+            platform.getStateRepository().addValidIdentity(nameDoc.getDashUniqueIdentityId());
+            Identity identity = platform.getIdentities().get(nameDoc.getDashUniqueIdentityId());
+            contacts.create(blockchainIdentity, identity, null);
+            try {
+                sleep(1000);
+            } catch (InterruptedException x) {
+
+            }
+        }
+
+        /*try {
+            sleep(10000);
+        } catch (InterruptedException x) {
+
+        }*/
+
+        List<Document> contactRequests = contacts.get(blockchainIdentity.getUniqueIdentifier(), false, 0, true, 0);
+
+        double completion = (double)contactRequests.size() / names.size();
+        System.out.println("success rate on sending contact requests: " + completion);
+        ArrayList<DomainDocument> missing = new ArrayList<>();
+        for (Document name : names) {
+            DomainDocument nameDoc = new DomainDocument(name);
+            boolean found = false;
+            for (Document req : contactRequests) {
+                if (new ContactRequest(req).getToUserId().equals(nameDoc.getDashUniqueIdentityId()))
+                    found = true;
+            }
+
+            if (!found)
+                missing.add(nameDoc);
+        }
+        System.out.println("These contact requests had failures: " + missing.toString());
+
+        waitAndShutdownFuture.set(waitForFlag);
+    }
+
 
     private static void setCreationTime() {
         long creationTime = getCreationTimeSeconds();
