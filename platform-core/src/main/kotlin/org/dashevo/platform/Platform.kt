@@ -63,13 +63,13 @@ class Platform(val params: NetworkParameters) {
                 apps["dpns"] = ContractInfo("36ez8VqoDbR8NkdXwFaf9Tp8ukBdQxN8eYs8JNMnUyKz")
                 // matk8g1YRpzZskecRfpG5GCAgRmWCGJfjUemrsLkFDg - contract with coreHeightCreatedAt required field
                 apps["dashpay"] = ContractInfo("2DAncD4YTjfhSQZYrsQ659xbM7M5dNEkyfBEAg9SsS3W")
-                client = DapiClient(TestNet3Params.MASTERNODES.toList(), true)
+                client = DapiClient(TestNet3Params.MASTERNODES.toList())
                 permanentBanList = listOf("45.48.168.16", "71.239.154.151", "174.34.233.98")
             }
             params.id.contains("evonet") -> {
                 apps["dpns"] = ContractInfo("3VvS19qomuGSbEYWbTsRzeuRgawU3yK4fPMzLrbV62u8")
                 apps["dashpay"] = ContractInfo("5kML7KqerxF2wU7acywVhpVRHtJGrNGh9swcmqNmFg2s")
-                client = DapiClient(EvoNetParams.MASTERNODES.toList(), true)
+                client = DapiClient(EvoNetParams.MASTERNODES.toList())
             }
             params.id.contains("mobile") -> {
                 apps["dpns"] = ContractInfo("CVZzFCbz4Rcf2Lmu9mvtC1CmvPukHy5kS2LNtNaBFM2N")
@@ -77,10 +77,10 @@ class Platform(val params: NetworkParameters) {
                 client = DapiClient(MobileDevNetParams.MASTERNODES.toList())
             }
             params.id.contains("palinka") -> {
-                apps["dpns"] = ContractInfo("3hdUnYSieTRV7h7RyEnoesKHVQLkDwo8otTa86kB9WVz")
-                apps["dashpay"] = ContractInfo("8BHFWebfkDAC55cayxasaMJjxayPYzR6ng3h9mqtRgSo")
-                apps["thumbnail"] = ContractInfo("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
-                client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList(), true)
+                apps["dpns"] = ContractInfo("FZ2MkyR8YigXX7K7m9sq3PikzubV8i4rwUMheAQTLLCw")
+                apps["dashpay"] = ContractInfo("GmCL5grcMBHumKVXvWpRZU4BaGzGC7p6mbsJSR4K6yhd")
+                //apps["thumbnail"] = ContractInfo("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
+                client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList())
             }
         }
     }
