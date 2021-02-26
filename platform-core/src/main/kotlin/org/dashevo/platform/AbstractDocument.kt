@@ -31,6 +31,10 @@ abstract class AbstractDocument(val document: Document) {
         return document.toJSON()
     }
 
+    fun toObject() : Map<String, Any?> {
+        return document.toObject()
+    }
+
     protected fun getFieldString(fieldName: String): String? {
         val field = document.data[fieldName]
         return if (field != null)
@@ -50,5 +54,26 @@ abstract class AbstractDocument(val document: Document) {
         return if (field != null)
             field as Map<String, Any>
         else null
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as AbstractDocument
+
+        return document.equals(other.document)
+    }
+
+    override fun hashCode(): Int {
+        return document.hashCode()
+    }
+
+    fun hash(): ByteArray {
+        return document.hash()
+    }
+
+    fun hashOnce(): ByteArray {
+        return document.hashOnce()
     }
 }
