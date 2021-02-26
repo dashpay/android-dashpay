@@ -1166,10 +1166,12 @@ class BlockchainIdentity {
         return platform.dpp.document.createStateTransition(transitionMap)
     }
 
-    fun registerProfile(displayName: String?, publicMessage: String?, avatarUrl: String?, avatarHash: ByteArray? = null, avatarFingerprint: ByteArray?, keyParameter: KeyParameter?) {
+    fun registerProfile(displayName: String?, publicMessage: String?,
+                        avatarUrl: String?, avatarHash: ByteArray? = null,
+                        avatarFingerprint: ByteArray?, keyParameter: KeyParameter?) : Profile {
         val transition = createProfileTransition(displayName, publicMessage, avatarUrl, avatarHash, avatarFingerprint)
 
-        signStateTransition(transition!!, keyParameter)
+        signStateTransition(transition, keyParameter)
 
         platform.broadcastStateTransition(transition)
         return Profile(lastProfileDocument!!)
@@ -1213,10 +1215,12 @@ class BlockchainIdentity {
         return platform.dpp.document.createStateTransition(transitionMap)
     }
 
-    fun updateProfile(displayName: String?, publicMessage: String?, avatarUrl: String?, avatarHash: ByteArray? = null, avatarFingerprint: ByteArray?, keyParameter: KeyParameter?) {
+    fun updateProfile(displayName: String?, publicMessage: String?,
+                      avatarUrl: String?, avatarHash: ByteArray? = null,
+                      avatarFingerprint: ByteArray?, keyParameter: KeyParameter?) : Profile {
         val transition = replaceProfileTransition(displayName, publicMessage, avatarUrl, avatarHash, avatarFingerprint)
 
-        signStateTransition(transition!!, keyParameter)
+        signStateTransition(transition, keyParameter)
 
         platform.broadcastStateTransition(transition)
 
@@ -1238,7 +1242,7 @@ class BlockchainIdentity {
         retryCount: Int,
         delayMillis: Long,
         retryDelayType: RetryDelayType
-    ): Document? {
+    ): Profile? {
 
         val updatedAt = if (lastProfileDocument?.updatedAt != null) {
             lastProfileDocument!!.updatedAt!!
@@ -1250,7 +1254,7 @@ class BlockchainIdentity {
 
         if (profileResult != null) {
             save()
-            return profileResult
+            return Profile(profileResult)
         } else {
             if (retryCount > 0) {
                 val nextDelay = delayMillis * when (retryDelayType) {
