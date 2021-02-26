@@ -44,7 +44,7 @@ class Profiles(
 
         val transition = signAndBroadcast(transitionMap, identity, id, signingKey)
 
-        return platform.dpp.document.createFromObject(transition.transitions[0].toObject().toMutableMap())
+        return platform.dpp.document.createFromObject(transition.transitions[0].toObject())
     }
 
     fun replace(
@@ -76,7 +76,7 @@ class Profiles(
 
         val transition = signAndBroadcast(transitionMap, identity, id, signingKey)
 
-        return platform.dpp.document.createFromObject(transition.transitions[0].toJSON().toMutableMap())
+        return platform.dpp.document.createFromObject(transition.transitions[0].toObject())
     }
 
     private fun signAndBroadcast(
