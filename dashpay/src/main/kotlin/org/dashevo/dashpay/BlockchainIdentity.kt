@@ -26,7 +26,6 @@ import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
 import org.bitcoinj.wallet.ZeroConfCoinSelector
 import org.bouncycastle.crypto.params.KeyParameter
-import org.dashevo.dapiclient.grpc.DefaultBroadcastRetryCallback
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dashpay.callback.RegisterIdentityCallback
 import org.dashevo.dashpay.callback.RegisterNameCallback
@@ -423,9 +422,7 @@ class BlockchainIdentity {
         }
         signStateTransition(transition, keyParameter)
 
-        platform.client.broadcastStateTransition(transition,
-            retryCallback = DefaultBroadcastRetryCallback(platform.stateRepository, retryContractIds = platform.apps.map { it.value.contractId })
-        )
+        platform.broadcastStateTransition(transition)
 
         for (string in usernames) {
             var usernameStatusDictionary = usernameStatuses[string] as MutableMap<String, Any>
@@ -445,9 +442,7 @@ class BlockchainIdentity {
         }
         signStateTransition(transition!!, keyParameter)
 
-        platform.client.broadcastStateTransition(transition,
-            retryCallback = platform.broadcastRetryCallback
-        )
+        platform.broadcastStateTransition(transition)
 
         for (string in usernames) {
             var usernameStatusDictionary = usernameStatuses[string] as MutableMap<String, Any>
@@ -1176,9 +1171,9 @@ class BlockchainIdentity {
 
         signStateTransition(transition!!, keyParameter)
 
-        platform.client.broadcastStateTransition(transition,
-            retryCallback = platform.broadcastRetryCallback
-        )
+        platform.broadcastStateTransition(transition)
+        return Profile(lastProfileDocument!!)
+
     }
 
     private fun replaceProfileTransition(
@@ -1195,16 +1190,22 @@ class BlockchainIdentity {
         // change all of the document fields
         val profileData = hashMapOf<String, Any?>()
         profileData.putAll(currentProfile!!.toJSON())
-        profileData["displayName"] = displayName
-        profileData["publicMessage"] = publicMessage
-        profileData["avatarUrl"] = avatarUrl
-        profileData["avatarHash"] = avatarHash
-        profileData["avatarFingerprint"] = avatarFingerprint
+        if (displayName != null)
+            profileData["displayName"] = displayName
+        if (publicMessage != null)
+            profileData["publicMessage"] = publicMessage
+        if (avatarUrl != null)
+            profileData["avatarUrl"] = avatarUrl
+        if (avatarHash != null)
+            profileData["avatarHash"] = avatarHash
+        if (avatarFingerprint != null)
+            profileData["avatarFingerprint"] = avatarFingerprint
 
         val profileDocument = Document(profileData, platform.apps["dashpay"]!!.dataContract!!)
         // a replace operation must set updatedAt
         profileDocument.updatedAt = Date().time
-        lastProfileDocument = profileDocument
+        lastProfileDocument = platform.dpp.document.createFromObject(profileDocument.toObject()) // copy the document
+        lastProfileDocument!!.revision++
 
         val transitionMap = hashMapOf<String, List<Document>?>(
             "replace" to listOf(profileDocument)
@@ -1217,9 +1218,9 @@ class BlockchainIdentity {
 
         signStateTransition(transition!!, keyParameter)
 
-        platform.client.broadcastStateTransition(transition,
-            retryCallback = platform.broadcastRetryCallback
-        )
+        platform.broadcastStateTransition(transition)
+
+        return Profile(lastProfileDocument!!)
     }
 
     fun getProfile(): Document? {
