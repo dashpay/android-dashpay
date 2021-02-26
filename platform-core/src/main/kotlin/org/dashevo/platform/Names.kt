@@ -68,7 +68,7 @@ class Names(val platform: Platform) {
         preorderTransition.sign(identity.getPublicKeyById(0)!!, identityHDPrivateKey.privateKeyAsHex)
 
         return try {
-            platform.client.broadcastStateTransition(preorderTransition, retryCallback = platform.broadcastRetryCallback)
+            platform.broadcastStateTransition(preorderTransition)
             preorderDocument
         } catch (x: Exception) {
             null
@@ -143,7 +143,7 @@ class Names(val platform: Platform) {
 
         log.info("domainTransition: ${domainTransition.toJSON()}")
 
-        platform.client.broadcastStateTransition(domainTransition, retryCallback = platform.broadcastRetryCallback)
+        platform.broadcastStateTransition(domainTransition)
 
         return domainDocument
     }
