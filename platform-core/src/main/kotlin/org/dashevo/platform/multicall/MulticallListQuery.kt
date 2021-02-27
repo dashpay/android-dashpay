@@ -35,12 +35,6 @@ class MulticallListQuery<T>(method: MulticallMethod<List<T>>,
                                 println(toString())
                                 return MulticallQuery.Companion.Status.FOUND
                             }
-                            //MulticallQuery.Companion.CallType.MAJORITY_FOUND -> {
-                            //    if (foundRate > requiredSuccessRate) {
-                            //        return MulticallQuery.Companion.Status.FOUND
-                            //        println(toString())
-                            //    }
-                            //}
                             MulticallQuery.Companion.CallType.UNTIL_FOUND -> {
                                 println(toString())
                                 return MulticallQuery.Companion.Status.FOUND
@@ -106,8 +100,6 @@ class MulticallListQuery<T>(method: MulticallMethod<List<T>>,
             MulticallQuery.Companion.CallType.MAJORITY_FOUND -> {
                 if (foundSuccess()) {
                     results.first()
-                } else if (notFoundSuccess()) {
-                    listOf()
                 } else {
                     listOf()
                 }

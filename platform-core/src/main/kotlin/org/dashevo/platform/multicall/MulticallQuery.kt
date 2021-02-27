@@ -126,10 +126,6 @@ open class MulticallQuery<T> (val method: MulticallMethod<T>,
                             failures = 0
                             return Status.FOUND
                         }
-                        //CallType.MAJORITY_FOUND -> {
-                        //    if (foundRate > requiredSuccessRate)
-                        //        return Status.FOUND
-                        //}
                         CallType.UNTIL_FOUND -> {
                             return Status.FOUND
                         }
@@ -181,8 +177,6 @@ open class MulticallQuery<T> (val method: MulticallMethod<T>,
             CallType.MAJORITY_FOUND -> {
                 if (foundSuccess()) {
                     results.first()
-                } else if (notFoundSuccess()) {
-                    null
                 } else {
                     null
                 }
