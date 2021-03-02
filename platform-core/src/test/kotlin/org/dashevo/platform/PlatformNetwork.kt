@@ -1,42 +1,66 @@
 package org.dashevo.platform;
+import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.params.MobileDevNetParams
+import org.bitcoinj.params.PalinkaDevNetParams
 import org.bitcoinj.params.TestNet3Params
-import org.dashevo.dapiclient.DapiClient
+import org.bitcoinj.wallet.*
 import org.junit.jupiter.api.AfterEach
+import java.util.*
 
 open class PlatformNetwork {
 
-    val platform = Platform(TestNet3Params.get())
+    val platform = Platform(PalinkaDevNetParams.get())
+
+    val assetLockTxId: String
+    val seed: String
+
+    val wallet: Wallet
+
+    init {
+        when  {
+            platform.params.id.contains("test") -> {
+                assetLockTxId = "1175bf329cf6d35839f67aa57da87636a76b4837ce76b46ababa2a415be8d866"
+                seed = "mango air virus pigeon crowd attract review lemon lion assume lab rain"
+            }
+            platform.params.id.contains("evonet") -> {
+                assetLockTxId = "1175bf329cf6d35839f67aa57da87636a76b4837ce76b46ababa2a415be8d866"
+                seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
+            }
+            platform.params.id.contains("mobile") -> {
+                assetLockTxId = "1175bf329cf6d35839f67aa57da87636a76b4837ce76b46ababa2a415be8d866"
+                seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
+            }
+            platform.params.id.contains("palinka") -> {
+                assetLockTxId = "1175bf329cf6d35839f67aa57da87636a76b4837ce76b46ababa2a415be8d866"
+                seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
+            }
+            else -> {
+                assetLockTxId = ""
+                seed = ""
+            }
+        }
+
+        wallet = Wallet(
+                platform.params,
+        KeyChainGroup.builder(platform.params)
+            .addChain(
+                DeterministicKeyChain.builder()
+                    .accountPath(DerivationPathFactory.get(platform.params).bip44DerivationPath(0))
+                    .seed(DeterministicSeed(seed, null, "", Date().time))
+                    .build()
+            )
+            .build()
+        )
+        wallet.initializeAuthenticationKeyChains(wallet.keyChainSeed, null)
+    }
 
     @AfterEach
     fun afterEachTest() {
         println(platform.client.reportNetworkStatus())
     }
 
-    private fun getMnList(): List<Map<String, Any>> {
-        val success = 0
-        do {
-            try {
-                val baseBlockHash = platform.client.getBlockHash(0)
-                val blockHash = platform.client.getBestBlockHash()
-
-                val mnListDiff = platform.client.getMnListDiff(baseBlockHash!!, blockHash!!)
-                return mnListDiff!!["mnList"] as List<Map<String, Any>>
-            } catch (e: Exception) {
-                println("Error: $e")
-            }
-        } while (success == 0)
-        return listOf()
-    }
-
     init {
         println("initializing platform")
-        platform.client = DapiClient("174.34.233.123", false)
-        val mnList = getMnList()
-        val validList = mnList.filter {
-            it["isValid"] == true
-        }
-        println("${validList.size} masternodes were found")
-        platform.client = DapiClient(validList.map { (it["service"] as String).split(":")[0] })
+        platform.useValidNodes()
     }
 }
