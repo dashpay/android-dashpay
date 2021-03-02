@@ -9,6 +9,7 @@ package org.dashevo.platform
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Sha256Hash
 import org.dashevo.dapiclient.model.DocumentQuery
+import org.dashevo.dpp.document.DataDocumentTransition
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
@@ -29,6 +30,11 @@ class Names(val platform: Platform) {
 
         fun isUniqueIdentity(domainDocument: Document): Boolean {
             val records = domainDocument.data["records"] as Map<String, Any>
+            return records.containsKey("dashUniqueIdentityId")
+        }
+
+        fun isUniqueIdentity(dataDocumentTransition: DataDocumentTransition): Boolean {
+            val records = dataDocumentTransition.data["records"] as Map<String, Any>
             return records.containsKey("dashUniqueIdentityId")
         }
     }
