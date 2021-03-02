@@ -23,7 +23,7 @@ class CreateContract {
         @JvmStatic
         fun main(args: Array<String>) {
             if (args.isEmpty()) {
-                println("Usage: DisplayContracts network")
+                println("Usage: CreateContract network")
                 return
             }
             sdk = Client(args[0])
