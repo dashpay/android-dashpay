@@ -1545,14 +1545,14 @@ class BlockchainIdentity {
 
     fun addPaymentKeyChainFromContact(
         contactIdentity: Identity,
-        contactRequest: Document,
+        contactRequest: ContactRequest,
         encryptionKey: KeyParameter?
     ): Boolean {
         val contact = EvolutionContact(uniqueId, account, contactIdentity.id.toSha256Hash(), -1)
         if (!wallet!!.hasReceivingKeyChain(contact)) {
-            val encryptedXpub = HashUtils.byteArrayfromBase64orByteArray(contactRequest.data["encryptedPublicKey"]!!)
-            val senderKeyIndex = contactRequest.data["senderKeyIndex"] as Int
-            val recipientKeyIndex = contactRequest.data["recipientKeyIndex"] as Int
+            val encryptedXpub = HashUtils.byteArrayfromBase64orByteArray(contactRequest.encryptedPublicKey)
+            val senderKeyIndex = contactRequest.senderKeyIndex
+            val recipientKeyIndex = contactRequest.recipientKeyIndex
             val contactKeyChain = getReceiveFromContactChain(contactIdentity, encryptionKey)
 
             val serializedContactXpub = decryptExtendedPublicKey(encryptedXpub, contactIdentity, recipientKeyIndex, senderKeyIndex, encryptionKey)
