@@ -16,8 +16,8 @@ import java.util.*
 class ContactRequest(document: Document) : AbstractDocument(document) {
     val toUserId: Identifier
         get() = Identifier.from(document.data["toUserId"])
-    val encryptedPublicKey: ByteArray?
-        get() = getFieldByteArray("encryptedPublicKey")
+    val encryptedPublicKey: ByteArray
+        get() = getFieldByteArray("encryptedPublicKey")!!
     val senderKeyIndex: Int
         get() = document.data["senderKeyIndex"] as Int
     val recipientKeyIndex: Int
