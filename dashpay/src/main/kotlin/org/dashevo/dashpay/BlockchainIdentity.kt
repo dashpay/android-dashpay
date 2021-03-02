@@ -32,6 +32,7 @@ import org.dashevo.dashpay.callback.RegisterNameCallback
 import org.dashevo.dashpay.callback.RegisterPreorderCallback
 import org.dashevo.dashpay.callback.UpdateProfileCallback
 import org.dashevo.dpp.document.Document
+import org.dashevo.dpp.document.DocumentCreateTransition
 import org.dashevo.dpp.document.DocumentsBatchTransition
 import org.dashevo.dpp.errors.InvalidIdentityAssetLockProofError
 import org.dashevo.dpp.identifier.Identifier
@@ -333,7 +334,7 @@ class BlockchainIdentity {
             instantLock = creditFundingTransaction!!.confidence?.instantSendlock
                 ?: throw InvalidIdentityAssetLockProofError("instantLock == null")
         }
-        platform.identities.register(
+        identity = platform.identities.register(
             creditFundingTransaction!!.outputIndex,
             creditFundingTransaction!!,
             instantLock!!,
@@ -344,6 +345,8 @@ class BlockchainIdentity {
         registrationStatus = RegistrationStatus.REGISTERED
 
         finalizeIdentityRegistration(creditFundingTransaction!!)
+
+        registrationStatus = RegistrationStatus.REGISTERED
     }
 
     fun recoverIdentity(creditFundingTransaction: CreditFundingTransaction): Boolean {
@@ -432,15 +435,29 @@ class BlockchainIdentity {
             usernameStatusDictionary[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.PREORDER_REGISTRATION_PENDING
             usernameStatuses[string] = usernameStatusDictionary
         }
+
+        val saltedDomainHashes = saltedDomainHashesForUsernames(usernames)
+
+        for (username in saltedDomainHashes.keys) {
+            val saltedDomainHashData = saltedDomainHashes[username] as ByteArray
+            for (preorderTransition in transition.transitions) {
+                preorderTransition as DocumentCreateTransition
+                if ((preorderTransition.data["saltedDomainHash"] as ByteArray).contentEquals(saltedDomainHashData)) {
+                    val usernameStatus = if (usernameStatuses.containsKey(username))
+                        usernameStatuses[username] as MutableMap<String, Any>
+                    else HashMap()
+                    usernameStatus[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.PREORDERED
+                    usernameStatuses[username] = usernameStatus
+                    saveUsername(username, UsernameStatus.PREORDERED, null, true)
+                }
+            }
+        }
         saveUsernames(usernames, UsernameStatus.PREORDER_REGISTRATION_PENDING)
     }
 
     fun registerUsernameDomainsForUsernames(usernames: List<String>, keyParameter: KeyParameter?) {
-        val transition = createDomainTransition(usernames)
-        if (transition == null) {
-            return
-        }
-        signStateTransition(transition!!, keyParameter)
+        val transition = createDomainTransition(usernames) ?: return
+        signStateTransition(transition, keyParameter)
 
         platform.broadcastStateTransition(transition)
 
@@ -452,8 +469,25 @@ class BlockchainIdentity {
             usernameStatusDictionary[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.REGISTRATION_PENDING
             usernameStatuses[string] = usernameStatusDictionary
         }
-        saveUsernames(usernames, BlockchainIdentity.UsernameStatus.REGISTRATION_PENDING)
+        saveUsernames(usernames, UsernameStatus.REGISTRATION_PENDING)
 
+        val usernamesLeft = ArrayList(usernames)
+        for (username in usernames) {
+            val normalizedName = username.toLowerCase()
+            for (nameDocumentTransition in transition.transitions) {
+                nameDocumentTransition as DocumentCreateTransition
+                if (nameDocumentTransition.data["normalizedLabel"] == normalizedName) {
+                    val usernameStatus = if (usernameStatuses.containsKey(username))
+                        usernameStatuses[username] as MutableMap<String, Any>
+                    else HashMap()
+                    usernameStatus[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.CONFIRMED
+                    usernameStatus[BLOCKCHAIN_USERNAME_UNIQUE] = Names.isUniqueIdentity(nameDocumentTransition)
+                    usernameStatuses[username] = usernameStatus
+                    saveUsername(username, UsernameStatus.CONFIRMED, null, true)
+                    usernamesLeft.remove(username)
+                }
+            }
+        }
     }
 
     /**
@@ -785,6 +819,7 @@ class BlockchainIdentity {
      * @param retryDelayType RetryDelayType
      * @param callback RegisterIdentityCallback
      */
+    @Deprecated("v18 makes this function obsolete")
     fun watchIdentity(
         retryCount: Int,
         delayMillis: Long,
@@ -820,6 +855,7 @@ class BlockchainIdentity {
         //throw exception or return false
     }
 
+    @Deprecated("v18 makes this function obsolete")
     suspend fun watchIdentity(
         retryCount: Int,
         delayMillis: Long,
@@ -863,6 +899,7 @@ class BlockchainIdentity {
      * @param retryDelayType RetryDelayType
      * @param callback RegisterPreorderCallback
      */
+    @Deprecated("v18 makes this function obsolete")
     fun watchPreorder(
         saltedDomainHashes: Map<String, ByteArray>,
         retryCount: Int,
@@ -941,7 +978,7 @@ class BlockchainIdentity {
             }
         }
     }
-
+    @Deprecated("v18 makes this function obsolete")
     suspend fun watchPreorder(
         saltedDomainHashes: Map<String, ByteArray>,
         retryCount: Int,
@@ -1031,6 +1068,7 @@ class BlockchainIdentity {
      * @param retryDelayType RetryDelayType
      * @param callback RegisterNameCallback
      */
+    @Deprecated("v18 makes this function obsolete")
     fun watchUsernames(
         usernames: List<String>,
         retryCount: Int,
@@ -1091,6 +1129,7 @@ class BlockchainIdentity {
         }
     }
 
+    @Deprecated("v18 makes this function obsolete")
     suspend fun watchUsernames(
         usernames: List<String>,
         retryCount: Int,
