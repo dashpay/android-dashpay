@@ -15,14 +15,20 @@ import org.dashevo.dpp.identity.AssetLock
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.identity.IdentityPublicKey
 import org.dashevo.dpp.identity.InstantAssetLockProof
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class Identities(val platform: Platform) {
+
+    companion object {
+        private val log: Logger = LoggerFactory.getLogger(Identities::class.java)
+    }
 
     fun register(
         signedLockTransaction: CreditFundingTransaction,
         instantLock: InstantSendLock,
         identityPublicKeys: List<IdentityPublicKey>
-    ): String {
+    ): Identity {
         return register(
             signedLockTransaction.outputIndex,
             signedLockTransaction,
@@ -34,11 +40,11 @@ class Identities(val platform: Platform) {
 
     fun register(
         outputIndex: Long,
-        transaction: Transaction,
+        transaction: CreditFundingTransaction,
         instantLock: InstantSendLock,
         assetLockPrivateKey: ECKey,
         identityPublicKeys: List<IdentityPublicKey>
-    ): String {
+    ): Identity {
 
         try {
             val instantAssetLockProof = InstantAssetLockProof(instantLock)
@@ -49,8 +55,13 @@ class Identities(val platform: Platform) {
             identityCreateTransition.signByPrivateKey(assetLockPrivateKey)
 
             platform.broadcastStateTransition(identityCreateTransition);
-            return identityCreateTransition.identityId.toString()
+
+            //get the identity from Platform since it cannot be recreated from the transition with the balance, etc
+            platform.stateRepository.addValidIdentity(identityCreateTransition.identityId)
+
+            return Identity(identityCreateTransition.identityId, identityPublicKeys, 0, identityCreateTransition.protocolVersion)
         } catch (e: Exception) {
+            log.info("registerIdentity failure: $e")
             throw e
         }
     }
@@ -103,6 +114,7 @@ class Identities(val platform: Platform) {
 
             return true
         } catch (e: Exception) {
+            log.info("topup failure: $e")
             throw e
         }
     }
