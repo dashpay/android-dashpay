@@ -251,12 +251,11 @@ class CreateWallets {
 
         private fun displayNameFromUsername(blockchainIdentity: BlockchainIdentity): String {
             val username = blockchainIdentity.currentUsername!!
-            return if (username.length > 20) {
-                username.substring(0, 20)
+            return if (username.length > 25) {
+                username.substring(0, 25)
             } else {
                 username
             }
-
         }
 
         private fun createProfile(blockchainIdentity: BlockchainIdentity) {
