@@ -38,7 +38,7 @@ class CreateContract {
                 KeyChainGroup.builder(platform.params)
                     .addChain(DeterministicKeyChain.builder()
                         .accountPath(DerivationPathFactory.get(platform.params).bip44DerivationPath(0))
-                        .seed(DeterministicSeed(DefaultIdentity.seed, null, "", Date().time))
+                        .seed(DeterministicSeed(DefaultIdentity(platform.params).seed, null, "", Date().time))
                         .build())
                     .build())
 
