@@ -130,7 +130,7 @@ class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: 
                             // Don't bother with DeriveKeyTask here, just call deriveKey
                             encryptionKey = wallet.keyCrypter!!.deriveKey(password)
                         }
-                        blockchainIdentity.addPaymentKeyChainFromContact(contactIdentity!!, it, encryptionKey)
+                        blockchainIdentity.addPaymentKeyChainFromContact(contactIdentity!!, contactRequest, encryptionKey)
                         addedContact = true
                     }
                 } catch (e: KeyCrypterException) {
