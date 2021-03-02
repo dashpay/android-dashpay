@@ -19,7 +19,7 @@ class ContactRequests(val platform: Platform) {
         const val CONTACTREQUEST_DOCUMENT = "dashpay.contactRequest"
     }
 
-    fun create(fromUser: BlockchainIdentity, toUser: Identity, aesKey: KeyParameter?) {
+    fun create(fromUser: BlockchainIdentity, toUser: Identity, aesKey: KeyParameter?): ContactRequest {
         val contactKeyChain = fromUser.getReceiveFromContactChain(toUser, aesKey)
         val contactKey = contactKeyChain.watchingKey
         val contactPub = contactKey.serializeContactPub()
@@ -48,7 +48,9 @@ class ContactRequests(val platform: Platform) {
         val transition = platform.dpp.document.createStateTransition(transitionMap)
         fromUser.signStateTransition(transition, aesKey)
 
-        platform.client.broadcastStateTransition(transition, retryCallback = platform.broadcastRetryCallback)
+        platform.broadcastStateTransition(transition)
+
+        return ContactRequest(contactRequestDocument)
     }
 
     /**
