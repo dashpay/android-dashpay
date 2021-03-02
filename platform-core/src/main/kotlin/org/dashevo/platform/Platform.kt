@@ -14,10 +14,7 @@ import org.bitcoinj.params.MobileDevNetParams
 import org.bitcoinj.params.PalinkaDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.dashevo.dapiclient.DapiClient
-import org.dashevo.dapiclient.grpc.DefaultBroadcastRetryCallback
-import org.dashevo.dapiclient.grpc.DefaultGetDataContractWithContractIdRetryCallback
-import org.dashevo.dapiclient.grpc.DefaultGetDocumentsWithContractIdRetryCallback
-import org.dashevo.dapiclient.grpc.DefaultGetIdentityWithIdentitiesRetryCallback
+import org.dashevo.dapiclient.grpc.*
 import org.dashevo.dpp.DashPlatformProtocol
 import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
@@ -40,7 +37,7 @@ class Platform(val params: NetworkParameters) {
         override val retryContractIds
             get() = getAppList() // always use the latest app list
     }
-    val broadcastRetryCallback = object : DefaultBroadcastRetryCallback(stateRepository) {
+    val broadcastRetryCallback = object : BroadcastRetryCallback(stateRepository) {
         override val retryContractIds
             get() = getAppList() // always use the latest app list
         override val retryIdentityIds: List<Identifier>
@@ -96,8 +93,13 @@ class Platform(val params: NetworkParameters) {
         keyIndex: Int = 0
     ) {
         stateTransition.sign(identity.getPublicKeyById(keyIndex)!!, privateKey.privateKeyAsHex)
+
+        broadcastStateTransition(stateTransition)
+    }
+
+    fun broadcastStateTransition(signedStateTransition: StateTransitionIdentitySigned) {
         //TODO: validate transition structure here
-        client.broadcastStateTransition(stateTransition, retryCallback = broadcastRetryCallback);
+        client.broadcastStateTransitionAndWait(signedStateTransition, retryCallback = broadcastRetryCallback)
     }
 
     fun hasApp(appName: String): Boolean {
