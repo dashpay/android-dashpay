@@ -1,6 +1,7 @@
 package org.dashevo.platform
 
 import org.bitcoinj.core.ECKey
+import org.bitcoinj.core.Transaction
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -15,10 +16,10 @@ class IdentitiesTest : PlatformNetwork() {
 
         for (document in results) {
             val domainDoc = DomainDocument(document)
-            val expectedContractId = domainDoc.dashUniqueIdentityId!!
-            val identity = platform.identities.get(expectedContractId.toString())
+            val expectedIdentityId = domainDoc.dashUniqueIdentityId ?: domainDoc.dashAliasIdentityId!!
+            val identity = platform.identities.get(expectedIdentityId.toString())
 
-            assertEquals(expectedContractId, identity!!.id)
+            assertEquals(expectedIdentityId, identity!!.id)
         }
     }
 
@@ -30,5 +31,9 @@ class IdentitiesTest : PlatformNetwork() {
         assertNull(results)
     }
 
-
+    @Test
+    fun getAssetLockTxTest() {
+        val tx = platform.client.getTransaction(assetLockTxId)
+        assertEquals(assetLockTxId, Transaction(platform.params, tx!!.toByteArray()).txId.toString())
+    }
 }
