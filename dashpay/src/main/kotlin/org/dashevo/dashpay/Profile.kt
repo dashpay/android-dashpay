@@ -24,4 +24,8 @@ class Profile(document: Document) : AbstractDocument(document) {
 
         return document.equals(other.document)
     }
+
+    override fun toString(): String {
+        return "Profile(${document.toJSON()})"
+    }
 }

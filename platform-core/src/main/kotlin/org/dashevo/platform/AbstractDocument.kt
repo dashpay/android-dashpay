@@ -76,4 +76,9 @@ abstract class AbstractDocument(val document: Document) {
     fun hashOnce(): ByteArray {
         return document.hashOnce()
     }
+
+
+    override fun toString(): String {
+        return "Document(${document.toJSON()})"
+    }
 }
