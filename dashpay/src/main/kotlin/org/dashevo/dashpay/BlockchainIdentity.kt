@@ -1222,7 +1222,7 @@ class BlockchainIdentity {
         publicMessage: String?,
         avatarUrl: String? = null,
         avatarHash: ByteArray? = null,
-        avatarFingerprint: ByteArray?
+        avatarFingerprint: ByteArray? = null
     ): DocumentsBatchTransition {
 
         // first obtain the current document
@@ -1230,19 +1230,33 @@ class BlockchainIdentity {
 
         // change all of the document fields
         val profileData = hashMapOf<String, Any?>()
-        profileData.putAll(currentProfile!!.toJSON())
-        if (displayName != null)
+        profileData.putAll(currentProfile!!.toObject())
+        if (displayName != null) {
             profileData["displayName"] = displayName
-        if (publicMessage != null)
+        } else {
+            profileData.remove("displayName")
+        }
+        if (publicMessage != null) {
             profileData["publicMessage"] = publicMessage
-        if (avatarUrl != null)
+        } else {
+            profileData.remove("publicMessage")
+        }
+        if (avatarUrl != null) {
             profileData["avatarUrl"] = avatarUrl
-        if (avatarHash != null)
+        } else {
+            profileData.remove("avatarUrl")
+        }
+        if (avatarHash != null) {
             profileData["avatarHash"] = avatarHash
-        if (avatarFingerprint != null)
+        } else {
+            profileData.remove("avatarHash")
+        }
+        if (avatarFingerprint != null) {
             profileData["avatarFingerprint"] = avatarFingerprint
-
-        val profileDocument = Document(profileData, platform.apps["dashpay"]!!.dataContract!!)
+        } else {
+            profileData.remove("avatarFingerprint")
+        }
+        val profileDocument = platform.dpp.document.createFromObject(profileData)
         // a replace operation must set updatedAt
         profileDocument.updatedAt = Date().time
         lastProfileDocument = platform.dpp.document.createFromObject(profileDocument.toObject()) // copy the document
