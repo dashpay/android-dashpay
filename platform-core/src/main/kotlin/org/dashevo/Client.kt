@@ -25,9 +25,13 @@ class Client(private val clientOptions: ClientOptions) {
         "testnet" -> TestNet3Params.get()
         else -> throw IllegalArgumentException("network ${clientOptions.network} is not valid")
     }
-    val apps: ClientApps
-    var dapiClient: DapiClient
     val platform = Platform(params)
+
+    val dapiClient: DapiClient
+        get() = platform.client
+
+    val apps: ClientApps
+        get() = ClientApps(platform.apps)
 
     var wallet : Wallet? = null
 
@@ -60,7 +64,7 @@ class Client(private val clientOptions: ClientOptions) {
         }
 
         // Create the DapiClient with parameters
-        dapiClient = when {
+        platform.client  = when {
             clientOptions.dapiAddressListProvider != null -> {
                 DapiClient(clientOptions.dapiAddressListProvider, clientOptions.timeout, clientOptions.retries, clientOptions.banBaseTime)
             }
@@ -71,31 +75,8 @@ class Client(private val clientOptions: ClientOptions) {
                 DapiClient(params.defaultMasternodeList.toList(), clientOptions.timeout, clientOptions.retries, clientOptions.banBaseTime)
             }
         }
-        platform.client = dapiClient
 
         // Client Apps
-        val defaultApps = hashMapOf<String, ClientAppDefinition>()
-        when {
-            params.id.contains("test") -> {
-                defaultApps["dpns"] = ClientAppDefinition("36ez8VqoDbR8NkdXwFaf9Tp8ukBdQxN8eYs8JNMnUyKz")
-                // matk8g1YRpzZskecRfpG5GCAgRmWCGJfjUemrsLkFDg - contract with coreHeightCreatedAt required field
-                defaultApps["dashpay"] = ClientAppDefinition("2DAncD4YTjfhSQZYrsQ659xbM7M5dNEkyfBEAg9SsS3W")
-            }
-            params.id.contains("evonet") -> {
-                defaultApps["dpns"] = ClientAppDefinition("3VvS19qomuGSbEYWbTsRzeuRgawU3yK4fPMzLrbV62u8")
-                defaultApps["dashpay"] = ClientAppDefinition("5kML7KqerxF2wU7acywVhpVRHtJGrNGh9swcmqNmFg2s")
-            }
-            params.id.contains("mobile") -> {
-                defaultApps["dpns"] = ClientAppDefinition("CVZzFCbz4Rcf2Lmu9mvtC1CmvPukHy5kS2LNtNaBFM2N")
-                defaultApps["dashpay"] = ClientAppDefinition("FqAxLy1KMzGTb2Xj4A2tpxw89srN5VK8D6yuMnkzzk5P")
-            }
-            params.id.contains("palinka") -> {
-                defaultApps["dpns"] = ClientAppDefinition("FZ2MkyR8YigXX7K7m9sq3PikzubV8i4rwUMheAQTLLCw")
-                defaultApps["dashpay"] = ClientAppDefinition("GmCL5grcMBHumKVXvWpRZU4BaGzGC7p6mbsJSR4K6yhd")
-                //apps["thumbnail"] = ContractInfo("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
-            }
-        }
-        apps = ClientApps(defaultApps)
-        apps.addAll(clientOptions.apps)
+        platform.apps.putAll(clientOptions.apps)
     }
 }
