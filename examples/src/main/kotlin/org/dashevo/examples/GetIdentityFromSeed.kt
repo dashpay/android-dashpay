@@ -12,7 +12,7 @@ import org.bitcoinj.wallet.KeyChainGroup
 import org.bitcoinj.wallet.Wallet
 import org.dashevo.Client
 import org.dashevo.dpp.toHexString
-import org.json.JSONObject
+import org.dashevo.client.ClientOptions
 
 class GetIdentityFromSeed {
     companion object {
@@ -25,7 +25,7 @@ class GetIdentityFromSeed {
                 println("Usage: GetIdentityFromSeed network word-list")
                 return
             }
-            sdk = Client(args[0])
+            sdk = Client(ClientOptions(network = args[0]))
             if (args.size > 1) {
                 for (i in 0 until args.size - 1) {
                     wordlist.add(args[i+1])

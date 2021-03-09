@@ -13,6 +13,7 @@ import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.toBase58
 import org.dashevo.dpp.toBase64
+import org.dashevo.client.ClientOptions
 import org.dashevo.platform.Documents
 import org.json.JSONObject
 import java.util.*
@@ -33,7 +34,7 @@ class ShowContactRequests {
                 scanner.next()
             }
 
-            sdk = Client(network)
+            sdk = Client(ClientOptions(network = args[0]))
             if (!sdk.platform.hasApp("dashpay")) {
                 println("$network does not support dashpay")
                 return

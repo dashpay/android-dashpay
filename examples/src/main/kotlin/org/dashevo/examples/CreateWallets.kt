@@ -12,8 +12,6 @@ import org.bitcoinj.core.Transaction
 import org.bitcoinj.core.TransactionOutput
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.params.EvoNetParams
-import org.bitcoinj.params.MobileDevNetParams
-import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.utils.BriefLogFormatter
 import org.bitcoinj.wallet.AuthenticationKeyChain
 import org.bitcoinj.wallet.CoinSelection
@@ -26,7 +24,6 @@ import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
 import org.dashevo.Client
 import org.dashevo.dashpay.BlockchainIdentity
-import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.util.HashUtils
 import java.io.File
 import java.io.IOException
@@ -40,6 +37,7 @@ import org.dashevo.dashpay.callback.*
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.toHexString
+import org.dashevo.client.ClientOptions
 import org.dashevo.platform.DomainDocument
 import org.json.JSONObject
 
@@ -80,7 +78,7 @@ class CreateWallets {
                 network = args[0]
                 configurationFile = args[1]
                 contact = args[2]
-                sdk = Client(network)
+                sdk = Client(ClientOptions(network = network))
                 println("------------------------------------------------")
                 println("CreateWallets($network: $configurationFile)")
                 println()

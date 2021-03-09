@@ -6,11 +6,9 @@
  */
 package org.dashevo.examples
 
-import org.bitcoinj.core.ECKey
-import org.bitcoinj.core.Sha256Hash
-import org.bitcoinj.core.Utils
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.dashevo.Client
+import org.dashevo.client.ClientOptions
 import org.json.JSONObject
 
 /**
@@ -20,7 +18,7 @@ import org.json.JSONObject
 
 class RegisterNames {
     companion object {
-        val sdk = Client("mobile")
+        val sdk = Client(ClientOptions(network ="mobile"))
 
         @JvmStatic
         fun main(args: Array<String>) {

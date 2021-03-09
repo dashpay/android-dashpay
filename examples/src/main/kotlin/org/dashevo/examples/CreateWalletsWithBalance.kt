@@ -13,6 +13,7 @@ import org.bitcoinj.wallet.DeterministicKeyChain
 import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.KeyChain
 import org.dashevo.Client
+import org.dashevo.client.ClientOptions
 import java.io.File
 import java.security.SecureRandom
 import java.util.*
@@ -37,7 +38,7 @@ class CreateWalletsWithBalance {
                 network = args[0]
                 configurationFile = args[1]
                 balance = args[2].toDouble()
-                sdk = Client(network)
+                sdk = Client(ClientOptions(network = args[0]))
                 println("------------------------------------------------")
                 println("CreateWallets($network: $configurationFile)")
                 println()

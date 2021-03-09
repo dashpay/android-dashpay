@@ -13,6 +13,7 @@ import org.bitcoinj.wallet.KeyChainGroup
 import org.bitcoinj.wallet.Wallet
 import org.dashevo.Client
 import org.dashevo.dashpay.BlockchainIdentity
+import org.dashevo.client.ClientOptions
 import org.json.JSONObject
 import java.util.*
 import kotlin.random.Random
@@ -28,7 +29,7 @@ class UpdateProfile {
                 println("Usage: Update Profile network New-Display-Name")
                 return
             }
-            sdk = Client(args[0])
+            sdk = Client(ClientOptions(network = args[0]))
             displayName = args[1] + Random.nextInt()
             updateProfile()
         }

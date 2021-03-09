@@ -11,6 +11,7 @@ import io.grpc.StatusRuntimeException
 import org.dashevo.Client
 import org.dashevo.dapiclient.DapiClient
 import org.dashevo.dpp.identifier.Identifier
+import org.dashevo.client.ClientOptions
 import org.dashevo.platform.Platform
 
 class GetNetworkStatus {
@@ -29,7 +30,7 @@ class GetNetworkStatus {
                 println("Usage: GetStatus network")
                 return
             }
-            sdk = Client(args[0])
+            sdk = Client(ClientOptions(network = args[0]))
             platform = sdk.platform
 
             start()

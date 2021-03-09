@@ -8,8 +8,8 @@ package org.dashevo.examples
 
 import org.dashevo.Client
 import org.dashevo.dapiclient.model.DocumentQuery
-import org.dashevo.dashpay.Profiles
 import org.dashevo.dpp.document.Document
+import org.dashevo.client.ClientOptions
 import org.dashevo.platform.Documents
 import org.json.JSONObject
 
@@ -23,7 +23,7 @@ class DashPayProfiles {
                 println("Usage: DashPayProfiles network")
                 return
             }
-            sdk = Client(args[0])
+            sdk = Client(ClientOptions(network = args[0]))
             getDocuments()
         }
 

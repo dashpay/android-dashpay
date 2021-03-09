@@ -10,12 +10,13 @@ import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.quorums.InstantSendLock
 import org.dashevo.Client
 import org.dashevo.dpp.identity.IdentityPublicKey
+import org.dashevo.client.ClientOptions
 import org.json.JSONObject
 import java.lang.Thread.sleep
 
 class CreateIdentity {
     companion object {
-        val sdk = Client("palinka")
+        val sdk = Client(ClientOptions(network = "palinka"))
 
         @JvmStatic
         fun main(args: Array<String>) {

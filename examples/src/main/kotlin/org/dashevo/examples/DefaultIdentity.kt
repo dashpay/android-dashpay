@@ -4,6 +4,10 @@ import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.core.Utils
+import org.bitcoinj.params.EvoNetParams
+import org.bitcoinj.params.MobileDevNetParams
+import org.bitcoinj.params.PalinkaDevNetParams
+import org.bitcoinj.params.TestNet3Params
 
 /*
 
@@ -55,6 +59,14 @@ class DefaultIdentity(val params: NetworkParameters) {
 //        }
 
     }
+
+    constructor(network: String) : this (when (network) {
+        "evonet" -> EvoNetParams.get()
+        "palinka" -> PalinkaDevNetParams.get()
+        "mobile" -> MobileDevNetParams.get()
+        "testnet" -> TestNet3Params.get()
+        else -> throw IllegalArgumentException("network $network is not valid")
+    })
 
     val seed: String
 

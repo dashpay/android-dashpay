@@ -10,6 +10,7 @@ import com.google.common.base.Stopwatch
 import org.dashevo.Client
 import org.dashevo.dapiclient.model.GetStatusResponse
 import org.dashevo.dapiclient.provider.DAPIAddress
+import org.dashevo.client.ClientOptions
 
 /*
     Calls getStatus on every masternode in the default list for a network
@@ -26,7 +27,7 @@ class GetStatus {
                 println("Usage: GetStatus network")
                 return
             }
-            sdk = Client(args[0])
+            sdk = Client(ClientOptions(network = args[0]))
             getStatus()
         }
 

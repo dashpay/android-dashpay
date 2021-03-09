@@ -7,6 +7,7 @@
 package org.dashevo.examples
 
 import org.dashevo.Client
+import org.dashevo.client.ClientOptions
 import org.json.JSONObject
 
 class DisplayContracts {
@@ -19,7 +20,7 @@ class DisplayContracts {
                 println("Usage: DisplayContracts network")
                 return
             }
-            sdk = Client(args[0])
+            sdk = Client(ClientOptions(network = args[0]))
             getContracts()
         }
 

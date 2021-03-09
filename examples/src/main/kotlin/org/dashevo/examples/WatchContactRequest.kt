@@ -1,16 +1,16 @@
 package org.dashevo.examples
 
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import org.dashevo.Client
 import org.dashevo.dashpay.ContactRequests
 import org.dashevo.dashpay.RetryDelayType
 import org.dashevo.dpp.identifier.Identifier
+import org.dashevo.client.ClientOptions
 
 class WatchContactRequest {
     companion object {
-        val sdk = Client("mobile")
+        val sdk = Client(ClientOptions(network = "mobile"))
 
         @JvmStatic
         fun main(args: Array<String>) {

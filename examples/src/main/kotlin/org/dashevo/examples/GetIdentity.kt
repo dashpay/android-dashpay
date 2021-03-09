@@ -7,13 +7,9 @@
 package org.dashevo.examples
 
 import org.bitcoinj.core.ECKey
-import org.bitcoinj.script.Script
-import org.bitcoinj.wallet.DeterministicSeed
-import org.bitcoinj.wallet.KeyChainGroup
-import org.bitcoinj.wallet.Wallet
 import org.dashevo.Client
 import org.dashevo.dpp.toHexString
-import org.dashevo.dpp.util.HashUtils
+import org.dashevo.client.ClientOptions
 
 class GetIdentity {
     companion object {
@@ -26,7 +22,7 @@ class GetIdentity {
                 println("Usage: GetIdentity network base58-id")
                 return
             }
-            sdk = Client(args[0])
+            sdk = Client(ClientOptions(network = args[0]))
             if (args.size > 1) {
                 id = args[1]
             }

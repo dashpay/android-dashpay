@@ -10,6 +10,7 @@ import org.dashevo.Client
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.document.Document
 import org.dashevo.dpp.toBase64
+import org.dashevo.client.ClientOptions
 import org.dashevo.platform.Documents
 
 class PreorderedNames {
@@ -18,7 +19,7 @@ class PreorderedNames {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            sdk = Client(args[0])
+            sdk = Client(ClientOptions(network = args[0]))
             getDocuments()
         }
 
