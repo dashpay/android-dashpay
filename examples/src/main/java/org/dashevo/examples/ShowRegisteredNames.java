@@ -1,11 +1,11 @@
 package org.dashevo.examples;
 
-import org.bitcoinj.params.EvoNetParams;
 import org.dashevo.Client;
 import org.dashevo.dapiclient.model.DocumentQuery;
 import org.dashevo.dpp.document.Document;
 import org.dashevo.platform.Documents;
 import org.dashevo.platform.Platform;
+import org.dashevo.client.ClientOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,14 +14,13 @@ public class ShowRegisteredNames {
 
     static Client sdk;
     public static void main(String [] args) {
-        sdk = new Client("testnet");
+        sdk = new Client(ClientOptions.builder().network("testnet").build());
 
         getDocuments();
     }
 
     private static void getDocuments() {
         Platform platform = sdk.getPlatform();
-        sdk.isReady();
 
         int startAt = 0;
         List<Document> documents = new ArrayList<Document>(0);
