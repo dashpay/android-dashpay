@@ -35,7 +35,6 @@ class UpdateProfile {
 
         fun updateProfile() {
             val platform = sdk.platform
-            sdk.isReady()
 
             val wallet = Wallet(platform.params,
                 KeyChainGroup.builder(platform.params)

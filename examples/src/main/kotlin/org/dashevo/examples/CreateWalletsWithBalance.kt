@@ -56,7 +56,6 @@ class CreateWalletsWithBalance {
 
         private fun createWallets() {
             val scanner = Scanner(System.`in`)
-            sdk.isReady()
 
             val secureRandom = SecureRandom()
             val recoveryPhraseMap = HashMap<String, String>()

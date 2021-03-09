@@ -38,7 +38,6 @@ class ShowContactRequests {
                 println("$network does not support dashpay")
                 return
             }
-            sdk.isReady()
 
             val prompt = "Enter identity or name for which to list contact requests (all = show all, !quit = quit): "
             println(prompt)

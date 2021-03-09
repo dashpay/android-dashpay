@@ -30,7 +30,6 @@ class RegisterNames {
 
         fun registerName(name: String) {
             val platform = sdk.platform
-            sdk.isReady();
 
             val cftx = CreditFundingTransaction(platform.params, DefaultIdentity.creditBurnTx)
             cftx.setCreditBurnPublicKeyAndIndex(DefaultIdentity.identityPrivateKey, 0)

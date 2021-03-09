@@ -24,7 +24,6 @@ class WatchContactRequest {
 
         suspend fun watchContactRequest(from: Identifier, to: Identifier) {
             val platform = sdk.platform
-            sdk.isReady()
             val contactRequest = ContactRequests(platform).watchContactRequest(from, to, 100, 333, RetryDelayType.LINEAR)
         }
     }

@@ -35,7 +35,6 @@ class GetIdentity {
 
         private fun getIdentity() {
             val platform = sdk.platform
-            sdk.isReady()
 
             val identity = platform.identities.get(id)
             if (identity != null) {

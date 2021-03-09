@@ -36,7 +36,6 @@ class GetIdentityFromSeed {
 
         private fun getIdentityFromSeed() {
             val platform = sdk.platform
-            sdk.isReady()
 
             val seed = DeterministicSeed(wordlist, null, "", 0)
             val kcg = KeyChainGroup.builder(platform.params).fromSeed(seed, Script.ScriptType.P2PKH).build()

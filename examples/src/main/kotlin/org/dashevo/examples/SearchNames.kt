@@ -39,7 +39,6 @@ class SearchNames {
 
         private fun searchDocuments(text: String) {
             val platform = sdk.platform
-            sdk.isReady()
 
             var startAt = 0
             var documents: List<Document>? = null

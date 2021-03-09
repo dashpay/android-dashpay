@@ -25,7 +25,6 @@ class DisplayContracts {
 
         private fun getContracts() {
             val platform = sdk.platform
-            sdk.isReady()
 
             for (app in platform.apps) {
                 try {

@@ -98,7 +98,6 @@ class CreateWallets {
         private fun createWallets() {
             val scanner = Scanner(System.`in`)
             val platform = sdk.platform
-            sdk.isReady()
 
             val secureRandom = SecureRandom()
             val addresses = arrayListOf<Address>()

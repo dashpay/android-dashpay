@@ -31,7 +31,6 @@ class GetStatus {
         }
 
         private fun getStatus() {
-            sdk.isReady()
             val results = hashMapOf<DAPIAddress, GetStatusResponse?>()
 
             val nodeList = sdk.platform.params.defaultMasternodeList.toMutableList()

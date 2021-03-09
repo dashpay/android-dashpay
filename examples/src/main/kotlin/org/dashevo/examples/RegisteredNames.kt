@@ -24,7 +24,6 @@ class RegisteredNames {
 
         fun getDocuments() {
             val platform = sdk.platform
-            sdk.isReady()
 
             var startAt = 0
             var documents: List<Document>? = null

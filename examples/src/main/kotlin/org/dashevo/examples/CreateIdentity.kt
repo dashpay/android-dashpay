@@ -24,7 +24,6 @@ class CreateIdentity {
 
         fun createIdentity() {
             val platform = sdk.platform
-            sdk.isReady()
 
             val cftx = CreditFundingTransaction(platform.params, DefaultIdentity.creditBurnTx)
             cftx.setCreditBurnPublicKeyAndIndex(DefaultIdentity.identityPrivateKey, 0)
