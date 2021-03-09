@@ -13,6 +13,7 @@ import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.params.MobileDevNetParams
 import org.bitcoinj.params.PalinkaDevNetParams
 import org.bitcoinj.params.TestNet3Params
+import org.dashevo.client.ClientAppDefinition
 import org.dashevo.dapiclient.DapiClient
 import org.dashevo.dapiclient.grpc.*
 import org.dashevo.dpp.DashPlatformProtocol
@@ -26,7 +27,7 @@ class Platform(val params: NetworkParameters) {
     var stateRepository = PlatformStateRepository(this)
 
     val dpp = DashPlatformProtocol(stateRepository)
-    val apps = HashMap<String, ContractInfo>()
+    val apps = HashMap<String, ClientAppDefinition>()
     val contracts = Contracts(this)
     val documents = Documents(this)
     val identities = Identities(this)
@@ -57,15 +58,15 @@ class Platform(val params: NetworkParameters) {
     init {
         when {
             params.id.contains("test") -> {
-                apps["dpns"] = ContractInfo("36ez8VqoDbR8NkdXwFaf9Tp8ukBdQxN8eYs8JNMnUyKz")
+                apps["dpns"] = ClientAppDefinition("36ez8VqoDbR8NkdXwFaf9Tp8ukBdQxN8eYs8JNMnUyKz")
                 // matk8g1YRpzZskecRfpG5GCAgRmWCGJfjUemrsLkFDg - contract with coreHeightCreatedAt required field
-                apps["dashpay"] = ContractInfo("2DAncD4YTjfhSQZYrsQ659xbM7M5dNEkyfBEAg9SsS3W")
+                apps["dashpay"] = ClientAppDefinition("2DAncD4YTjfhSQZYrsQ659xbM7M5dNEkyfBEAg9SsS3W")
                 client = DapiClient(TestNet3Params.MASTERNODES.toList())
                 permanentBanList = listOf("45.48.168.16", "71.239.154.151", "174.34.233.98")
             }
             params.id.contains("evonet") -> {
-                apps["dpns"] = ContractInfo("3VvS19qomuGSbEYWbTsRzeuRgawU3yK4fPMzLrbV62u8")
-                apps["dashpay"] = ContractInfo("5kML7KqerxF2wU7acywVhpVRHtJGrNGh9swcmqNmFg2s")
+                apps["dpns"] = ClientAppDefinition("3VvS19qomuGSbEYWbTsRzeuRgawU3yK4fPMzLrbV62u8")
+                apps["dashpay"] = ClientAppDefinition("5kML7KqerxF2wU7acywVhpVRHtJGrNGh9swcmqNmFg2s")
                 client = DapiClient(EvoNetParams.MASTERNODES.toList())
             }
             params.id.contains("mobile") -> {
@@ -74,8 +75,8 @@ class Platform(val params: NetworkParameters) {
                 client = DapiClient(MobileDevNetParams.MASTERNODES.toList())
             }
             params.id.contains("palinka") -> {
-                apps["dpns"] = ContractInfo("FZ2MkyR8YigXX7K7m9sq3PikzubV8i4rwUMheAQTLLCw")
-                apps["dashpay"] = ContractInfo("GmCL5grcMBHumKVXvWpRZU4BaGzGC7p6mbsJSR4K6yhd")
+                apps["dpns"] = ClientAppDefinition("FZ2MkyR8YigXX7K7m9sq3PikzubV8i4rwUMheAQTLLCw")
+                apps["dashpay"] = ClientAppDefinition("GmCL5grcMBHumKVXvWpRZU4BaGzGC7p6mbsJSR4K6yhd")
                 //apps["thumbnail"] = ContractInfo("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
                 client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList())
             }

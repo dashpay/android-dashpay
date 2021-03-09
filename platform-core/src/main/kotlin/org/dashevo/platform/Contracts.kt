@@ -7,6 +7,7 @@
 package org.dashevo.platform
 
 import org.bitcoinj.core.ECKey
+import org.dashevo.client.ClientAppDefinition
 import org.dashevo.dpp.contract.DataContract
 import org.dashevo.dpp.contract.DataContractCreateTransition
 import org.dashevo.dpp.identifier.Identifier
@@ -38,7 +39,7 @@ class Contracts(val platform: Platform) {
     }
 
     fun get(identifier: Identifier): DataContract? {
-        var localContract: ContractInfo? = null;
+        var localContract: ClientAppDefinition? = null;
 
         for (appName in platform.apps.keys) {
             val app = platform.apps[appName]
@@ -48,19 +49,19 @@ class Contracts(val platform: Platform) {
             }
         }
 
-        if (localContract?.dataContract != null) {
-            return localContract.dataContract;
+        if (localContract?.contract != null) {
+            return localContract.contract;
         } else {
             try {
                 val rawContract = platform.client.getDataContract(identifier.toBuffer(), platform.contractsRetryCallback) ?: return null
 
                 val contract = platform.dpp.dataContract.createFromBuffer(rawContract.toByteArray())
-                val app = ContractInfo(contract.id, contract)
+                val app = ClientAppDefinition(contract.id, contract)
                 // If we do not have even the identifier in this.apps, we add it with timestamp as key
                 if (localContract == null) {
                     platform.apps[Date().toString()] = app
                 } else {
-                    localContract.dataContract = contract
+                    localContract.contract = contract
                 }
                 return contract;
             } catch (e: Exception) {

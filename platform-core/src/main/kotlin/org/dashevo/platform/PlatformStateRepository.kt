@@ -33,8 +33,8 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
             return contractsMap[id]
 
         val contractInfo = platform.apps.values.find { it.contractId == id }
-        if (contractInfo?.dataContract != null)
-            return contractInfo.dataContract
+        if (contractInfo?.contract != null)
+            return contractInfo.contract
 
         val contract = platform.contracts.get(id)
         if (contract != null)
