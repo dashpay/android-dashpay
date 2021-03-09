@@ -6,19 +6,15 @@
  */
 package org.dashevo.examples
 
-import org.bitcoinj.wallet.DerivationPathFactory
-import org.bitcoinj.wallet.DeterministicKeyChain
-import org.bitcoinj.wallet.DeterministicSeed
-import org.bitcoinj.wallet.KeyChainGroup
-import org.bitcoinj.wallet.Wallet
 import org.dashevo.Client
+import org.dashevo.client.ClientOptions
+import org.dashevo.client.WalletOptions
 import org.json.JSONObject
 import java.lang.Thread.sleep
-import java.util.*
 
 class CreateContract {
     companion object {
-        lateinit var sdk: Client
+        lateinit var client: Client
 
         @JvmStatic
         fun main(args: Array<String>) {
@@ -26,38 +22,26 @@ class CreateContract {
                 println("Usage: CreateContract network")
                 return
             }
-            sdk = Client(args[0])
+            client = Client(ClientOptions(network = args[0], walletOptions = WalletOptions(DefaultIdentity(args[0]).seed)))
             createContract()
         }
 
-        fun createContract() {
-            val platform = sdk.platform
-
-            val wallet = Wallet(platform.params,
-                KeyChainGroup.builder(platform.params)
-                    .addChain(DeterministicKeyChain.builder()
-                        .accountPath(DerivationPathFactory.get(platform.params).bip44DerivationPath(0))
-                        .seed(DeterministicSeed(DefaultIdentity(platform.params).seed, null, "", Date().time))
-                        .build())
-                    .build())
-
-            wallet.initializeAuthenticationKeyChains(wallet.keyChainSeed, null)
-
-            val identity = platform.identities.getByPublicKeyHash(wallet.blockchainIdentityKeyChain.watchingKey.pubKeyHash)!!
+        private fun createContract() {
+            val identity = client.platform.identities.getByPublicKeyHash(client.wallet!!.blockchainIdentityKeyChain.watchingKey.pubKeyHash)!!
 
             val contractText = javaClass.getResource("dashpay-contract.json").readText()
             val jsonObject = JSONObject(contractText)
             val rawContract = jsonObject.toMap()
 
-            val dataContract = platform.contracts.create(rawContract, identity)
+            val dataContract = client.platform.contracts.create(rawContract, identity)
 
-            val transition = platform.contracts.broadcast(dataContract, identity, wallet.blockchainIdentityKeyChain.watchingKey, 0)
+            val transition = client.platform.contracts.broadcast(dataContract, identity, client.wallet!!.blockchainIdentityKeyChain.watchingKey, 0)
 
             println("DataContractCreateTransition: ----------------------")
             println(JSONObject(transition.toJSON()).toString(2))
             sleep(10000)
 
-            val publishedContract = platform.contracts.get(dataContract.id)
+            val publishedContract = client.platform.contracts.get(dataContract.id)
 
             println("DataContract: -----------------------------------")
             println(JSONObject(publishedContract!!.toJSON()).toString(2))
