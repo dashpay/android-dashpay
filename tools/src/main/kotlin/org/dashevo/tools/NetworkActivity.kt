@@ -7,11 +7,11 @@
 package org.dashevo.tools
 
 import org.dashevo.Client
+import org.dashevo.client.ClientOptions
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dashpay.ContactRequest
 import org.dashevo.dashpay.ContactRequests
 import org.dashevo.dpp.document.Document
-import org.dashevo.dpp.toBase58
 import org.dashevo.platform.Documents
 import org.dashevo.platform.Names
 import org.dashevo.platform.Platform
@@ -30,7 +30,7 @@ class NetworkActivity {
             }
             network = args[0]
             sdk = Client(
-                network
+                ClientOptions(network = network)
             )
             platform = sdk.platform
             getNetworkActivity()
