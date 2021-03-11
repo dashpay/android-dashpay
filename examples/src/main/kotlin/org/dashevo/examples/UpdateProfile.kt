@@ -30,6 +30,7 @@ class UpdateProfile {
                 return
             }
             sdk = Client(ClientOptions(network = args[0]))
+            sdk.platform.useValidNodes()
             displayName = args[1] + Random.nextInt()
             updateProfile()
         }
