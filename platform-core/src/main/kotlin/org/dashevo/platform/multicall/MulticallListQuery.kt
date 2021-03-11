@@ -15,7 +15,7 @@ class MulticallListQuery<T>(method: MulticallMethod<List<T>>,
     override fun query(): MulticallQuery.Companion.Status {
         for (i in 0 until callsToMake) {
             calls = i + 1
-            log.info("making query ${i + 1} of $callsToMake")
+            log.debug("making query ${i + 1} of $callsToMake")
             try {
                 val result = method.execute()
 
@@ -32,11 +32,11 @@ class MulticallListQuery<T>(method: MulticallMethod<List<T>>,
                         results.add(result)
                         when(callType) {
                             MulticallQuery.Companion.CallType.FIRST -> {
-                                println(toString())
+                                log.debug(toString())
                                 return MulticallQuery.Companion.Status.FOUND
                             }
                             MulticallQuery.Companion.CallType.UNTIL_FOUND -> {
-                                println(toString())
+                                log.debug(toString())
                                 return MulticallQuery.Companion.Status.FOUND
                             }
                         }
@@ -73,7 +73,7 @@ class MulticallListQuery<T>(method: MulticallMethod<List<T>>,
             }
         }
         log.info("multicall query results: ${successRate * 100}% with ${results.size} unique items")
-        println(toString())
+        log.debug(toString())
         return status()
     }
 

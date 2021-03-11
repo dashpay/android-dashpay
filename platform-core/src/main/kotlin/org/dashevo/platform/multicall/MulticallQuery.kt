@@ -104,7 +104,7 @@ open class MulticallQuery<T> (val method: MulticallMethod<T>,
 
     open fun query(): Status {
         for (i in 0 until callsToMake) {
-            log.info("making query ${i + 1} of $callsToMake")
+            log.debug("making query ${i + 1} of $callsToMake")
             calls = i
             try {
                 val result = method.execute()
