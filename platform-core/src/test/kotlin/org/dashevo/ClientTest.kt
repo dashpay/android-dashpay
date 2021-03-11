@@ -9,6 +9,7 @@ import org.bitcoinj.params.PalinkaDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.dashevo.client.ClientOptions
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 
@@ -19,6 +20,8 @@ class ClientTest {
         val options = ClientOptions(network = "testnet")
         val client = Client(options)
         assertEquals(client.platform.params, TestNet3Params.get())
+        client.platform.useValidNodes()
+        assertTrue(client.platform.check())
     }
 
     @Test
