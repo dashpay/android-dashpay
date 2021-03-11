@@ -6,6 +6,8 @@
  */
 package org.dashevo.platform
 
+import io.grpc.Status
+import io.grpc.StatusRuntimeException
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.evolution.SimplifiedMasternodeListManager
@@ -15,14 +17,23 @@ import org.bitcoinj.params.PalinkaDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.dashevo.client.ClientAppDefinition
 import org.dashevo.dapiclient.DapiClient
+import org.dashevo.dapiclient.MaxRetriesReachedException
 import org.dashevo.dapiclient.grpc.*
+import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.DashPlatformProtocol
 import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.statetransition.StateTransitionIdentitySigned
+import org.dashevo.dpp.util.Entropy
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import kotlin.collections.HashMap
 
 class Platform(val params: NetworkParameters) {
+
+    companion object {
+        private val log: Logger = LoggerFactory.getLogger(Platform::class.java)
+    }
 
     var stateRepository = PlatformStateRepository(this)
 
@@ -168,9 +179,44 @@ class Platform(val params: NetworkParameters) {
                 val mnListDiff = client.getMnListDiff(baseBlockHash!!, blockHash!!)
                 return mnListDiff!!["mnList"] as List<Map<String, Any>>
             } catch (e: Exception) {
-                println("Error: $e")
+                log.warn("Error: $e")
             }
         } while (success == 0)
         return listOf()
+    }
+
+    fun check(): Boolean {
+        return try {
+            // check getDataContract
+            val dpnsContract = contracts.get(apps["dpns"]!!.contractId) ?: return false
+
+            // check getDocuments
+            documents.get(dpnsContract.id, "domain", DocumentQuery.builder().limit(5).build())
+
+            // check getIdentity
+            identities.get(Identifier.from(Entropy.generate()))
+
+            try {
+                val response = client.getStatus()
+                response!!.connections > 0 &&
+                        /*response.errors.isBlank() &&*/
+                        params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.MINIMUM) <= response.protocolVersion
+            } catch (e: StatusRuntimeException) {
+                e.status.code == Status.Code.INTERNAL
+            }catch (e: MaxRetriesReachedException) {
+                if (e.cause is StatusRuntimeException) {
+                    (e.cause as StatusRuntimeException).status.code == io.grpc.Status.Code.INTERNAL
+                } else {
+                    log.warn("platform check: $e")
+                    false
+                }
+            }
+        } catch (e: StatusRuntimeException) {
+            log.warn("platform check: $e")
+            false
+        } catch (e: MaxRetriesReachedException) {
+            log.warn("platform check: $e")
+            false
+        }
     }
 }
