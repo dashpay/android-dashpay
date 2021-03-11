@@ -93,13 +93,11 @@ class Documents(val platform: Platform) {
         val appNames = platform.apps.keys
 
         val (appName, fieldType) = getAppnameAndType(typeLocator, appNames)
-        println("$appName and $fieldType")
 
         if (!platform.apps.containsKey(appName)) {
             throw Exception("No app named $appName specified.")
         }
         val appDefinition = platform.apps[appName];
-        println("appDefinition is $appDefinition");
         if (appDefinition == null || appDefinition.contractId.toBuffer().isEmpty()) {
             throw Exception("Missing contract ID for $appName")
         }
