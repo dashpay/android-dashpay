@@ -6,6 +6,7 @@
  */
 package org.dashevo.platform
 
+import com.google.common.base.Stopwatch
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import org.bitcoinj.core.ECKey
@@ -185,25 +186,36 @@ class Platform(val params: NetworkParameters) {
         return listOf()
     }
 
-    fun check(): Boolean {
+    fun check(fullTest: Boolean = false): Boolean {
         return try {
             // check getDataContract
-            val dpnsContract = contracts.get(apps["dpns"]!!.contractId) ?: return false
+            val watch = Stopwatch.createStarted()
+            if (fullTest) {
+                contracts.get(apps["dpns"]!!.contractId) ?: return false
+            }
 
             // check getDocuments
-            documents.get(dpnsContract.id, "domain", DocumentQuery.builder().limit(5).build())
+            documents.get(apps["dpns"]!!.contractId, "domain", DocumentQuery.builder().limit(5).build())
 
             // check getIdentity
-            identities.get(Identifier.from(Entropy.generate()))
+            if (fullTest) {
+                identities.get(Identifier.from(Entropy.generate())) //this should return null
+            }
 
             try {
-                val response = client.getStatus()
-                response!!.connections > 0 &&
-                        /*response.errors.isBlank() &&*/
-                        params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.MINIMUM) <= response.protocolVersion
+                if (fullTest) {
+                    val response = client.getStatus()
+                    response!!.connections > 0 &&
+                            /*response.errors.isBlank() &&*/
+                            params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.MINIMUM) <= response.protocolVersion
+                }
+                log.info("platform check: $watch")
+                true
             } catch (e: StatusRuntimeException) {
+                log.info("platform check: $watch")
                 e.status.code == Status.Code.INTERNAL
-            }catch (e: MaxRetriesReachedException) {
+            } catch (e: MaxRetriesReachedException) {
+                log.info("platform check: $watch")
                 if (e.cause is StatusRuntimeException) {
                     (e.cause as StatusRuntimeException).status.code == io.grpc.Status.Code.INTERNAL
                 } else {
