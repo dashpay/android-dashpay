@@ -1,17 +1,14 @@
 package org.dashevo.dashpay;
 
-import org.bitcoinj.params.MobileDevNetParams
-import org.bitcoinj.params.PalinkaDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.wallet.*
-import org.dashevo.dapiclient.DapiClient
 import org.dashevo.platform.Platform
 import org.junit.jupiter.api.AfterEach
 import java.util.*
 
 open class PlatformNetwork {
 
-    val platform = Platform(PalinkaDevNetParams.get())
+    val platform = Platform(TestNet3Params.get())
     val seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
 
     val wallet: Wallet = Wallet(
