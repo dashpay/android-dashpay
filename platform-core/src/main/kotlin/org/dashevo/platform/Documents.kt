@@ -86,10 +86,10 @@ class Documents(val platform: Platform) {
     }
 
     fun get(typeLocator: String, opts: DocumentQuery): List<Document> {
-        return get(typeLocator, opts, MulticallQuery.Companion.CallType.MAJORITY)
+        return get(typeLocator, opts, MulticallQuery.Companion.CallType.FIRST)
     }
 
-    fun get(typeLocator: String, opts: DocumentQuery, callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.MAJORITY): List<Document> {
+    fun get(typeLocator: String, opts: DocumentQuery, callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.FIRST): List<Document> {
         val appNames = platform.apps.keys
 
         val (appName, fieldType) = getAppnameAndType(typeLocator, appNames)
@@ -107,7 +107,7 @@ class Documents(val platform: Platform) {
         return get(contractId, fieldType, opts, callType)
     }
 
-    fun get(dataContractId: Identifier, documentType: String, opts: DocumentQuery, callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.MAJORITY): List<Document> {
+    fun get(dataContractId: Identifier, documentType: String, opts: DocumentQuery, callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.FIRST): List<Document> {
         try {
             val domainQuery = MulticallListQuery(object: MulticallMethod<List<ByteArray>> {
                 override fun execute(): List<ByteArray>{

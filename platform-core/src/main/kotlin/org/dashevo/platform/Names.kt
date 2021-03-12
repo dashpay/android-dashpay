@@ -226,10 +226,10 @@ class Names(val platform: Platform) {
      * @return Document? The document for the given name or null if the name does not exist
      */
     fun get(name:String, parentDomain: String): Document? {
-        return get(name, parentDomain, MulticallQuery.Companion.CallType.MAJORITY_FOUND)
+        return get(name, parentDomain, MulticallQuery.Companion.CallType.FIRST)
     }
 
-    fun get(name: String, parentDomain: String, callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.MAJORITY): Document? {
+    fun get(name: String, parentDomain: String, callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.FIRST): Document? {
         val documents = platform.documents.get(DPNS_DOMAIN_DOCUMENT, getDocumentQuery(name, parentDomain), callType)
         return if (documents.isNotEmpty()) documents[0] else null
     }
