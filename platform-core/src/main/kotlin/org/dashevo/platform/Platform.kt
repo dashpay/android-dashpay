@@ -19,6 +19,7 @@ import org.bitcoinj.params.TestNet3Params
 import org.dashevo.client.ClientAppDefinition
 import org.dashevo.dapiclient.DapiClient
 import org.dashevo.dapiclient.MaxRetriesReachedException
+import org.dashevo.dapiclient.NoAvailableAddressesForRetryException
 import org.dashevo.dapiclient.grpc.*
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.DashPlatformProtocol
@@ -26,6 +27,7 @@ import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.statetransition.StateTransitionIdentitySigned
 import org.dashevo.dpp.util.Entropy
+import org.dashevo.platform.multicall.MulticallException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.collections.HashMap
@@ -222,11 +224,20 @@ class Platform(val params: NetworkParameters) {
                     log.warn("platform check: $e")
                     false
                 }
+            } catch (e: NoAvailableAddressesForRetryException) {
+                log.warn("platform check: $e")
+                false
             }
         } catch (e: StatusRuntimeException) {
             log.warn("platform check: $e")
             false
         } catch (e: MaxRetriesReachedException) {
+            log.warn("platform check: $e")
+            false
+        } catch (e: MulticallException) {
+            log.warn("platform check: $e")
+            false
+        } catch (e: NoAvailableAddressesForRetryException) {
             log.warn("platform check: $e")
             false
         }
