@@ -1208,7 +1208,12 @@ class BlockchainIdentity {
     fun registerProfile(displayName: String?, publicMessage: String?,
                         avatarUrl: String?, avatarHash: ByteArray? = null,
                         avatarFingerprint: ByteArray?, keyParameter: KeyParameter?) : Profile {
-        val transition = createProfileTransition(displayName, publicMessage, avatarUrl, avatarHash, avatarFingerprint)
+        val currentProfile = getProfileFromPlatform()
+        val transition = if (currentProfile == null) {
+            createProfileTransition(displayName, publicMessage, avatarUrl, avatarHash, avatarFingerprint)
+        } else {
+            replaceProfileTransition(displayName, publicMessage, avatarUrl, avatarHash, avatarFingerprint)
+        }
 
         signStateTransition(transition, keyParameter)
 
