@@ -449,6 +449,7 @@ class BlockchainIdentity {
                     usernameStatus[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.PREORDERED
                     usernameStatuses[username] = usernameStatus
                     saveUsername(username, UsernameStatus.PREORDERED, null, true)
+                    platform.stateRepository.addValidDocument(preorderTransition.id)
                 }
             }
         }
@@ -485,6 +486,7 @@ class BlockchainIdentity {
                     usernameStatuses[username] = usernameStatus
                     saveUsername(username, UsernameStatus.CONFIRMED, null, true)
                     usernamesLeft.remove(username)
+                    platform.stateRepository.addValidDocument(nameDocumentTransition.id)
                 }
             }
         }
