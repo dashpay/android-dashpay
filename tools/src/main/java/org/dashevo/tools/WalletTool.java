@@ -2048,6 +2048,8 @@ public class WalletTool {
         }
         System.out.println("These contact requests had failures: " + missing.toString());
 
+        System.out.println(platform.client.reportNetworkStatus());
+
         waitAndShutdownFuture.set(waitForFlag);
     }
 
