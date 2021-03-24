@@ -450,6 +450,7 @@ class BlockchainIdentity {
                     usernameStatuses[username] = usernameStatus
                     saveUsername(username, UsernameStatus.PREORDERED, null, true)
                     platform.stateRepository.addValidDocument(preorderTransition.id)
+                    platform.stateRepository.addValidPreorderSalt(saltForUsername(username, false), saltedDomainHashData)
                 }
             }
         }
@@ -543,9 +544,9 @@ class BlockchainIdentity {
         for (unregisteredUsername in usernames) {
             val salt = saltForUsername(unregisteredUsername, true)
             val fullUsername = if (unregisteredUsername.contains(".")) {
-                unregisteredUsername
+                unregisteredUsername.toLowerCase()
             } else {
-                unregisteredUsername + "." + Names.DEFAULT_PARENT_DOMAIN
+                unregisteredUsername.toLowerCase() + "." + Names.DEFAULT_PARENT_DOMAIN
             }
             val saltedDomainHashData = platform.names.getSaltedDomainHashBytes(salt, fullUsername)
             mSaltedDomainHashes[unregisteredUsername] = saltedDomainHashData

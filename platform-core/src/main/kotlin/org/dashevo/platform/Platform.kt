@@ -11,6 +11,7 @@ import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
+import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.evolution.SimplifiedMasternodeListManager
 import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.params.MobileDevNetParams
@@ -59,6 +60,8 @@ class Platform(val params: NetworkParameters) {
             get() = stateRepository.validIdentityIdList()
         override val retryDocumentIds: List<Identifier>
             get() = stateRepository.validDocumentIdList()
+        override val retryPreorderSalts: Map<Sha256Hash, Sha256Hash>
+            get() = stateRepository.validPreorderSalts()
     }
     val identitiesRetryCallback = object : DefaultGetIdentityWithIdentitiesRetryCallback() {
         override val retryIdentityIds: List<Identifier>

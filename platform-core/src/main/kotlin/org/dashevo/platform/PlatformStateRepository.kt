@@ -7,6 +7,7 @@
 package org.dashevo.platform
 
 import org.bitcoinj.core.Block
+import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.core.Transaction
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.StateRepository
@@ -23,6 +24,7 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
     private val identityHashesMap = hashMapOf<Identifier, List<ByteArray>>()
     private val contractsMap = hashMapOf<Identifier, DataContract>()
     private val outPointBufferSet = hashSetOf<ByteArray>()
+    private val preorderSalts = hashMapOf<Sha256Hash, Sha256Hash>()
 
     override fun checkAssetLockTransactionOutPointExists(outPointBuffer: ByteArray): Boolean {
         return outPointBufferSet.contains(outPointBuffer)
@@ -112,5 +114,13 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
         val result = documentsMap.keys.toMutableList()
         result.addAll(validDocuments)
         return result
+    }
+
+    fun addValidPreorderSalt(preorderSalt: ByteArray, saltedDomainHash: ByteArray) {
+        preorderSalts[Sha256Hash.wrap(preorderSalt)] = Sha256Hash.wrap(saltedDomainHash)
+    }
+
+    fun validPreorderSalts(): Map<Sha256Hash, Sha256Hash> {
+        return preorderSalts
     }
 }
