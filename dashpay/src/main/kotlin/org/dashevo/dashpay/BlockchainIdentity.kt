@@ -1653,6 +1653,6 @@ class BlockchainIdentity {
 
         val privateKey = maybeDecryptKey(cftx.creditBurnPublicKey, encryptionKey)
         val wif = privateKey?.getPrivateKeyEncoded(wallet!!.params)
-        return "ivt:$txid:$wif"
+        return "assetlocktx=$txid&pk=$wif&du=${currentUsername!!}&islock=${cftx.confidence.instantSendlock.toStringHex()}"
     }
 }
