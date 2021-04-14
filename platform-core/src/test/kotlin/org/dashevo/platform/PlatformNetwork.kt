@@ -1,6 +1,4 @@
 package org.dashevo.platform;
-import org.bitcoinj.params.EvoNetParams
-import org.bitcoinj.params.MobileDevNetParams
 import org.bitcoinj.params.PalinkaDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.wallet.*
@@ -9,7 +7,7 @@ import java.util.*
 
 open class PlatformNetwork {
 
-    val platform = Platform(PalinkaDevNetParams.get())
+    val platform = Platform(TestNet3Params.get())
 
     val assetLockTxId: String
     val seed: String

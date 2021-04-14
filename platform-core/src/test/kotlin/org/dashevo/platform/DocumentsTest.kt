@@ -61,6 +61,19 @@ class DocumentsTest : PlatformNetwork() {
     }
 
     @Test
+    fun getAllTest() {
+        println("Make a query for domain documents")
+        val results = platform.documents.getAll(Names.DPNS_DOMAIN_DOCUMENT, DocumentQuery.builder().build())
+
+        val limitedResults = platform.documents.getAll(Names.DPNS_DOMAIN_DOCUMENT, DocumentQuery.builder().limit(301).startAt(2).build())
+
+        assertTrue(results.isNotEmpty())
+        assertEquals(301, limitedResults.size)
+
+        assertEquals(results[1].id, limitedResults[0].id)
+    }
+
+    @Test
     fun getNoResultsTest() {
         val results = platform.documents.get(Names.DPNS_DOMAIN_DOCUMENT, DocumentQuery.builder()
             .where("normalizedLabel", "==", "39383838")
@@ -68,6 +81,4 @@ class DocumentsTest : PlatformNetwork() {
             .build())
         assertEquals(results, listOf<ByteArray>())
     }
-
-
 }
