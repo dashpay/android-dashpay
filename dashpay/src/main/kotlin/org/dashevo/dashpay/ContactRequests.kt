@@ -58,7 +58,7 @@ class ContactRequests(val platform: Platform) {
      * @param toUserId Boolean (true if getting toUserId, false if $userId)
      * @param afterTime Long Time in milliseconds
      * @param retrieveAll Boolean get all results (true) or 100 at a time (false)
-     * @param startAt Int where to start getting results
+     * @param startAt Int where to start getting results (1 is the first item)
      * @return List<Documents>
      */
     fun get(
@@ -66,17 +66,27 @@ class ContactRequests(val platform: Platform) {
         toUserId: Boolean,
         afterTime: Long = 0,
         retrieveAll: Boolean = true,
-        startAt: Int = 0
+        startAt: Int = 1
     ): List<Document> {
         return get(Identifier.from(userId), toUserId, afterTime, retrieveAll, startAt)
     }
+
+    /**
+     * Gets the contactRequest documents for the given userId
+     * @param userId Identifier
+     * @param toUserId Boolean (true if getting toUserId, false if $userId)
+     * @param afterTime Long Time in milliseconds
+     * @param retrieveAll Boolean get all results (true) or 100 at a time (false)
+     * @param startAt Int where to start getting results (1 is the first item)
+     * @return List<Documents>
+     */
 
     fun get(
         userId: Identifier,
         toUserId: Boolean,
         afterTime: Long = 0,
         retrieveAll: Boolean = true,
-        startAt: Int = 0
+        startAt: Int = 1
     ): List<Document> {
         val documentQuery = DocumentQuery.Builder()
 
@@ -88,30 +98,14 @@ class ContactRequests(val platform: Platform) {
         if (afterTime > 0)
             documentQuery.where(listOf("\$createdAt", ">", afterTime))
 
-        // TODO: Refactor the rest of this code since it is also used in Names.search
-        // TODO: This block of code can get all the results of a query, or 100 at a time
-        var startAt = startAt
-        val documents = ArrayList<Document>()
-        var documentList: List<Document>
-        var requests = 0
+        if (retrieveAll) {
+            documentQuery.limit(-1)
+        } else {
+            documentQuery.limit(Documents.DOCUMENT_LIMIT)
+        }
 
-        do {
-            try {
-                documentList =
-                    platform.documents.get(
-                        CONTACTREQUEST_DOCUMENT,
-                        documentQuery.startAt(startAt).build()
-                    )
-                requests += 1
-                startAt += Documents.DOCUMENT_LIMIT
-                if (documentList.isNotEmpty())
-                    documents.addAll(documentList)
-            } catch (e: Exception) {
-                throw e
-            }
-        } while ((requests == 0 || documentList.size >= Documents.DOCUMENT_LIMIT) && retrieveAll)
-
-        return documents
+        return platform.documents.getAll(CONTACTREQUEST_DOCUMENT,
+            documentQuery.startAt(startAt).build())
     }
 
     suspend fun watchContactRequest(

@@ -72,8 +72,8 @@ class Documents(val platform: Platform) {
         typeLocator: String,
         appNames: MutableSet<String>
     ): Pair<String, String> {
-        var appName: String
-        var fieldType: String
+        val appName: String
+        val fieldType: String
         if (typeLocator.contains('.')) {
             val split = typeLocator.split('.')
             appName = split[0]
@@ -83,6 +83,55 @@ class Documents(val platform: Platform) {
             fieldType = typeLocator
         }
         return Pair(appName, fieldType)
+    }
+
+    /**
+     * Fetches all results that match the query this allows limit to be greater than 100
+     * and will return more than 100 results
+     */
+    fun getAll(typeLocator: String,
+               documentQuery: DocumentQuery,
+               callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.FIRST): List<Document> {
+        val query = documentQuery.clone()
+        val limit = query.limit
+        var total = 0
+        if (limit > 100)
+            query.limit = 100
+
+        val documents = ArrayList<Document>()
+        var documentList: List<Document>
+        var requests = 0
+
+        do {
+            try {
+                documentList =
+                    platform.documents.get(
+                        typeLocator,
+                        query,
+                        callType
+                    )
+                requests += 1
+                query.startAt += documentList.size
+                if (documentList.isNotEmpty()) {
+                    when {
+                        limit == -1 -> documents.addAll(documentList)
+                        total + documentList.size > limit -> {
+                            total - limit
+                            for (i in 0 until limit-total) {
+                                documents.add(documentList[i])
+                            }
+                        }
+                        else -> documents.addAll(documentList)
+                    }
+                }
+                total += documentList.size
+            } catch (e: Exception) {
+                log.warn("Exception $e")
+                throw e
+            }
+        } while ((requests == 0 || documentList.size >= DOCUMENT_LIMIT))
+
+        return documents
     }
 
     fun get(typeLocator: String, opts: DocumentQuery): List<Document> {

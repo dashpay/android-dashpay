@@ -53,6 +53,7 @@ class NetworkActivity {
             println("Average Contacts per user:    ${"%.2f".format(establishedContacts.size.toDouble()/nameDocuments.size)}")
         }
 
+        //TODO: This could use Documents.getAll
         private fun getAllDocuments(contractDocument: String): List<Document> {
             var startAt = 0
             var documents: List<Document>? = null

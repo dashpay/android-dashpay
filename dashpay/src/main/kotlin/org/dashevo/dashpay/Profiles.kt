@@ -142,27 +142,50 @@ class Profiles(
         }
     }
 
-    //TODO: handle case where userIds's contains more than 100 items
+
+    /**
+     * Returns all profiles associated with the given identity ids
+     *
+     * @param userIds The identities for which to obtain the profiles.  This supports more than 100 identities
+     * @param timestamp The timestamp that the profile updatedAt time must be after
+     */
     fun getList(
         userIds: List<Identifier>,
-        timestamp: Long = 0L,
-        retrieveAll: Boolean = true,
-        startAt: Int = 0
+        timestamp: Long = 0L
     ): List<Document> {
-        val documentQuery = DocumentQuery.Builder()
-        documentQuery.whereIn("\$ownerId", userIds)
-            .where(listOf("\$updatedAt", ">", timestamp))
+        var startAt = 0 // this parameter is not used by a getDocuments query, so 0 is good
+        val documents = ArrayList<Document>()
 
-        var requests = 0
-
-        val documents = arrayListOf<Document>()
-        do {
-            val result = platform.documents.get(DOCUMENT, documentQuery.startAt(startAt).build())
-            documents.addAll(result)
-            requests += 1
-        } while ((requests == 0 || result.size >= Documents.DOCUMENT_LIMIT) && retrieveAll)
+        while (startAt < userIds.size) {
+            val subsetSize = if (startAt + Documents.DOCUMENT_LIMIT > userIds.size ) {
+                userIds.size - startAt
+            } else {
+                Documents.DOCUMENT_LIMIT
+            }
+            val userIdSubSet = userIds.subList(startAt, startAt + subsetSize)
+            val documentSubset = getListHelper(userIdSubSet, timestamp)
+            documents.addAll(documentSubset)
+            startAt += subsetSize
+        }
 
         return documents
+    }
+
+    /**
+     * gets a list of profiles using the identities in userIds (max 100)
+     *
+     * This query never has more than 100 results, since userIds are primary keys
+     */
+    private fun getListHelper(
+        userIds: List<Identifier>,
+        timestamp: Long = 0L
+    ): List<Document> {
+        val documentQuery = DocumentQuery.builder()
+            .whereIn("\$ownerId", userIds)
+            .where(listOf("\$updatedAt", ">", timestamp))
+            .build()
+
+        return platform.documents.get(DOCUMENT, documentQuery)
     }
 
     suspend fun watchProfile(

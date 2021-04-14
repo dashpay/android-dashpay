@@ -240,30 +240,19 @@ class Names(val platform: Platform) {
      * @param text String
      * @param parentDomain String
      * @param retrieveAll Boolean
-     * @param startAtIndex Int
+     * @param limit Int the number of items to return (-1 is the default)
+     * @param startAtIndex Int (1 is the first item)
      * @return List<Documents>
      */
-    fun search(text: String, parentDomain: String, retrieveAll: Boolean, limit: Int = -1, startAtIndex: Int = 0): List<Document> {
+    fun search(text: String, parentDomain: String, retrieveAll: Boolean, limit: Int = -1, startAtIndex: Int = 1): List<Document> {
         val documentQuery = DocumentQuery.Builder()
             .where(listOf("normalizedParentDomainName", "==", parentDomain))
             .orderBy(listOf("normalizedLabel", "asc"))
             .where(listOf("normalizedLabel", "startsWith", text.toLowerCase()))
-            .limit(limit)
+            .limit(if (retrieveAll) -1 else limit)
+            .startAt(startAtIndex)
 
-        var startAt = startAtIndex
-        val documents = ArrayList<Document>()
-        var documentList: List<Document>
-        var requests = 0
-
-        do {
-            documentList = platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.startAt(startAt).build(), MulticallQuery.Companion.CallType.FIRST)
-            requests += 1
-            startAt += Documents.DOCUMENT_LIMIT
-            if (documentList.isNotEmpty())
-                documents.addAll(documentList)
-        } while ((requests == 0 || documentList.size >= Documents.DOCUMENT_LIMIT) && retrieveAll)
-
-        return documents
+        return platform.documents.getAll(DPNS_DOMAIN_DOCUMENT, documentQuery.build())
     }
 
     /**
@@ -312,24 +301,44 @@ class Names(val platform: Platform) {
         return results
     }
 
+    //TODO: getList/getListHelper can be refactored into Documents
     /**
      * Gets all of the unique usernames associated with a list of userId's
      */
+
     fun getList(
+        userIds: List<Identifier>
+    ): List<Document> {
+        var startAt = 0
+        val documents = ArrayList<Document>()
+
+        while (startAt < userIds.size) {
+            val subsetSize = if (startAt + Documents.DOCUMENT_LIMIT > userIds.size ) {
+                userIds.size - startAt
+            } else {
+                Documents.DOCUMENT_LIMIT
+            }
+            val userIdSubSet = userIds.subList(startAt, startAt + subsetSize)
+            val documentSubset = getListHelper(userIdSubSet)
+            documents.addAll(documentSubset)
+            startAt += subsetSize
+        }
+
+        return documents
+    }
+
+    /**
+     * obtains the domain documents for the associated identities
+     *
+     * @param userIds A list of identity ids that must be limited to 100 in size
+     */
+    private fun getListHelper(
         userIds: List<Identifier>,
-        retrieveAll: Boolean = true,
-        startAt: Int = 0
     ): List<Document> {
         val documentQuery = DocumentQuery.Builder()
         documentQuery.whereIn("records.dashUniqueIdentityId", userIds)
-        var requests = 0
 
-        val documents = arrayListOf<Document>()
-        do {
-            val result = platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.startAt(startAt).build())
-            documents.addAll(result)
-            requests += 1
-        } while ((requests == 0 || result.size >= Documents.DOCUMENT_LIMIT) && retrieveAll)
+        val documents = platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.build())
 
         return documents
     }
