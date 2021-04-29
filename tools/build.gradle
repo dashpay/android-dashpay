@@ -6,7 +6,7 @@ plugins {
     //id 'edu.sc.seis.launch4j' version '2.4.8'
 }
 
-group 'org.dashevo'
+group 'org.dashj.platform'
 version '0.18-SNAPSHOT'
 
 repositories {
@@ -74,8 +74,8 @@ dependencies {
     implementation project(':dashpay')
     implementation 'com.google.guava:guava:27.1-android'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    implementation "org.dashevo:dpp:0.18-SNAPSHOT"
-    implementation "org.dashevo:dapi-client:0.18-SNAPSHOT"
+    implementation "org.dashj.platform:dpp:0.19-SNAPSHOT"
+    implementation "org.dashj.platform:dapi-client:0.19-SNAPSHOT"
     implementation "org.dashj:dashj-core:0.18-SNAPSHOT"
     implementation "org.dashj:dashj-bls:0.18-SNAPSHOT"
     implementation 'org.slf4j:slf4j-jdk14:1.7.28'
