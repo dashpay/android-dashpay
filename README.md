@@ -22,18 +22,26 @@ cd android-dashpay`
 ./gradlew assemble`
 ```
 - After building, it will be available on the local Maven repository.
-- To use it with gradle, add `mavenLocal()` to the `repositories` list in your `build.gradle` file and add `org.dashevo:dashpay:0.18-SNAPSHOT` and `org.dashevo:platform-core:0.18-SNAPSHOT` and as dependency. 
+- To use it with gradle, add `mavenLocal()` to the `repositories` list in your `build.gradle` file and add `org.dashj.platform:dashpay:0.19-SNAPSHOT` and `org.dashj.platform:platform-core:0.19-SNAPSHOT` and as dependency. 
+
+# Usage
+- Add mavenCentral() to your `repositories`
 - What to include in your build.gradle:
 ```
-    implementation "org.dashevo:dpp:0.18-SNAPSHOT"
-    implementation "org.dashevo:dapi-client:0.18-SNAPSHOT"
+dependencies {
+    implementation "org.dashj.platform:dpp:0.19-SNAPSHOT"
+    implementation "org.dashj.platform:dapi-client:0.19-SNAPSHOT"
     implementation "org.dashj:dashj-core:0.18-SNAPSHOT"
     implementation "org.dashj:dashj-bls:0.18-SNAPSHOT"
-    implementation "org.dashevo:platform-core:0.18-SNAPSHOT"
-    implementation "org.dashevo:dashpay:0.18-SNAPSHOT" # if dashpay contract is required
+    implementation "org.dashj.platform:platform-core:0.19-SNAPSHOT"
+    implementation "org.dashj.platform:dashpay:0.19-SNAPSHOT" # if dashpay contract is required
+}
 ```
 # Tests
 Run tests with `gradle build test`
 
-# TODO
-- Publish to jcenter/maven central
+# Publish to maven central
+```  
+./gradlew uploadArchives
+```
+
