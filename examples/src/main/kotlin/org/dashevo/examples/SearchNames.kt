@@ -56,7 +56,7 @@ class SearchNames {
             var transitionCount = 3 //identity + preorder + domain
             do {
                 try {
-                    val results = platform.names.search(text, Names.DEFAULT_PARENT_DOMAIN, false, startAt)
+                    val results = platform.names.search(text, Names.DEFAULT_PARENT_DOMAIN, false, startAtIndex = startAt)
                     val theseNames = hashMapOf<Identifier, DomainDocument>()
                     results.forEach {
                         val doc = DomainDocument(it)
