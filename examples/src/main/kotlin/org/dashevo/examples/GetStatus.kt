@@ -44,7 +44,7 @@ class GetStatus {
                     val status = sdk.platform.client.getStatus(DAPIAddress(node), 0)
                     success++
                     results[status!!.address!!] = status
-                    println("$node: Get status successful: $watch; errors: ${status?.errors}")
+                    println("$node: Get status successful: $watch; errors: ${status.status.name}")
                 } catch (e: Exception) {
                     watch.stop()
                     println("$node: Get status failed: ${e.message} after $watch")
@@ -62,7 +62,7 @@ class GetStatus {
             println("getBlockByHeight() Results: $successFallback/$total (${successFallback.toDouble()/total})")
             println("Overall Results: ${(success + successFallback)}/$total (${(successFallback + success).toDouble()/total})")
             for (s in results) {
-                println("${s.key.host}: ${s.value?.duration} ms; errors: ${s.value?.errors}")
+                println("${s.key.host}: ${s.value?.duration} ms; errors: ${s.value?.status}")
             }
         }
     }

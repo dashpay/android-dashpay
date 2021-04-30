@@ -85,7 +85,7 @@ class GetNetworkStatus {
 
                 try {
                     val status = rpcClient.getStatus()
-                    println("\t\u2713 L1 gRPC Success.\tBlock count: ${status!!.blocks}")
+                    println("\t\u2713 L1 gRPC Success.\tBlock count: ${status!!.chain.blockCount}")
                 } catch (e: Exception) {
                     println("\t\u2716 L1 gRPC Failure")
                     coreGrpcSuccess = false

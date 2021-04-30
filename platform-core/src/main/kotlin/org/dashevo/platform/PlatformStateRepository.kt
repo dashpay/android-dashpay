@@ -9,6 +9,7 @@ package org.dashevo.platform
 import org.bitcoinj.core.Block
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.core.Transaction
+import org.bitcoinj.quorums.InstantSendLock
 import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.StateRepository
 import org.dashevo.dpp.contract.DataContract
@@ -25,10 +26,6 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
     private val contractsMap = hashMapOf<Identifier, DataContract>()
     private val outPointBufferSet = hashSetOf<ByteArray>()
     private val preorderSalts = hashMapOf<Sha256Hash, Sha256Hash>()
-
-    override fun checkAssetLockTransactionOutPointExists(outPointBuffer: ByteArray): Boolean {
-        return outPointBufferSet.contains(outPointBuffer)
-    }
 
     override fun fetchDataContract(id: Identifier): DataContract? {
         if (contractsMap.containsKey(id))
@@ -54,12 +51,16 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
         return Transaction(null, txData.toByteArray())
     }
 
-    override fun removeDocument(contractId: Identifier, type: String, id: Identifier) {
-        // do nothing for now
+    override fun isAssetLockTransactionOutPointAlreadyUsed(outPointBuffer: ByteArray): Boolean {
+        return outPointBufferSet.contains(outPointBuffer)
     }
 
-    override fun storeAssetLockTransactionOutPoint(outPointBuffer: ByteArray) {
+    override fun markAssetLockTransactionOutPointAsUsed(outPointBuffer: ByteArray) {
         outPointBufferSet.add(outPointBuffer)
+    }
+
+    override fun removeDocument(contractId: Identifier, type: String, id: Identifier) {
+        // do nothing for now
     }
 
     override fun storeDataContract(dataContract: DataContract) {
@@ -78,6 +79,11 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
 
     override fun storeIdentityPublicKeyHashes(identifier: Identifier, publicKeyHashes: List<ByteArray>) {
         identityHashesMap[identifier] = publicKeyHashes
+    }
+
+    override fun verifyInstantLock(instantLock: InstantSendLock): Boolean {
+        //TODO: can we do anything here?
+        return false
     }
 
     override fun fetchIdentity(id: Identifier): Identity? {

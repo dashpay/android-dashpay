@@ -32,6 +32,7 @@ import org.bitcoinj.params.MobileDevNetParams;
 import org.bitcoinj.params.PalinkaDevNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
+import org.bitcoinj.quorums.InstantSendLock;
 import org.bitcoinj.utils.BriefLogFormatter;
 import org.bitcoinj.wallet.AuthenticationKeyChain;
 import org.bitcoinj.wallet.SendRequest;
@@ -475,13 +476,20 @@ public class ForwardingServiceEvo {
     }
 
     static StateRepository dataProvider = new StateRepository() {
+
+
         @Override
-        public void storeAssetLockTransactionOutPoint(@NotNull byte[] bytes) {
+        public boolean verifyInstantLock(@NotNull InstantSendLock instantSendLock) {
+            return false;
+        }
+
+        @Override
+        public void markAssetLockTransactionOutPointAsUsed(@NotNull byte[] bytes) {
 
         }
 
         @Override
-        public boolean checkAssetLockTransactionOutPointExists(@NotNull byte[] bytes) {
+        public boolean isAssetLockTransactionOutPointAlreadyUsed(@NotNull byte[] bytes) {
             return false;
         }
 

@@ -11,7 +11,6 @@ import org.bitcoinj.core.Transaction
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.quorums.InstantSendLock
 import org.dashevo.dpp.identifier.Identifier
-import org.dashevo.dpp.identity.AssetLock
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.identity.IdentityPublicKey
 import org.dashevo.dpp.identity.InstantAssetLockProof
@@ -47,8 +46,7 @@ class Identities(val platform: Platform) {
     ): Identity {
 
         try {
-            val instantAssetLockProof = InstantAssetLockProof(instantLock)
-            val assetLock = AssetLock(outputIndex, transaction, instantAssetLockProof)
+            val assetLock = InstantAssetLockProof(outputIndex, transaction, instantLock)
 
             val identityCreateTransition = platform.dpp.identity.createIdentityCreateTransition(assetLock, identityPublicKeys)
 
@@ -103,8 +101,7 @@ class Identities(val platform: Platform) {
     ): Boolean {
 
         try {
-            val instantAssetLockProof = InstantAssetLockProof(instantLock)
-            val assetLock = AssetLock(outputIndex, transaction, instantAssetLockProof)
+            val assetLock = InstantAssetLockProof(outputIndex, transaction, instantLock)
 
             val identityTopupTransition = platform.dpp.identity.createIdentityTopupTransition(identityId, assetLock)
 

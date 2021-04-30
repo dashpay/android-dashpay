@@ -82,7 +82,7 @@ class DefaultIdentity(val params: NetworkParameters) {
                 seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
             }
             params.id.contains("palinka") -> {
-                seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
+                seed = "version route there raw fringe derive gain prepare online salon faint scrub"
             }
             else -> {
                 seed = ""
