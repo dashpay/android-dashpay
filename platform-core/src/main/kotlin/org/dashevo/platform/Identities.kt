@@ -11,6 +11,7 @@ import org.bitcoinj.core.Transaction
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.quorums.InstantSendLock
 import org.dashevo.dpp.identifier.Identifier
+import org.dashevo.dpp.identity.ChainAssetLockProof
 import org.dashevo.dpp.identity.Identity
 import org.dashevo.dpp.identity.IdentityPublicKey
 import org.dashevo.dpp.identity.InstantAssetLockProof
@@ -47,6 +48,33 @@ class Identities(val platform: Platform) {
 
         try {
             val assetLock = InstantAssetLockProof(outputIndex, transaction, instantLock)
+
+            val identityCreateTransition = platform.dpp.identity.createIdentityCreateTransition(assetLock, identityPublicKeys)
+
+            identityCreateTransition.signByPrivateKey(assetLockPrivateKey)
+
+            platform.broadcastStateTransition(identityCreateTransition);
+
+            //get the identity from Platform since it cannot be recreated from the transition with the balance, etc
+            platform.stateRepository.addValidIdentity(identityCreateTransition.identityId)
+
+            return Identity(identityCreateTransition.identityId, identityPublicKeys, 0, identityCreateTransition.protocolVersion)
+        } catch (e: Exception) {
+            log.info("registerIdentity failure: $e")
+            throw e
+        }
+    }
+
+    fun register(
+        outputIndex: Long,
+        transaction: CreditFundingTransaction,
+        coreHeight: Long,
+        assetLockPrivateKey: ECKey,
+        identityPublicKeys: List<IdentityPublicKey>
+    ): Identity {
+
+        try {
+            val assetLock = ChainAssetLockProof(coreHeight, transaction.getOutput(outputIndex).outPointFor)
 
             val identityCreateTransition = platform.dpp.identity.createIdentityCreateTransition(assetLock, identityPublicKeys)
 
