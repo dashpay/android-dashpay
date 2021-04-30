@@ -328,19 +328,38 @@ class BlockchainIdentity {
         val signingKey = maybeDecryptKey(creditFundingTransaction!!.creditBurnPublicKey, keyParameter)
 
         var instantLock: InstantSendLock? =
-            wallet!!.context.instantSendManager.getInstantSendLockByTxId(creditFundingTransaction!!.txId)
+            wallet!!.context.instantSendManager?.getInstantSendLockByTxId(creditFundingTransaction!!.txId)
 
         if (instantLock == null) {
             instantLock = creditFundingTransaction!!.confidence?.instantSendlock
-                ?: throw InvalidIdentityAssetLockProofError("instantLock == null")
+            val coreHeight = creditFundingTransaction!!.confidence.appearedAtChainHeight.toLong();
+            if (instantLock == null && coreHeight > 0) {
+                identity = platform.identities.register(
+                    creditFundingTransaction!!.outputIndex,
+                    creditFundingTransaction!!,
+                    coreHeight,
+                    signingKey!!,
+                    identityPublicKeys
+                )
+            } else if (instantLock != null) {
+                identity = platform.identities.register(
+                    creditFundingTransaction!!.outputIndex,
+                    creditFundingTransaction!!,
+                    instantLock,
+                    signingKey!!,
+                    identityPublicKeys
+                )
+            }
+            else throw InvalidIdentityAssetLockProofError("instantLock == null")
+        } else {
+            identity = platform.identities.register(
+                creditFundingTransaction!!.outputIndex,
+                creditFundingTransaction!!,
+                instantLock,
+                signingKey!!,
+                identityPublicKeys
+            )
         }
-        identity = platform.identities.register(
-            creditFundingTransaction!!.outputIndex,
-            creditFundingTransaction!!,
-            instantLock!!,
-            signingKey!!,
-            identityPublicKeys
-        )
 
         registrationStatus = RegistrationStatus.REGISTERED
 
