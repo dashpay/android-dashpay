@@ -92,9 +92,10 @@ class Platform(val params: NetworkParameters) {
                 client = DapiClient(MobileDevNetParams.MASTERNODES.toList())
             }
             params.id.contains("palinka") -> {
-                apps["dpns"] = ClientAppDefinition("FZ2MkyR8YigXX7K7m9sq3PikzubV8i4rwUMheAQTLLCw")
-                apps["dashpay"] = ClientAppDefinition("GmCL5grcMBHumKVXvWpRZU4BaGzGC7p6mbsJSR4K6yhd")
-                //apps["thumbnail"] = ContractInfo("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
+                apps["dpns"] = ClientAppDefinition("F1erbGMTrcLjvPhY6QoNe81Nz5r4YTaEkEHTpGmffRnj")
+                apps["dashpay"] = ClientAppDefinition("GjiD2MkJAK66YHESp8q7Roja7AEMHhAVhrUSQDS3ZydU")
+                apps["featureFlags"] = ClientAppDefinition("55xbrhC3gmkR2TUSfv9Xvx2fEujHzg2NWQKTWuxr23s6")
+                //apps["thumbnail"] = ClientAppDefinition("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
                 client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList())
             }
         }
@@ -210,9 +211,9 @@ class Platform(val params: NetworkParameters) {
             try {
                 if (fullTest) {
                     val response = client.getStatus()
-                    response!!.connections > 0 &&
+                    response!!.network.peerCount > 0 &&
                             /*response.errors.isBlank() &&*/
-                            params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.MINIMUM) <= response.protocolVersion
+                            params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.MINIMUM) <= response.version.protocolVersion
                 }
                 log.info("platform check: $watch")
                 true
