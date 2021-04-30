@@ -3,6 +3,9 @@ plugins {
     id 'kotlin'
     id 'application'
     id 'eclipse'
+    id 'signing'
+    id 'maven-publish'
+    id 'maven'
     //id 'edu.sc.seis.launch4j' version '2.4.8'
 }
 
@@ -87,3 +90,80 @@ dependencies {
 }
 
 
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+task sourcesJar(type: Jar) {
+    classifier 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+        }
+    }
+}
+
+assemble.dependsOn(publishToMavenLocal)
+
+signing {
+    required { gradle.taskGraph.hasTask("publish") }
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: project.hasProperty('ossrhUsername')?project.findProperty('ossrhUsername'):'', password: project.hasProperty('ossrhPassword')?project.findProperty('ossrhPassword'):'')
+            }
+
+            snapshotRepository(url: "https://s01.oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: project.hasProperty('ossrhUsername')?project.findProperty('ossrhUsername'):'', password: project.hasProperty('ossrhPassword')?project.findProperty('ossrhPassword'):'')
+            }
+
+            pom.project {
+                name 'Dash DashPay Tools'
+                packaging 'jar'
+                groupId 'org.dashj.platform'
+                artifactId 'dashpay'
+                version '0.19-SNAPSHOT'
+                description 'Dash DashPay Tools'
+                url 'https://github.com/dashevo/android-dashpay'
+
+                scm {
+                    connection 'scm:svn:https://github.com/dashevo/android-dashpay'
+                    developerConnection 'scm:svn:https://github.com/dashevo/android-dashpay'
+                    url 'https://github.com/dashevo/android-dashpay'
+                }
+
+                licenses {
+                    license {
+                        name 'MIT'
+                        url 'https://opensource.org/licenses/MIT'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'hashengineering'
+                        name 'HashEngineering'
+                        email 'hashengineeringsolutions@gmail.com'
+                    }
+                }
+            }
+        }
+    }
+}
