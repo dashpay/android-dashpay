@@ -12,6 +12,7 @@ import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dashpay.ContactRequest
 import org.dashevo.dashpay.ContactRequests
 import org.dashevo.dpp.document.Document
+import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.platform.Documents
 import org.dashevo.platform.Names
 import org.dashevo.platform.Platform
@@ -41,6 +42,7 @@ class NetworkActivity {
             val nameDocuments = getNameDocuments()
             val contactRequests = getContactRequests()
             val establishedContacts = getEstablishedContacts(contactRequests)
+            val identitiesWithoutUsernames = getIdentitiesWithoutUsernames(nameDocuments, contactRequests)
 
             // Display Report
             println()
@@ -51,6 +53,28 @@ class NetworkActivity {
             println("Contact Requests:             ${contactRequests.size} [all sent] ")
             println("Established Contacts:         ${establishedContacts.size} [both sent and accepted]")
             println("Average Contacts per user:    ${"%.2f".format(establishedContacts.size.toDouble()/nameDocuments.size)}")
+
+            println("--------------------------------------------")
+            val identities = getIdentitiesWithoutUsernames(nameDocuments, contactRequests)
+            println("Identities without usernames: ${identities.size}")
+            println("                            : $identities")
+
+        }
+
+        fun getIdentityForName(nameDocument: Document): Identifier {
+            val records = nameDocument.data["records"] as Map<String, Any?>
+            return try {
+                Identifier.from(records["dashUniqueIdentityId"])
+            } catch (e: Exception) {
+                Identifier.from(records["dashAliasIdentityId"])
+            }
+        }
+
+        private fun getIdentitiesWithoutUsernames(nameDocuments: List<Document>, contactRequests: List<ContactRequest>): List<Identifier> {
+            val contactRequestByOwnerId = contactRequests.associateBy({it.ownerId}, {it})
+            val namesByOwnerId = nameDocuments.associateBy({getIdentityForName(it)}, {it})
+
+            return contactRequestByOwnerId.filter { !namesByOwnerId.contains(it.key) }.map { it.key }
         }
 
         //TODO: This could use Documents.getAll
