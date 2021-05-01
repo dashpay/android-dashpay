@@ -332,7 +332,13 @@ class BlockchainIdentity {
 
         if (instantLock == null) {
             instantLock = creditFundingTransaction!!.confidence?.instantSendlock
-            val coreHeight = creditFundingTransaction!!.confidence.appearedAtChainHeight.toLong();
+
+            val coreHeight = if (creditFundingTransaction!!.confidence.confidenceType == TransactionConfidence.ConfidenceType.BUILDING) {
+                creditFundingTransaction!!.confidence.appearedAtChainHeight.toLong()
+            } else {
+                -1L
+            }
+
             if (instantLock == null && coreHeight > 0) {
                 identity = platform.identities.register(
                     creditFundingTransaction!!.outputIndex,
