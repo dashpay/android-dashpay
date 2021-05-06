@@ -138,7 +138,7 @@ uploadArchives {
                 name 'Dash DashPay Tools'
                 packaging 'jar'
                 groupId 'org.dashj.platform'
-                artifactId 'dashpay'
+                artifactId 'tools'
                 version '0.19-SNAPSHOT'
                 description 'Dash DashPay Tools'
                 url 'https://github.com/dashevo/android-dashpay'
