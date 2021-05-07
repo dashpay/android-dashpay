@@ -75,9 +75,9 @@ class Platform(val params: NetworkParameters) {
     init {
         when {
             params.id.contains("test") -> {
-                apps["dpns"] = ClientAppDefinition("36ez8VqoDbR8NkdXwFaf9Tp8ukBdQxN8eYs8JNMnUyKz")
-                // matk8g1YRpzZskecRfpG5GCAgRmWCGJfjUemrsLkFDg - contract with coreHeightCreatedAt required field
-                apps["dashpay"] = ClientAppDefinition("2DAncD4YTjfhSQZYrsQ659xbM7M5dNEkyfBEAg9SsS3W")
+                apps["dpns"] = ClientAppDefinition("76wgB8KBxLGhtEzn4Hp5zgheyzzpHYvfcWGLs69B2ahq")
+                apps["dashpay"] = ClientAppDefinition("6wfobip5Mfn6NNGK9JTQ5eHtZozpkNx4aZUsnCxkfgj5")
+                apps["featureFlags"] = ClientAppDefinition("4CTBQw6eJK9Kg7k4F4v6U1RPMtkfCoPbQzUJDCi85pQb")
                 client = DapiClient(TestNet3Params.MASTERNODES.toList())
                 permanentBanList = listOf("45.48.168.16", "71.239.154.151", "174.34.233.98")
             }
