@@ -8,8 +8,10 @@ package org.dashevo.examples
 
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
+import org.bitcoinj.core.ECKey
 import org.dashevo.Client
 import org.dashevo.dapiclient.DapiClient
+import org.dashevo.dapiclient.model.DocumentQuery
 import org.dashevo.dpp.identifier.Identifier
 import org.dashevo.client.ClientOptions
 import org.dashevo.platform.Platform
@@ -18,8 +20,10 @@ class GetNetworkStatus {
 
     companion object {
 
-        private const val identityId = "BSNxbs99zCFvEtK8qrewYTVxNKt4DnFQ8sPbsb8nrDuf"
+        private const val identityId = "5y69D5k71omozvFU55gv3os62Ynwd8DstyJFUCdiZr1P"
         private val identifier = Identifier.from(identityId)
+        private lateinit var dataContractId: Identifier
+        private val pubKeyHash = ECKey().pubKeyHash
 
         lateinit var sdk: Client
         lateinit var platform: Platform
@@ -32,6 +36,7 @@ class GetNetworkStatus {
             }
             sdk = Client(ClientOptions(network = args[0]))
             platform = sdk.platform
+            dataContractId = platform.apps["dashpay"]!!.contractId
 
             start()
         }
@@ -74,12 +79,14 @@ class GetNetworkStatus {
                 var jsonRpcSuccess = true
                 var coreGrpcSuccess = true
                 var platformGrpcSuccess = true
-
+                var getDataContractSuccess = true
+                var getDocumentsSuccess = true
+                var getIdentitiesByPublicKeyHashesSuccess = true
                 try {
                     val jsonRpcResponse = rpcClient.getBestBlockHash()
-                    println("\t\u2713 L1 JSON-RPC Success.\tBest hash $jsonRpcResponse")
+                    println("\t+ L1 JSON-RPC Success.\tBest hash $jsonRpcResponse")
                 } catch (e: Exception) {
-                    println("\t\u2716 L1 JSON-RPC Failure")
+                    println("\tX L1 JSON-RPC Failure")
                     jsonRpcSuccess = false
                 }
 
@@ -87,8 +94,32 @@ class GetNetworkStatus {
                     val status = rpcClient.getStatus()
                     println("\t\u2713 L1 gRPC Success.\tBlock count: ${status!!.chain.blockCount}")
                 } catch (e: Exception) {
-                    println("\t\u2716 L1 gRPC Failure")
+                    println("\tX L1 gRPC Failure")
                     coreGrpcSuccess = false
+                }
+
+                try {
+                    rpcClient.getDataContract(dataContractId.toBuffer())
+                    println("\t+ L1 gRPC Success.\tgetDataContract DashPay")
+                } catch (e: Exception) {
+                    println("\tX L1 gRPC Failure.\tgetDataContract DashPay")
+                    getDataContractSuccess = false
+                }
+
+                try {
+                    rpcClient.getDocuments(dataContractId.toBuffer(), "profile", DocumentQuery.builder().build())
+                    println("\t+ L1 gRPC Success.\tgetDocuments dashpay.profile")
+                } catch (e: Exception) {
+                    println("\tX L1 gRPC Failure.\tgetDocuments dashpay.profile")
+                    getDocumentsSuccess = false
+                }
+
+                try {
+                    rpcClient.getIdentitiesByPublicKeyHashes(listOf(pubKeyHash))
+                    println("\t+ L1 gRPC Success.\tgetIdentitiesByPublicKeyHashes")
+                } catch (e: Exception) {
+                    println("\tX L1 gRPC Failure.\tgetIdentitiesByPublicKeyHashes")
+                    getIdentitiesByPublicKeyHashesSuccess = false
                 }
 
                 // Attempt to retrieve an identity to see if gRPC is responding on the node
@@ -96,27 +127,36 @@ class GetNetworkStatus {
                 try {
                     val response = rpcClient.getIdentity(identifier.toBuffer())
                     val id = platform.dpp.identity.createFromBuffer(response!!.toByteArray()).id.toString()
-                    println("\t\u2713 L2 gRPC Success.\tRetrieved identity: $id")
+                    println("\t+ L2 gRPC Success.\tRetrieved identity: $id")
                 } catch (e: StatusRuntimeException) {
                     if (e.status == Status.NOT_FOUND) {
-                        println("\t\u2713 L2 gRPC Success")
+                        println("\t+ L2 gRPC Success")
                     } else {
-                        println("\t\u2716 L2 gRPC Failure")
+                        println("\tX L2 gRPC Failure")
                         platformGrpcSuccess = false
                     }
                 } catch (e: Exception) {
 
                 }
+                println(rpcClient.reportErrorStatus())
 
-                if (!jsonRpcSuccess || !coreGrpcSuccess || !platformGrpcSuccess) {
+                if (!jsonRpcSuccess || !coreGrpcSuccess || !platformGrpcSuccess || !getDataContractSuccess ||!getDocumentsSuccess
+                    || !getIdentitiesByPublicKeyHashesSuccess) {
                     badNodes.add(
                         mapOf(
                             "ip" to service.split(":")[0],
                             "response" to mapOf(
                                 "JSON-RPC Success" to jsonRpcSuccess,
                                 "Core gRPC Success" to coreGrpcSuccess,
-                                "Platform gRPC Success" to platformGrpcSuccess
-                            )
+                                "Platform gRPC Success" to platformGrpcSuccess,
+                                "getDataContract Success" to getDataContractSuccess,
+                                "getDocuments Success" to getDocumentsSuccess,
+                                "Platform gRPC Success" to platformGrpcSuccess,
+                                "getDataContract Success" to getDataContractSuccess,
+                                "getDocuments Success" to getDocumentsSuccess,
+                                "getIdentitiesByPublicKeyHashes Success" to getIdentitiesByPublicKeyHashesSuccess
+                            ),
+                            "report" to rpcClient.reportErrorStatus()
                         )
                     )
                 } else {
@@ -134,7 +174,10 @@ class GetNetworkStatus {
             println("Nodes with JSON-RPC Failures:      ${badNodes.filter { (it["response"] as Map<String, Any>)["JSON-RPC Success"] == false }.size}")
             println("Nodes with Core gRPC Failures:     ${badNodes.filter { (it["response"] as Map<String, Any>)["Core gRPC Success"] == false }.size}")
             println("Nodes with Platform gRPC Failures: ${badNodes.filter { (it["response"] as Map<String, Any>)["Platform gRPC Success"] == false }.size}")
-
+            println("Nodes with getDataContract Failures: ${badNodes.filter { (it["response"] as Map<String, Any>)["getDataContract Success"] == false }.size}")
+            println("Nodes with getDocument Failures: ${badNodes.filter { (it["response"] as Map<String, Any>)["getDocuments Success"] == false }.size}")
+            println("Nodes with getDataContract Failures: ${badNodes.filter { (it["response"] as Map<String, Any>)["getDataContract Success"] == false }.map { it["ip"] } }")
+            println("Nodes with getIdentitiesByPublicKeyHashes Failures: ${badNodes.filter { (it["response"] as Map<String, Any>)["getIdentitiesByPublicKeyHashes Success"] == false }.map { it["ip"] } }")
             // Success summary
             println("Nodes with no errors: ${goodNodes.size}")
         }

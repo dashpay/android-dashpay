@@ -73,7 +73,7 @@ class DefaultIdentity(val params: NetworkParameters) {
     init {
         when {
             params.id.contains("test") -> {
-                seed = "mango air virus pigeon crowd attract review lemon lion assume lab rain"
+                seed = "chief capital exile you toilet jaguar session crisp lawn mosquito tool lottery"
             }
             params.id.contains("evonet") -> {
                 seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
