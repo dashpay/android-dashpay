@@ -52,6 +52,7 @@ task sourcesJar(type: Jar) {
 }
 
 publishing {
+    tasks.withType(Sign)*.enabled = false
     publications {
         maven(MavenPublication) {
             from components.java

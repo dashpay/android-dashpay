@@ -30,6 +30,6 @@ jobs:
     #    cd ..
         chmod +x gradlew
         chmod +x gradle/wrapper/gradle-wrapper.jar
-        ./gradlew assemble -x sign
+        ./gradlew assemble
     # don't run tests for now
     #    ./gradlew build test --info
