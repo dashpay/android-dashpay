@@ -79,7 +79,33 @@ class Platform(val params: NetworkParameters) {
                 apps["dashpay"] = ClientAppDefinition("6wfobip5Mfn6NNGK9JTQ5eHtZozpkNx4aZUsnCxkfgj5")
                 apps["featureFlags"] = ClientAppDefinition("4CTBQw6eJK9Kg7k4F4v6U1RPMtkfCoPbQzUJDCi85pQb")
                 client = DapiClient(TestNet3Params.MASTERNODES.toList())
-                permanentBanList = listOf("45.48.168.16", "71.239.154.151", "174.34.233.98")
+                permanentBanList = listOf(
+                    "45.48.168.16",   // unavailable
+                    "34.214.102.160", // no dashpay contract
+                    "174.34.233.98",
+                    "174.34.233.119", // unavailable
+                    "174.34.233.133", // unavailable
+                    "174.34.233.134", // unavailable
+                    "52.11.252.174",  // no dashpay contract
+                    "34.209.124.112", // no dashpay contract
+                    "174.34.233.118", // unavailable
+                    "174.34.233.120", // unavailable
+                    "178.62.203.249", // unavailable
+                    "60.205.218.5",
+                    "51.68.175.79",
+                    "80.208.231.9",   // no dashpay contract
+                    "206.189.147.240", // unavailable
+                    "178.62.203.249",  // unavailable
+                    "35.164.180.39",   // no dashpay contract
+                    "80.209.231.29",   // no dashpay contract
+                    "80.208.228.172",  // no dashpay contract
+                    "34.208.190.130",  // no dashpay contract
+                    "174.34.233.117",  // no dashpay contract
+                    "174.34.233.127",  // no dashpay contract
+                    "143.110.156.147", // no dashpay contract
+                    "174.34.233.121",  // no dashpay contract
+                    "174.34.233.132"   // no waitForStateTransitionResult, no dashpay contract
+                )
             }
             params.id.contains("evonet") -> {
                 apps["dpns"] = ClientAppDefinition("3VvS19qomuGSbEYWbTsRzeuRgawU3yK4fPMzLrbV62u8")
