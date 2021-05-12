@@ -94,7 +94,7 @@ class GetNetworkStatus {
                     val status = rpcClient.getStatus()
                     println("\t\u2713 L1 gRPC Success.\tBlock count: ${status!!.chain.blockCount}")
                 } catch (e: Exception) {
-                    println("\tX L1 gRPC Failure")
+                    println("\tX L1 gRPC Failure ($e)")
                     coreGrpcSuccess = false
                 }
 
@@ -176,7 +176,9 @@ class GetNetworkStatus {
             println("Nodes with Platform gRPC Failures: ${badNodes.filter { (it["response"] as Map<String, Any>)["Platform gRPC Success"] == false }.size}")
             println("Nodes with getDataContract Failures: ${badNodes.filter { (it["response"] as Map<String, Any>)["getDataContract Success"] == false }.size}")
             println("Nodes with getDocument Failures: ${badNodes.filter { (it["response"] as Map<String, Any>)["getDocuments Success"] == false }.size}")
-            println("Nodes with getDataContract Failures: ${badNodes.filter { (it["response"] as Map<String, Any>)["getDataContract Success"] == false }.map { it["ip"] } }")
+            println("Nodes with getIdentitiesByPublicKeyHashes Failures: ${badNodes.filter { (it["response"] as Map<String, Any>)["getIdentitiesByPublicKeyHashes Success"] == false }.size}")
+            println("Nodes with getDocument(dashpay) Failures: ${badNodes.filter { (it["response"] as Map<String, Any>)["getDocuments Success"] == false }.map { it["ip"] }}")
+            println("Nodes with getDataContract(dashpay) Failures: ${badNodes.filter { (it["response"] as Map<String, Any>)["getDataContract Success"] == false }.map { it["ip"] } }")
             println("Nodes with getIdentitiesByPublicKeyHashes Failures: ${badNodes.filter { (it["response"] as Map<String, Any>)["getIdentitiesByPublicKeyHashes Success"] == false }.map { it["ip"] } }")
             // Success summary
             println("Nodes with no errors: ${goodNodes.size}")
