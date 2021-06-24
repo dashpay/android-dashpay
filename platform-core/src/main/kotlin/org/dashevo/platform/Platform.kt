@@ -118,9 +118,9 @@ class Platform(val params: NetworkParameters) {
                 client = DapiClient(MobileDevNetParams.MASTERNODES.toList())
             }
             params.id.contains("palinka") -> {
-                apps["dpns"] = ClientAppDefinition("CgLcubqzRCvYkHyWKK2bQjqA3P1P8AHVPyJf61G9MRgK")
-                apps["dashpay"] = ClientAppDefinition("5xajtUq6NCZJdp3z1FbYCdSJ4QaU6krEBAdEPrxQriEY")
-                apps["featureFlags"] = ClientAppDefinition("BCDNAQf9h6geS9F3bVS5jBNdfKoj22rZSrDATTBH1jUA")
+                apps["dpns"] = ClientAppDefinition("9mdK1irvadi6ibMsxvkpVR4vxEvABf8Bx9QQ1GD495um")
+                apps["dashpay"] = ClientAppDefinition("DGTXxC9Rv3yfjciT9XSQowiLEiw5cMqGTH2ZgoL2MpB5")
+                apps["featureFlags"] = ClientAppDefinition("9AQ68hQjeHJy1QmMRgWSaCaNrkEQzx7Xv6BNi9d4NtCg")
                 //apps["thumbnail"] = ClientAppDefinition("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
                 client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList())
             }
