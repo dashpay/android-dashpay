@@ -6,9 +6,9 @@
  */
 package org.dashevo.platform
 
-import org.dashevo.dpp.document.Document
-import org.dashevo.dpp.identifier.Identifier
-import org.dashevo.dpp.util.HashUtils
+import org.dashj.platform.dpp.document.Document
+import org.dashj.platform.dpp.identifier.Identifier
+import org.dashj.platform.dpp.util.HashUtils
 
 abstract class AbstractDocument(val document: Document) {
 

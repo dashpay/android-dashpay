@@ -7,11 +7,11 @@
 package org.dashevo.platform
 
 import org.bitcoinj.core.ECKey
-import org.dashevo.dapiclient.model.DocumentQuery
-import org.dashevo.dpp.Factory
-import org.dashevo.dpp.document.Document
-import org.dashevo.dpp.identifier.Identifier
-import org.dashevo.dpp.identity.Identity
+import org.dashj.platform.dapiclient.model.DocumentQuery
+import org.dashj.platform.dpp.Factory
+import org.dashj.platform.dpp.document.Document
+import org.dashj.platform.dpp.identifier.Identifier
+import org.dashj.platform.dpp.identity.Identity
 import org.dashevo.platform.multicall.MulticallException
 import org.dashevo.platform.multicall.MulticallListQuery
 import org.dashevo.platform.multicall.MulticallMethod

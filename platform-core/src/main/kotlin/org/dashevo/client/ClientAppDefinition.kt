@@ -7,8 +7,8 @@
 
 package org.dashevo.client
 
-import org.dashevo.dpp.contract.DataContract
-import org.dashevo.dpp.identifier.Identifier
+import org.dashj.platform.dpp.contract.DataContract
+import org.dashj.platform.dpp.identifier.Identifier
 
 data class ClientAppDefinition(
     val contractId: Identifier,

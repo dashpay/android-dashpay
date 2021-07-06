@@ -11,7 +11,7 @@ import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.KeyChainGroup
 import org.bitcoinj.wallet.Wallet
 import org.dashevo.Client
-import org.dashevo.dpp.toHexString
+import org.dashj.platform.dpp.toHexString
 import org.dashevo.client.ClientOptions
 
 class GetIdentityFromSeed {

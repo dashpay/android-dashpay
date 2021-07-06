@@ -10,12 +10,12 @@ import org.bitcoinj.core.Block
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.core.Transaction
 import org.bitcoinj.quorums.InstantSendLock
-import org.dashevo.dapiclient.model.DocumentQuery
-import org.dashevo.dpp.StateRepository
-import org.dashevo.dpp.contract.DataContract
-import org.dashevo.dpp.document.Document
-import org.dashevo.dpp.identifier.Identifier
-import org.dashevo.dpp.identity.Identity
+import org.dashj.platform.dapiclient.model.DocumentQuery
+import org.dashj.platform.dpp.StateRepository
+import org.dashj.platform.dpp.contract.DataContract
+import org.dashj.platform.dpp.document.Document
+import org.dashj.platform.dpp.identifier.Identifier
+import org.dashj.platform.dpp.identity.Identity
 
 open class PlatformStateRepository(val platform: Platform) : StateRepository {
     private val identityMap = hashMapOf<Identifier, Identity>()

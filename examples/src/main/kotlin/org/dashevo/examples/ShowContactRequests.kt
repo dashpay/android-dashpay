@@ -7,12 +7,12 @@
 package org.dashevo.examples
 
 import org.dashevo.Client
-import org.dashevo.dapiclient.model.DocumentQuery
+import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashevo.dashpay.ContactRequests
-import org.dashevo.dpp.document.Document
-import org.dashevo.dpp.identifier.Identifier
-import org.dashevo.dpp.toBase58
-import org.dashevo.dpp.toBase64
+import org.dashj.platform.dpp.document.Document
+import org.dashj.platform.dpp.identifier.Identifier
+import org.dashj.platform.dpp.toBase58
+import org.dashj.platform.dpp.toBase64
 import org.dashevo.client.ClientOptions
 import org.dashevo.platform.Documents
 import org.json.JSONObject

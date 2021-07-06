@@ -8,10 +8,10 @@
 package org.dashevo.dashpay
 
 import org.bitcoinj.core.ECKey
-import org.dashevo.dapiclient.model.DocumentQuery
-import org.dashevo.dpp.document.*
-import org.dashevo.dpp.identifier.Identifier
-import org.dashevo.dpp.identity.Identity
+import org.dashj.platform.dapiclient.model.DocumentQuery
+import org.dashj.platform.dpp.document.*
+import org.dashj.platform.dpp.identifier.Identifier
+import org.dashj.platform.dpp.identity.Identity
 import org.dashevo.platform.Documents
 import org.dashevo.platform.Platform
 import java.util.*

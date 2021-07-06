@@ -7,8 +7,8 @@
 
 package org.dashevo.dashpay
 
-import org.dashevo.dpp.document.Document
-import org.dashevo.dpp.identifier.Identifier
+import org.dashj.platform.dpp.document.Document
+import org.dashj.platform.dpp.identifier.Identifier
 import org.dashevo.platform.AbstractDocument
 import org.dashevo.platform.Platform
 import java.util.*

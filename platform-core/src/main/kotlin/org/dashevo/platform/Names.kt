@@ -8,12 +8,12 @@ package org.dashevo.platform
 
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Sha256Hash
-import org.dashevo.dapiclient.model.DocumentQuery
-import org.dashevo.dpp.document.DataDocumentTransition
-import org.dashevo.dpp.document.Document
-import org.dashevo.dpp.identifier.Identifier
-import org.dashevo.dpp.identity.Identity
-import org.dashevo.dpp.util.Entropy
+import org.dashj.platform.dapiclient.model.DocumentQuery
+import org.dashj.platform.dpp.document.DataDocumentTransition
+import org.dashj.platform.dpp.document.Document
+import org.dashj.platform.dpp.identifier.Identifier
+import org.dashj.platform.dpp.identity.Identity
+import org.dashj.platform.dpp.util.Entropy
 import org.dashevo.platform.multicall.MulticallQuery
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

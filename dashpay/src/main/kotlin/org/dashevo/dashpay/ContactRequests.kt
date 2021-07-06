@@ -2,11 +2,11 @@ package org.dashevo.dashpay
 
 
 import org.bouncycastle.crypto.params.KeyParameter
-import org.dashevo.dapiclient.model.DocumentQuery
+import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashevo.dashpay.callback.SendContactRequestCallback
-import org.dashevo.dpp.document.Document
-import org.dashevo.dpp.identity.Identity
-import org.dashevo.dpp.identifier.Identifier
+import org.dashj.platform.dpp.document.Document
+import org.dashj.platform.dpp.identity.Identity
+import org.dashj.platform.dpp.identifier.Identifier
 import org.dashevo.platform.Documents
 import org.dashevo.platform.Platform
 import java.util.*

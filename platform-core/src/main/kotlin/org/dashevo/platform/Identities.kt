@@ -10,11 +10,11 @@ import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Transaction
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.quorums.InstantSendLock
-import org.dashevo.dpp.identifier.Identifier
-import org.dashevo.dpp.identity.ChainAssetLockProof
-import org.dashevo.dpp.identity.Identity
-import org.dashevo.dpp.identity.IdentityPublicKey
-import org.dashevo.dpp.identity.InstantAssetLockProof
+import org.dashj.platform.dpp.identifier.Identifier
+import org.dashj.platform.dpp.identity.ChainAssetLockProof
+import org.dashj.platform.dpp.identity.Identity
+import org.dashj.platform.dpp.identity.IdentityPublicKey
+import org.dashj.platform.dpp.identity.InstantAssetLockProof
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 

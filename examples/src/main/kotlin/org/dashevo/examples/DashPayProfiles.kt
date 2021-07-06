@@ -7,8 +7,8 @@
 package org.dashevo.examples
 
 import org.dashevo.Client
-import org.dashevo.dapiclient.model.DocumentQuery
-import org.dashevo.dpp.document.Document
+import org.dashj.platform.dapiclient.model.DocumentQuery
+import org.dashj.platform.dpp.document.Document
 import org.dashevo.client.ClientOptions
 import org.dashevo.platform.Documents
 import org.json.JSONObject

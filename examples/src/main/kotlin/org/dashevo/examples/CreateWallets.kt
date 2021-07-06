@@ -24,7 +24,7 @@ import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
 import org.dashevo.Client
 import org.dashevo.dashpay.BlockchainIdentity
-import org.dashevo.dpp.util.HashUtils
+import org.dashj.platform.dpp.util.HashUtils
 import java.io.File
 import java.io.IOException
 import java.security.SecureRandom
@@ -34,9 +34,9 @@ import org.bitcoinj.wallet.WalletTransaction
 import org.dashevo.dashpay.ContactRequests
 import org.dashevo.dashpay.RetryDelayType
 import org.dashevo.dashpay.callback.*
-import org.dashevo.dpp.document.Document
-import org.dashevo.dpp.identifier.Identifier
-import org.dashevo.dpp.toHexString
+import org.dashj.platform.dpp.document.Document
+import org.dashj.platform.dpp.identifier.Identifier
+import org.dashj.platform.dpp.toHexString
 import org.dashevo.client.ClientOptions
 import org.dashevo.platform.DomainDocument
 import org.json.JSONObject

@@ -6,8 +6,8 @@
  */
 package org.dashevo.platform
 
-import org.dashevo.dpp.document.Document
-import org.dashevo.dpp.identifier.Identifier
+import org.dashj.platform.dpp.document.Document
+import org.dashj.platform.dpp.identifier.Identifier
 
 class DomainDocument(document: Document) : AbstractDocument(document) {
     val label: String

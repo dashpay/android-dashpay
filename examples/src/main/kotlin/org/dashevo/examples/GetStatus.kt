@@ -8,8 +8,8 @@ package org.dashevo.examples
 
 import com.google.common.base.Stopwatch
 import org.dashevo.Client
-import org.dashevo.dapiclient.model.GetStatusResponse
-import org.dashevo.dapiclient.provider.DAPIAddress
+import org.dashj.platform.dapiclient.model.GetStatusResponse
+import org.dashj.platform.dapiclient.provider.DAPIAddress
 import org.dashevo.client.ClientOptions
 
 /*

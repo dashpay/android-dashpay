@@ -5,7 +5,7 @@ import kotlinx.coroutines.launch
 import org.dashevo.Client
 import org.dashevo.dashpay.ContactRequests
 import org.dashevo.dashpay.RetryDelayType
-import org.dashevo.dpp.identifier.Identifier
+import org.dashj.platform.dpp.identifier.Identifier
 import org.dashevo.client.ClientOptions
 
 class WatchContactRequest {

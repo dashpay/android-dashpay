@@ -6,8 +6,8 @@
  */
 package org.dashevo.client
 
-import org.dashevo.dapiclient.DapiClient
-import org.dashevo.dapiclient.provider.DAPIAddressListProvider
+import org.dashj.platform.dapiclient.DapiClient
+import org.dashj.platform.dapiclient.provider.DAPIAddressListProvider
 
 class ClientOptions(
     val apps: Map<String, ClientAppDefinition> = mapOf(),

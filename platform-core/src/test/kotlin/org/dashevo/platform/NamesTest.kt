@@ -1,6 +1,6 @@
 package org.dashevo.platform
 
-import org.dashevo.dpp.identifier.Identifier
+import org.dashj.platform.dpp.identifier.Identifier
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

@@ -118,8 +118,8 @@ import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
 import org.bitcoinj.wallet.listeners.WalletReorganizeEventListener;
 import org.bouncycastle.crypto.params.KeyParameter;
-import org.dashevo.dapiclient.model.GetStatusResponse;
-import org.dashevo.dapiclient.provider.DAPIAddress;
+import org.dashj.platform.dapiclient.model.GetStatusResponse;
+import org.dashj.platform.dapiclient.provider.DAPIAddress;
 import org.dashevo.dashpay.BlockchainIdentity;
 import org.dashevo.dashpay.Contact;
 import org.dashevo.dashpay.ContactRequest;
@@ -129,9 +129,9 @@ import org.dashevo.dashpay.RetryDelayType;
 import org.dashevo.dashpay.callback.RegisterIdentityCallback;
 import org.dashevo.dashpay.callback.RegisterNameCallback;
 import org.dashevo.dashpay.callback.RegisterPreorderCallback;
-import org.dashevo.dpp.document.Document;
-import org.dashevo.dpp.identifier.Identifier;
-import org.dashevo.dpp.identity.Identity;
+import org.dashj.platform.dpp.document.Document;
+import org.dashj.platform.dpp.identifier.Identifier;
+import org.dashj.platform.dpp.identity.Identity;
 import org.dashevo.platform.DomainDocument;
 import org.dashevo.platform.Names;
 import org.dashevo.platform.Platform;
@@ -2126,7 +2126,7 @@ public class WalletTool {
     };
 
     static void status() {
-        HashMap<DAPIAddress, org.dashevo.dapiclient.model.GetStatusResponse> results = new HashMap();
+        HashMap<DAPIAddress, org.dashj.platform.dapiclient.model.GetStatusResponse> results = new HashMap();
 
         ArrayList<String> nodeList = new ArrayList<>();
 

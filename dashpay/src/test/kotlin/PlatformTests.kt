@@ -9,7 +9,7 @@ import io.grpc.StatusRuntimeException
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Utils
 import org.bitcoinj.params.EvoNetParams
-import org.dashevo.dpp.identifier.Identifier
+import org.dashj.platform.dpp.identifier.Identifier
 import org.dashevo.platform.Platform
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

@@ -1,6 +1,6 @@
 package org.dashevo.dashpay
 
-import org.dashevo.dpp.document.Document
+import org.dashj.platform.dpp.document.Document
 import org.dashevo.platform.AbstractDocument
 
 class Profile(document: Document) : AbstractDocument(document) {

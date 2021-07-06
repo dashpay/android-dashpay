@@ -1,9 +1,9 @@
 package org.dashevo.platform
 
 import org.bitcoinj.core.Sha256Hash
-import org.dashevo.dapiclient.model.DocumentQuery
-import org.dashevo.dpp.identifier.Identifier
-import org.dashevo.dpp.util.Entropy
+import org.dashj.platform.dapiclient.model.DocumentQuery
+import org.dashj.platform.dpp.identifier.Identifier
+import org.dashj.platform.dpp.util.Entropy
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.fail

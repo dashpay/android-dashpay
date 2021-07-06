@@ -9,7 +9,7 @@ package org.dashevo.examples
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.quorums.InstantSendLock
 import org.dashevo.Client
-import org.dashevo.dpp.identity.IdentityPublicKey
+import org.dashj.platform.dpp.identity.IdentityPublicKey
 import org.dashevo.client.ClientOptions
 import org.json.JSONObject
 import java.lang.Thread.sleep

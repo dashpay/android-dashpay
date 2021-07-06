@@ -8,10 +8,10 @@ package org.dashevo.platform
 
 import org.bitcoinj.core.ECKey
 import org.dashevo.client.ClientAppDefinition
-import org.dashevo.dpp.contract.DataContract
-import org.dashevo.dpp.contract.DataContractCreateTransition
-import org.dashevo.dpp.identifier.Identifier
-import org.dashevo.dpp.identity.Identity
+import org.dashj.platform.dpp.contract.DataContract
+import org.dashj.platform.dpp.contract.DataContractCreateTransition
+import org.dashj.platform.dpp.identifier.Identifier
+import org.dashj.platform.dpp.identity.Identity
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*

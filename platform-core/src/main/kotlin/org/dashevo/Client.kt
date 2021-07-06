@@ -14,7 +14,7 @@ import org.bitcoinj.wallet.*
 import org.dashevo.client.ClientAppDefinition
 import org.dashevo.client.ClientApps
 import org.dashevo.client.ClientOptions
-import org.dashevo.dapiclient.DapiClient
+import org.dashj.platform.dapiclient.DapiClient
 import org.dashevo.platform.Platform
 
 class Client(private val clientOptions: ClientOptions) {

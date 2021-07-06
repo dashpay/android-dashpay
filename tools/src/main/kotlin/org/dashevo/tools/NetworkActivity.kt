@@ -8,11 +8,11 @@ package org.dashevo.tools
 
 import org.dashevo.Client
 import org.dashevo.client.ClientOptions
-import org.dashevo.dapiclient.model.DocumentQuery
+import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashevo.dashpay.ContactRequest
 import org.dashevo.dashpay.ContactRequests
-import org.dashevo.dpp.document.Document
-import org.dashevo.dpp.identifier.Identifier
+import org.dashj.platform.dpp.document.Document
+import org.dashj.platform.dpp.identifier.Identifier
 import org.dashevo.platform.Documents
 import org.dashevo.platform.Names
 import org.dashevo.platform.Platform

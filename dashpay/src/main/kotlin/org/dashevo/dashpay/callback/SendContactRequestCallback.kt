@@ -6,7 +6,7 @@
  */
 package org.dashevo.dashpay.callback
 
-import org.dashevo.dpp.identifier.Identifier
+import org.dashj.platform.dpp.identifier.Identifier
 
 interface SendContactRequestCallback {
     fun onComplete(fromUser: Identifier, toUser: Identifier)

@@ -12,9 +12,9 @@ import org.dashevo.dashpay.ContactRequest
 import org.dashevo.dashpay.ContactRequests
 import org.dashevo.dashpay.Profile
 import org.dashevo.dashpay.Profiles
-import org.dashevo.dpp.identifier.Identifier
-import org.dashevo.dpp.identity.Identity
-import org.dashevo.dpp.util.CreditsConverter
+import org.dashj.platform.dpp.identifier.Identifier
+import org.dashj.platform.dpp.identity.Identity
+import org.dashj.platform.dpp.util.CreditsConverter
 import org.dashevo.client.ClientOptions
 import org.dashevo.platform.Documents
 import org.dashevo.platform.DomainDocument

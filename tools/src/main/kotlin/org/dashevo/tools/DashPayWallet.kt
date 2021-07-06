@@ -15,10 +15,10 @@ import org.bitcoinj.evolution.EvolutionContact
 import org.bouncycastle.crypto.params.KeyParameter
 import org.dashevo.dashpay.*
 import org.dashevo.dashpay.Profile
-import org.dashevo.dpp.document.Document
-import org.dashevo.dpp.toBase58
+import org.dashj.platform.dpp.document.Document
+import org.dashj.platform.dpp.toBase58
 import org.dashevo.platform.DomainDocument
-import org.dashevo.dpp.identifier.Identifier
+import org.dashj.platform.dpp.identifier.Identifier
 import org.slf4j.LoggerFactory
 import java.lang.Long.max
 import java.util.concurrent.atomic.AtomicBoolean

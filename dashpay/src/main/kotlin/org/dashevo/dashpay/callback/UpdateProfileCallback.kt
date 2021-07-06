@@ -6,7 +6,7 @@
  */
 package org.dashevo.dashpay.callback
 
-import org.dashevo.dpp.document.Document
+import org.dashj.platform.dpp.document.Document
 
 interface UpdateProfileCallback {
     fun onComplete(uniqueId: String, profileDocument: Document)

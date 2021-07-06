@@ -8,7 +8,7 @@ package org.dashevo.examples
 
 import org.bitcoinj.core.ECKey
 import org.dashevo.Client
-import org.dashevo.dpp.toHexString
+import org.dashj.platform.dpp.toHexString
 import org.dashevo.client.ClientOptions
 
 class GetIdentity {
