@@ -20,9 +20,9 @@ dependencies {
     implementation project(':dashpay')
     implementation 'com.google.guava:guava:27.1-android'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    implementation "org.dashj.platform:dpp:0.19-SNAPSHOT"
-    implementation "org.dashj.platform:dapi-client:0.19-SNAPSHOT"
-    implementation "org.dashj:dashj-core:0.18-SNAPSHOT"
+    implementation "org.dashj.platform:dpp:$dpp_version"
+    implementation "org.dashj.platform:dapi-client:$dapi_client_version"
+    implementation "org.dashj:dashj-core:$dashj_version"
     implementation "org.dashj:dashj-bls:0.18-SNAPSHOT"
     implementation 'org.slf4j:slf4j-jdk14:1.7.28'
     implementation 'io.grpc:grpc-okhttp:1.28.0' // CURRENT_GRPC_VERSION
@@ -81,7 +81,7 @@ uploadArchives {
                 packaging 'jar'
                 groupId 'org.dashj.platform'
                 artifactId 'examples'
-                version '0.19-SNAPSHOT'
+                version dashpay_version
                 description 'Dash Platform Examples'
                 url 'https://github.com/dashevo/android-dashpay'
 

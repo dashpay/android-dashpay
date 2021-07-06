@@ -1,5 +1,9 @@
 buildscript {
     ext.kotlin_version = '1.4.10'
+    ext.dashpay_version = '0.20-SNAPSHOT'
+    ext.dpp_version = '0.20-SNAPSHOT'
+    ext.dapi_client_version = '0.20-SNAPSHOT'
+    ext.dashj_version = '0.18-SNAPSHOT'
     repositories {
         jcenter()
         mavenCentral()
@@ -17,6 +21,6 @@ allprojects {
         mavenLocal()
         maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots/' }
     }
-    version '0.19-SNAPSHOT'
+    version dashpay_version
     group = 'org.dashj.platform'
 }

@@ -6,7 +6,7 @@ plugins {
     id 'java'
 }
 
-version '0.19-SNAPSHOT'
+version dashpay_version
 
 repositories {
     mavenLocal()
@@ -16,9 +16,9 @@ repositories {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    implementation "org.dashj.platform:dpp:0.19-SNAPSHOT"
-    implementation "org.dashj.platform:dapi-client:0.19-SNAPSHOT"
-    implementation "org.dashj:dashj-core:0.18-SNAPSHOT"
+    implementation "org.dashj.platform:dpp:$dpp_version"
+    implementation "org.dashj.platform:dapi-client:$dapi_client_version"
+    implementation "org.dashj:dashj-core:$dashj_version"
 
     implementation 'io.grpc:grpc-okhttp:1.28.0' // CURRENT_GRPC_VERSION
     implementation 'io.grpc:grpc-protobuf-lite:1.28.0' // CURRENT_GRPC_VERSION
@@ -101,7 +101,7 @@ uploadArchives {
                 packaging 'jar'
                 groupId 'org.dashj.platform'
                 artifactId 'platform-core'
-                version '0.19-SNAPSHOT'
+                version dashpay_version
                 description 'Dash Java SDK Library'
                 url 'https://github.com/dashevo/android-dashpay'
 
