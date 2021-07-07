@@ -5,7 +5,6 @@ buildscript {
     ext.dapi_client_version = '0.20-SNAPSHOT'
     ext.dashj_version = '0.18-SNAPSHOT'
     repositories {
-        jcenter()
         mavenCentral()
         maven { url "https://kotlin.bintray.com/kotlinx" }
     }
@@ -17,7 +16,6 @@ buildscript {
 
 allprojects {
     repositories {
-        jcenter()
         mavenLocal()
         maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots/' }
     }
