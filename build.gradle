@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.4.10'
+    ext.kotlin_version = '1.4.32'
     ext.dashpay_version = '0.20-SNAPSHOT'
     ext.dpp_version = '0.20-SNAPSHOT'
     ext.dapi_client_version = '0.20-SNAPSHOT'
