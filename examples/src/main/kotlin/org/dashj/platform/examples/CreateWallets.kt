@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit
 import org.bitcoinj.wallet.WalletTransaction
 import org.dashj.platform.dashpay.ContactRequests
 import org.dashj.platform.dashpay.RetryDelayType
-import org.dashevo.dashpay.callback.*
+import org.dashj.platform.dashpay.callback.*
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.toHexString

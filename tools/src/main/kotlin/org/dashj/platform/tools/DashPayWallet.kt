@@ -13,10 +13,10 @@ import org.bitcoinj.core.PeerGroup
 import org.bitcoinj.crypto.KeyCrypterException
 import org.bitcoinj.evolution.EvolutionContact
 import org.bouncycastle.crypto.params.KeyParameter
-import org.dashevo.dashpay.*
+import org.dashevo.platform.DomainDocument
+import org.dashj.platform.dashpay.*
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.toBase58
-import org.dashevo.platform.DomainDocument
 import org.dashj.platform.dashpay.*
 import org.dashj.platform.dpp.identifier.Identifier
 import org.slf4j.LoggerFactory
