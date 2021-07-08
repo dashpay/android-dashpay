@@ -29,9 +29,6 @@ import org.bitcoinj.wallet.KeyChainGroup
 import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
 import org.bitcoinj.wallet.WalletTransaction
-import org.dashevo.Client
-import org.dashevo.client.ClientOptions
-import org.dashevo.platform.DomainDocument
 import org.dashj.platform.dashpay.BlockchainIdentity
 import org.dashj.platform.dashpay.ContactRequests
 import org.dashj.platform.dashpay.RetryDelayType
@@ -44,6 +41,9 @@ import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.toHexString
 import org.dashj.platform.dpp.util.HashUtils
+import org.dashj.platform.sdk.Client
+import org.dashj.platform.sdk.client.ClientOptions
+import org.dashj.platform.sdk.platform.DomainDocument
 import org.json.JSONObject
 
 fun String.runCommand(workingDir: File): String? {

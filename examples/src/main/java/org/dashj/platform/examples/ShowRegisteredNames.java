@@ -1,11 +1,11 @@
 package org.dashj.platform.examples;
 
-import org.dashevo.Client;
+import org.dashj.platform.sdk.Client;
 import org.dashj.platform.dapiclient.model.DocumentQuery;
 import org.dashj.platform.dpp.document.Document;
-import org.dashevo.platform.Documents;
-import org.dashevo.platform.Platform;
-import org.dashevo.client.ClientOptions;
+import org.dashj.platform.sdk.platform.Documents;
+import org.dashj.platform.sdk.platform.Platform;
+import org.dashj.platform.sdk.client.ClientOptions;
 
 import java.util.ArrayList;
 import java.util.List;

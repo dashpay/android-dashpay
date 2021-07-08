@@ -7,10 +7,10 @@
 package org.dashj.platform.examples
 
 import com.google.common.base.Stopwatch
-import org.dashevo.Client
-import org.dashevo.client.ClientOptions
 import org.dashj.platform.dapiclient.model.GetStatusResponse
 import org.dashj.platform.dapiclient.provider.DAPIAddress
+import org.dashj.platform.sdk.Client
+import org.dashj.platform.sdk.client.ClientOptions
 
 /*
     Calls getStatus on every masternode in the default list for a network

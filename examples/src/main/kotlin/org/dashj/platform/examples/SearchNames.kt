@@ -8,11 +8,6 @@ package org.dashj.platform.examples
 
 import java.util.Scanner
 import org.bitcoinj.core.Coin
-import org.dashevo.Client
-import org.dashevo.client.ClientOptions
-import org.dashevo.platform.Documents
-import org.dashevo.platform.DomainDocument
-import org.dashevo.platform.Names
 import org.dashj.platform.dashpay.ContactRequest
 import org.dashj.platform.dashpay.ContactRequests
 import org.dashj.platform.dashpay.Profile
@@ -20,6 +15,11 @@ import org.dashj.platform.dashpay.Profiles
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
 import org.dashj.platform.dpp.util.CreditsConverter
+import org.dashj.platform.sdk.Client
+import org.dashj.platform.sdk.client.ClientOptions
+import org.dashj.platform.sdk.platform.Documents
+import org.dashj.platform.sdk.platform.DomainDocument
+import org.dashj.platform.sdk.platform.Names
 
 class SearchNames {
     companion object {

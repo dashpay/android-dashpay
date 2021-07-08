@@ -2,11 +2,11 @@ package org.dashj.platform.examples
 
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import org.dashevo.Client
-import org.dashevo.client.ClientOptions
 import org.dashj.platform.dashpay.ContactRequests
 import org.dashj.platform.dashpay.RetryDelayType
 import org.dashj.platform.dpp.identifier.Identifier
+import org.dashj.platform.sdk.Client
+import org.dashj.platform.sdk.client.ClientOptions
 
 class WatchContactRequest {
     companion object {

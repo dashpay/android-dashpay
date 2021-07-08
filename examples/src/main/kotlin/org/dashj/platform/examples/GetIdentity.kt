@@ -7,9 +7,9 @@
 package org.dashj.platform.examples
 
 import org.bitcoinj.core.ECKey
-import org.dashevo.Client
-import org.dashevo.client.ClientOptions
 import org.dashj.platform.dpp.toHexString
+import org.dashj.platform.sdk.Client
+import org.dashj.platform.sdk.client.ClientOptions
 
 class GetIdentity {
     companion object {

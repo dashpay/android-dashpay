@@ -7,8 +7,8 @@
 package org.dashj.platform.examples
 
 import org.bitcoinj.evolution.CreditFundingTransaction
-import org.dashevo.Client
-import org.dashevo.client.ClientOptions
+import org.dashj.platform.sdk.Client
+import org.dashj.platform.sdk.client.ClientOptions
 import org.json.JSONObject
 
 /**

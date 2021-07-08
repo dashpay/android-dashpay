@@ -1,4 +1,4 @@
-package org.dashevo.platform
+package org.dashj.platform.sdk.platform
 
 import org.dashj.platform.dpp.identifier.Identifier
 import org.junit.jupiter.api.Assertions.assertEquals

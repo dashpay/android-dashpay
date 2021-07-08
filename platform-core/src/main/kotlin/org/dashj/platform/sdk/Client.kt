@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-package org.dashevo
+package org.dashj.platform.sdk
 
 import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.params.MobileDevNetParams
@@ -15,10 +15,10 @@ import org.bitcoinj.wallet.DeterministicKeyChain
 import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.KeyChainGroup
 import org.bitcoinj.wallet.Wallet
-import org.dashevo.client.ClientApps
-import org.dashevo.client.ClientOptions
-import org.dashevo.platform.Platform
 import org.dashj.platform.dapiclient.DapiClient
+import org.dashj.platform.sdk.client.ClientApps
+import org.dashj.platform.sdk.client.ClientOptions
+import org.dashj.platform.sdk.platform.Platform
 
 class Client(private val clientOptions: ClientOptions) {
     val params = when (clientOptions.network) {

@@ -8,10 +8,10 @@
 package org.dashj.platform.dashpay
 
 import java.util.Date
-import org.dashevo.platform.AbstractDocument
-import org.dashevo.platform.Platform
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.identifier.Identifier
+import org.dashj.platform.sdk.platform.AbstractDocument
+import org.dashj.platform.sdk.platform.Platform
 
 class ContactRequest(document: Document) : AbstractDocument(document) {
     val toUserId: Identifier

@@ -10,9 +10,9 @@ import org.bitcoinj.script.Script
 import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.KeyChainGroup
 import org.bitcoinj.wallet.Wallet
-import org.dashevo.Client
-import org.dashevo.client.ClientOptions
 import org.dashj.platform.dpp.toHexString
+import org.dashj.platform.sdk.Client
+import org.dashj.platform.sdk.client.ClientOptions
 
 class GetIdentityFromSeed {
     companion object {

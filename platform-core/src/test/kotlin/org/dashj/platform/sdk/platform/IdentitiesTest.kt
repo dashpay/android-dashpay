@@ -1,4 +1,4 @@
-package org.dashevo.platform
+package org.dashj.platform.sdk.platform
 
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Transaction

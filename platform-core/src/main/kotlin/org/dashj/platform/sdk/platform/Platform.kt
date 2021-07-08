@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-package org.dashevo.platform
+package org.dashj.platform.sdk.platform
 
 import com.google.common.base.Stopwatch
 import io.grpc.Status
@@ -18,8 +18,6 @@ import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.params.MobileDevNetParams
 import org.bitcoinj.params.PalinkaDevNetParams
 import org.bitcoinj.params.TestNet3Params
-import org.dashevo.client.ClientAppDefinition
-import org.dashevo.platform.multicall.MulticallException
 import org.dashj.platform.dapiclient.DapiClient
 import org.dashj.platform.dapiclient.MaxRetriesReachedException
 import org.dashj.platform.dapiclient.NoAvailableAddressesForRetryException
@@ -33,6 +31,8 @@ import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
 import org.dashj.platform.dpp.statetransition.StateTransitionIdentitySigned
 import org.dashj.platform.dpp.util.Entropy
+import org.dashj.platform.sdk.client.ClientAppDefinition
+import org.dashj.platform.sdk.platform.multicall.MulticallException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 

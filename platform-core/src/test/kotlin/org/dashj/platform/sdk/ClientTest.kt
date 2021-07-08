@@ -7,8 +7,7 @@
 package org.dashj.platform.sdk
 import org.bitcoinj.params.PalinkaDevNetParams
 import org.bitcoinj.params.TestNet3Params
-import org.dashevo.Client
-import org.dashevo.client.ClientOptions
+import org.dashj.platform.sdk.client.ClientOptions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

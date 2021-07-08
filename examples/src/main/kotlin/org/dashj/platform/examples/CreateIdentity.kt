@@ -9,9 +9,9 @@ package org.dashj.platform.examples
 import java.lang.Thread.sleep
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.quorums.InstantSendLock
-import org.dashevo.Client
-import org.dashevo.client.ClientOptions
 import org.dashj.platform.dpp.identity.IdentityPublicKey
+import org.dashj.platform.sdk.Client
+import org.dashj.platform.sdk.client.ClientOptions
 import org.json.JSONObject
 
 class CreateIdentity {

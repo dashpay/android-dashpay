@@ -4,18 +4,18 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-package org.dashevo.platform
+package org.dashj.platform.sdk.platform
 
 import java.io.ByteArrayOutputStream
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Sha256Hash
-import org.dashevo.platform.multicall.MulticallQuery
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dpp.document.DataDocumentTransition
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
 import org.dashj.platform.dpp.util.Entropy
+import org.dashj.platform.sdk.platform.multicall.MulticallQuery
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 

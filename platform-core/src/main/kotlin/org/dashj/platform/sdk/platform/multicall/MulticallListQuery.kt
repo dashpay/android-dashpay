@@ -1,4 +1,4 @@
-package org.dashevo.platform.multicall
+package org.dashj.platform.sdk.platform.multicall
 
 import org.slf4j.LoggerFactory
 

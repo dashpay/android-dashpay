@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-package org.dashevo.platform
+package org.dashj.platform.sdk.platform
 
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Transaction

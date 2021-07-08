@@ -7,9 +7,9 @@
 package org.dashj.platform.examples
 
 import java.lang.Thread.sleep
-import org.dashevo.Client
-import org.dashevo.client.ClientOptions
-import org.dashevo.client.WalletOptions
+import org.dashj.platform.sdk.Client
+import org.dashj.platform.sdk.client.ClientOptions
+import org.dashj.platform.sdk.client.WalletOptions
 import org.json.JSONObject
 
 class CreateContract {

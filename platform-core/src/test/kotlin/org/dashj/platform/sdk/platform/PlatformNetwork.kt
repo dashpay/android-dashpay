@@ -1,4 +1,4 @@
-package org.dashevo.platform
+package org.dashj.platform.sdk.platform
 import java.util.Date
 import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.wallet.DerivationPathFactory

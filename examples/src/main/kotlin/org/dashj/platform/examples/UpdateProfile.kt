@@ -13,9 +13,9 @@ import org.bitcoinj.wallet.DeterministicKeyChain
 import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.KeyChainGroup
 import org.bitcoinj.wallet.Wallet
-import org.dashevo.Client
-import org.dashevo.client.ClientOptions
 import org.dashj.platform.dashpay.BlockchainIdentity
+import org.dashj.platform.sdk.Client
+import org.dashj.platform.sdk.client.ClientOptions
 import org.json.JSONObject
 
 class UpdateProfile {

@@ -6,11 +6,11 @@
  */
 package org.dashj.platform.examples
 
-import org.dashevo.Client
-import org.dashevo.client.ClientOptions
-import org.dashevo.platform.Documents
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dpp.document.Document
+import org.dashj.platform.sdk.Client
+import org.dashj.platform.sdk.client.ClientOptions
+import org.dashj.platform.sdk.platform.Documents
 
 class RegisteredNames {
     companion object {

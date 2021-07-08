@@ -1,9 +1,9 @@
-package org.dashevo.platform.multicall
+package org.dashj.platform.sdk.platform.multicall
 
-import org.dashevo.platform.PlatformNetwork
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dpp.Factory
 import org.dashj.platform.dpp.document.Document
+import org.dashj.platform.sdk.platform.PlatformNetwork
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

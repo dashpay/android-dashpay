@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-package org.dashevo.client
+package org.dashj.platform.sdk.client
 
 import org.dashj.platform.dpp.contract.DataContract
 import org.dashj.platform.dpp.identifier.Identifier

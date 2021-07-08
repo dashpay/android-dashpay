@@ -15,7 +15,6 @@ import org.bitcoinj.core.PeerGroup
 import org.bitcoinj.crypto.KeyCrypterException
 import org.bitcoinj.evolution.EvolutionContact
 import org.bouncycastle.crypto.params.KeyParameter
-import org.dashevo.platform.DomainDocument
 import org.dashj.platform.dashpay.BlockchainIdentity
 import org.dashj.platform.dashpay.Contact
 import org.dashj.platform.dashpay.ContactRequest
@@ -24,6 +23,7 @@ import org.dashj.platform.dashpay.Profile
 import org.dashj.platform.dashpay.Profiles
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.identifier.Identifier
+import org.dashj.platform.sdk.platform.DomainDocument
 import org.slf4j.LoggerFactory
 
 class DashPayWallet(val blockchainIdentity: BlockchainIdentity, val peerGroup: PeerGroup?, val password: String? = null) {

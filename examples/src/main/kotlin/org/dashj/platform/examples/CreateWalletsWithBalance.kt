@@ -16,8 +16,8 @@ import org.bitcoinj.utils.BriefLogFormatter
 import org.bitcoinj.wallet.DeterministicKeyChain
 import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.KeyChain
-import org.dashevo.Client
-import org.dashevo.client.ClientOptions
+import org.dashj.platform.sdk.Client
+import org.dashj.platform.sdk.client.ClientOptions
 
 class CreateWalletsWithBalance {
     companion object {

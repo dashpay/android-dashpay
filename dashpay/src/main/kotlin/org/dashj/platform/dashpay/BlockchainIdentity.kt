@@ -39,10 +39,6 @@ import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
 import org.bitcoinj.wallet.ZeroConfCoinSelector
 import org.bouncycastle.crypto.params.KeyParameter
-import org.dashevo.platform.Names
-import org.dashevo.platform.Platform
-import org.dashevo.platform.multicall.MulticallMethod
-import org.dashevo.platform.multicall.MulticallQuery
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dashpay.callback.RegisterIdentityCallback
 import org.dashj.platform.dashpay.callback.RegisterNameCallback
@@ -59,6 +55,10 @@ import org.dashj.platform.dpp.statetransition.StateTransitionIdentitySigned
 import org.dashj.platform.dpp.toHexString
 import org.dashj.platform.dpp.util.Cbor
 import org.dashj.platform.dpp.util.HashUtils
+import org.dashj.platform.sdk.platform.Names
+import org.dashj.platform.sdk.platform.Platform
+import org.dashj.platform.sdk.platform.multicall.MulticallMethod
+import org.dashj.platform.sdk.platform.multicall.MulticallQuery
 import org.slf4j.LoggerFactory
 
 class BlockchainIdentity {

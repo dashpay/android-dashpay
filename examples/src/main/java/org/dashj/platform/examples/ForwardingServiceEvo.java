@@ -45,7 +45,7 @@ import org.dashj.platform.dashpay.callback.RegisterNameCallback;
 import org.dashj.platform.dashpay.callback.RegisterPreorderCallback;
 import org.dashj.platform.dpp.StateRepository;
 import org.dashj.platform.dpp.identifier.Identifier;
-import org.dashevo.platform.Platform;
+import org.dashj.platform.sdk.platform.Platform;
 import org.dashj.platform.dapiclient.model.DocumentQuery;
 import org.dashj.platform.dpp.StateRepository;
 import org.dashj.platform.dpp.contract.DataContract;

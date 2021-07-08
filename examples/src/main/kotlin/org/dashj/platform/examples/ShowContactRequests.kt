@@ -7,15 +7,15 @@
 package org.dashj.platform.examples
 
 import java.util.Scanner
-import org.dashevo.Client
-import org.dashevo.client.ClientOptions
-import org.dashevo.platform.Documents
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dashpay.ContactRequests
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.toBase58
 import org.dashj.platform.dpp.toBase64
+import org.dashj.platform.sdk.Client
+import org.dashj.platform.sdk.client.ClientOptions
+import org.dashj.platform.sdk.platform.Documents
 import org.json.JSONObject
 
 class ShowContactRequests {

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-package org.dashevo.client
+package org.dashj.platform.sdk.client
 
 data class WalletOptions(
     val mnemonic: String?,

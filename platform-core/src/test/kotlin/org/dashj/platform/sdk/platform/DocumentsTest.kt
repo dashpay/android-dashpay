@@ -1,4 +1,4 @@
-package org.dashevo.platform
+package org.dashj.platform.sdk.platform
 
 import org.bitcoinj.core.Sha256Hash
 import org.dashj.platform.dapiclient.model.DocumentQuery

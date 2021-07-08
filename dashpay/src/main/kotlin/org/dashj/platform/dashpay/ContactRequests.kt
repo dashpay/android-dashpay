@@ -3,13 +3,13 @@ package org.dashj.platform.dashpay
 import java.util.Timer
 import kotlin.concurrent.timerTask
 import org.bouncycastle.crypto.params.KeyParameter
-import org.dashevo.platform.Documents
-import org.dashevo.platform.Platform
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dashpay.callback.SendContactRequestCallback
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
+import org.dashj.platform.sdk.platform.Documents
+import org.dashj.platform.sdk.platform.Platform
 
 class ContactRequests(val platform: Platform) {
 

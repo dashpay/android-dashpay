@@ -10,14 +10,14 @@ package org.dashj.platform.dashpay
 import java.util.Date
 import kotlin.collections.HashMap
 import org.bitcoinj.core.ECKey
-import org.dashevo.platform.Documents
-import org.dashevo.platform.Platform
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.document.DocumentCreateTransition
 import org.dashj.platform.dpp.document.DocumentsBatchTransition
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
+import org.dashj.platform.sdk.platform.Documents
+import org.dashj.platform.sdk.platform.Platform
 
 class Profiles(
     val platform: Platform

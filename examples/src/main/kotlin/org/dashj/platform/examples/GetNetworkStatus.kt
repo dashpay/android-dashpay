@@ -9,12 +9,12 @@ package org.dashj.platform.examples
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import org.bitcoinj.core.ECKey
-import org.dashevo.Client
-import org.dashevo.client.ClientOptions
-import org.dashevo.platform.Platform
 import org.dashj.platform.dapiclient.DapiClient
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dpp.identifier.Identifier
+import org.dashj.platform.sdk.Client
+import org.dashj.platform.sdk.client.ClientOptions
+import org.dashj.platform.sdk.platform.Platform
 
 class GetNetworkStatus {
 

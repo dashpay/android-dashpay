@@ -7,7 +7,7 @@ import org.bitcoinj.wallet.DeterministicKeyChain
 import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.KeyChainGroup
 import org.bitcoinj.wallet.Wallet
-import org.dashevo.platform.Platform
+import org.dashj.platform.sdk.platform.Platform
 import org.junit.jupiter.api.AfterEach
 
 open class PlatformNetwork {
