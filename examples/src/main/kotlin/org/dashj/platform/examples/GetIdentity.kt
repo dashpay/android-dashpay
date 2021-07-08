@@ -8,8 +8,8 @@ package org.dashj.platform.examples
 
 import org.bitcoinj.core.ECKey
 import org.dashevo.Client
-import org.dashj.platform.dpp.toHexString
 import org.dashevo.client.ClientOptions
+import org.dashj.platform.dpp.toHexString
 
 class GetIdentity {
     companion object {

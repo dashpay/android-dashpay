@@ -57,16 +57,17 @@ class DefaultIdentity(val params: NetworkParameters) {
 //        init {
 //            seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
 //        }
-
     }
 
-    constructor(network: String) : this (when (network) {
-        "evonet" -> EvoNetParams.get()
-        "palinka" -> PalinkaDevNetParams.get()
-        "mobile" -> MobileDevNetParams.get()
-        "testnet" -> TestNet3Params.get()
-        else -> throw IllegalArgumentException("network $network is not valid")
-    })
+    constructor(network: String) : this (
+        when (network) {
+            "evonet" -> EvoNetParams.get()
+            "palinka" -> PalinkaDevNetParams.get()
+            "mobile" -> MobileDevNetParams.get()
+            "testnet" -> TestNet3Params.get()
+            else -> throw IllegalArgumentException("network $network is not valid")
+        }
+    )
 
     val seed: String
 

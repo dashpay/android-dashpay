@@ -1,7 +1,7 @@
 package org.dashj.platform.dashpay
 
-import org.dashj.platform.dpp.document.Document
 import org.dashevo.platform.AbstractDocument
+import org.dashj.platform.dpp.document.Document
 
 class Profile(document: Document) : AbstractDocument(document) {
 

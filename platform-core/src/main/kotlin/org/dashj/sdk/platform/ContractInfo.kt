@@ -18,8 +18,8 @@ import org.dashj.platform.dpp.identifier.Identifier
 data class ContractInfo(val contractId: Identifier, var dataContract: DataContract? = null) {
 
     constructor(contractId: String, dataContract: DataContract? = null) :
-            this(Identifier.Companion.from(contractId), dataContract)
+    this(Identifier.Companion.from(contractId), dataContract)
 
     constructor(contractId: ByteArray, dataContract: DataContract? = null) :
-            this(Identifier.from(contractId), dataContract)
+    this(Identifier.from(contractId), dataContract)
 }

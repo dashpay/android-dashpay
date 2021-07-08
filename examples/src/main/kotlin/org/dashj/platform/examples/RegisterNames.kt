@@ -18,7 +18,7 @@ import org.json.JSONObject
 
 class RegisterNames {
     companion object {
-        val sdk = Client(ClientOptions(network ="mobile"))
+        val sdk = Client(ClientOptions(network = "mobile"))
 
         @JvmStatic
         fun main(args: Array<String>) {
@@ -41,12 +41,11 @@ class RegisterNames {
                     var nameDocument = platform.names.register(name, identity!!, identityPrivateKey)
 
                     // display information
-                    println("Name Created: ${name}")
+                    println("Name Created: $name")
                     println(JSONObject(nameDocument!!.toJSON()).toString(2))
                 } else {
                     println("ERROR: username $name already exists")
                 }
-
             } catch (e: Exception) {
                 println(e.localizedMessage)
             }

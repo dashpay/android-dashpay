@@ -7,5 +7,7 @@
 
 package org.dashevo.client
 
-data class WalletOptions(val mnemonic: String?,
-                         val creationTime: Long = 0)
+data class WalletOptions(
+    val mnemonic: String?,
+    val creationTime: Long = 0
+)

@@ -8,9 +8,9 @@ package org.dashj.platform.examples
 
 import com.google.common.base.Stopwatch
 import org.dashevo.Client
+import org.dashevo.client.ClientOptions
 import org.dashj.platform.dapiclient.model.GetStatusResponse
 import org.dashj.platform.dapiclient.provider.DAPIAddress
-import org.dashevo.client.ClientOptions
 
 /*
     Calls getStatus on every masternode in the default list for a network
@@ -58,9 +58,9 @@ class GetStatus {
                     }
                 }
             }
-            println("getStatus() Results: $success/$total (${success.toDouble()/total})")
-            println("getBlockByHeight() Results: $successFallback/$total (${successFallback.toDouble()/total})")
-            println("Overall Results: ${(success + successFallback)}/$total (${(successFallback + success).toDouble()/total})")
+            println("getStatus() Results: $success/$total (${success.toDouble() / total})")
+            println("getBlockByHeight() Results: $successFallback/$total (${successFallback.toDouble() / total})")
+            println("Overall Results: ${(success + successFallback)}/$total (${(successFallback + success).toDouble() / total})")
             for (s in results) {
                 println("${s.key.host}: ${s.value?.duration} ms; errors: ${s.value?.status}")
             }

@@ -1,9 +1,9 @@
 package org.dashj.platform.dashpay
 
+import kotlin.random.Random
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
-import kotlin.random.Random
 
 class BlockchainIdentityTest : PlatformNetwork() {
 
@@ -16,7 +16,7 @@ class BlockchainIdentityTest : PlatformNetwork() {
 
     @Test
     fun updateProfileTest() {
-        val displayName = "Hello "+ Random.nextInt()
+        val displayName = "Hello " + Random.nextInt()
 
         blockchainIdentity.recoverIdentity(wallet.blockchainIdentityKeyChain.watchingKey.pubKeyHash)
 
@@ -29,6 +29,4 @@ class BlockchainIdentityTest : PlatformNetwork() {
         assertNotEquals(currentProfile, retrievedProfile)
         assertEquals(updatedProfile, Profile(retrievedProfile))
     }
-
-
 }

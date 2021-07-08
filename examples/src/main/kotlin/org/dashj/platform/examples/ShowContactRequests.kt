@@ -6,18 +6,17 @@
  */
 package org.dashj.platform.examples
 
+import java.util.Scanner
 import org.dashevo.Client
+import org.dashevo.client.ClientOptions
+import org.dashevo.platform.Documents
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dashpay.ContactRequests
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.toBase58
 import org.dashj.platform.dpp.toBase64
-import org.dashevo.client.ClientOptions
-import org.dashevo.platform.Documents
 import org.json.JSONObject
-import java.util.*
-
 
 class ShowContactRequests {
     companion object {
@@ -44,8 +43,9 @@ class ShowContactRequests {
             println(prompt)
             var text = scanner.next()
             do {
-                if (text == "!quit")
+                if (text == "!quit") {
                     return
+                }
                 searchContactRequests(text)
                 println(prompt)
                 text = scanner.next()
@@ -78,7 +78,7 @@ class ShowContactRequests {
                         ContactRequests(platform).get(identityId, false, 0L, false, startAt)
                     }
 
-                    requests += 1;
+                    requests += 1
 
                     for (doc in documents) {
                         val toUserId = doc.data["toUserId"] as ByteArray
@@ -92,12 +92,12 @@ class ShowContactRequests {
                         println("No identities found matching $id")
                     }
 
-                    startAt += Documents.DOCUMENT_LIMIT;
+                    startAt += Documents.DOCUMENT_LIMIT
                 } catch (e: Exception) {
                     println("\nError retrieving results (startAt =  $startAt)")
-                    println(e.message);
+                    println(e.message)
                 }
-            } while (requests == 0 || documents!!.size >= Documents.DOCUMENT_LIMIT);
+            } while (requests == 0 || documents!!.size >= Documents.DOCUMENT_LIMIT)
         }
     }
 }

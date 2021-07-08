@@ -19,10 +19,12 @@ import org.slf4j.LoggerFactory
  * @property successRate Double
  * @constructor
  */
-open class MulticallQuery<T> (val method: MulticallMethod<T>,
-                              val callType: CallType,
-                              val callsToMake: Int = 3,
-                              val requiredSuccessRate:Double = 0.51) {
+open class MulticallQuery<T> (
+    val method: MulticallMethod<T>,
+    val callType: CallType,
+    val callsToMake: Int = 3,
+    val requiredSuccessRate: Double = 0.51
+) {
 
     companion object {
         private val log = LoggerFactory.getLogger(MulticallQuery::class.java)
@@ -61,17 +63,18 @@ open class MulticallQuery<T> (val method: MulticallMethod<T>,
      * Returns true if some results were found or not found, but false if all queries returned errors
      * @return Boolean
      */
-    fun success() : Boolean {
-        if (failures == calls)
+    fun success(): Boolean {
+        if (failures == calls) {
             return false
+        }
         return true
     }
 
-    fun exception() : MulticallException {
+    fun exception(): MulticallException {
         return MulticallException(exceptions)
     }
 
-    fun status() : Status {
+    fun status(): Status {
         return when {
             failures == calls -> Status.ERRORS
             callType == CallType.UNANIMOUS -> {
@@ -90,7 +93,7 @@ open class MulticallQuery<T> (val method: MulticallMethod<T>,
      * Returns true if some results were found, from more than requiredSuccessRate% nodes
      * @return Boolean
      */
-    fun foundSuccess() : Boolean {
+    fun foundSuccess(): Boolean {
         return foundRate > requiredSuccessRate && results.size == 1
     }
 
@@ -98,7 +101,7 @@ open class MulticallQuery<T> (val method: MulticallMethod<T>,
      * Returns true if no results were found
      * @return Boolean
      */
-    fun notFoundSuccess() : Boolean {
+    fun notFoundSuccess(): Boolean {
         return notFound == calls
     }
 
@@ -119,7 +122,7 @@ open class MulticallQuery<T> (val method: MulticallMethod<T>,
                     }
                 } else {
                     results.add(result)
-                    when(callType) {
+                    when (callType) {
                         CallType.FIRST -> {
                             calls = 1
                             notFound = 0
@@ -140,22 +143,22 @@ open class MulticallQuery<T> (val method: MulticallMethod<T>,
         return status()
     }
 
-    fun queryFirstResult() : Boolean {
+    fun queryFirstResult(): Boolean {
         return query() == Status.FOUND
     }
 
-    fun queryFound() : Boolean {
+    fun queryFound(): Boolean {
         query()
         return foundSuccess()
     }
 
-    fun queryNotFound() : Boolean {
+    fun queryNotFound(): Boolean {
         query()
         return notFoundSuccess()
     }
 
     open fun getResult(): T? {
-        return when(callType) {
+        return when (callType) {
             CallType.UNTIL_FOUND -> results.first()
             CallType.UNANIMOUS -> {
                 if (results.isEmpty()) {
@@ -186,6 +189,6 @@ open class MulticallQuery<T> (val method: MulticallMethod<T>,
 
     override fun toString(): String {
         return "MulticallQuery(type=$callType, calls=$calls, found unique=${results.size}, notFound=$notFound, errors=$failures)" +
-                "--> $results; exceptions=$exceptions"
+            "--> $results; exceptions=$exceptions"
     }
 }

@@ -7,15 +7,15 @@
 package org.dashevo.platform
 
 import org.bitcoinj.core.ECKey
+import org.dashevo.platform.multicall.MulticallException
+import org.dashevo.platform.multicall.MulticallListQuery
+import org.dashevo.platform.multicall.MulticallMethod
+import org.dashevo.platform.multicall.MulticallQuery
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dpp.Factory
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
-import org.dashevo.platform.multicall.MulticallException
-import org.dashevo.platform.multicall.MulticallListQuery
-import org.dashevo.platform.multicall.MulticallMethod
-import org.dashevo.platform.multicall.MulticallQuery
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -28,12 +28,15 @@ class Documents(val platform: Platform) {
 
     fun broadcast(identity: Identity, privateKey: ECKey, create: List<Document>?, replace: List<Document>? = null, delete: List<Document>? = null) {
         val transitionMap = hashMapOf<String, List<Document>?>()
-        if (create != null)
+        if (create != null) {
             transitionMap["create"] = create
-        if (replace != null)
+        }
+        if (replace != null) {
             transitionMap["replace"] = replace
-        if (delete != null)
+        }
+        if (delete != null) {
             transitionMap["delete"] = delete
+        }
 
         val batch = platform.dpp.document.createStateTransition(transitionMap)
 
@@ -51,7 +54,7 @@ class Documents(val platform: Platform) {
             throw Exception("Cannot find contractId for $appName")
         }
 
-        val dataContract = platform.contracts.get(platform.apps[appName]!!.contractId);
+        val dataContract = platform.contracts.get(platform.apps[appName]!!.contractId)
 
         return dpp.document.create(
             dataContract!!,
@@ -89,15 +92,17 @@ class Documents(val platform: Platform) {
      * Fetches all results that match the query this allows limit to be greater than 100
      * and will return more than 100 results
      */
-    fun getAll(typeLocator: String,
-               documentQuery: DocumentQuery,
-               callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.FIRST): List<Document> {
+    fun getAll(
+        typeLocator: String,
+        documentQuery: DocumentQuery,
+        callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.FIRST
+    ): List<Document> {
         val query = documentQuery.clone()
         val limit = query.limit
         var total = 0
-        if (limit > 100)
+        if (limit > 100) {
             query.limit = 100
-
+        }
         val documents = ArrayList<Document>()
         var documentList: List<Document>
         var requests = 0
@@ -117,7 +122,7 @@ class Documents(val platform: Platform) {
                         limit == -1 -> documents.addAll(documentList)
                         total + documentList.size > limit -> {
                             total - limit
-                            for (i in 0 until limit-total) {
+                            for (i in 0 until limit - total) {
                                 documents.add(documentList[i])
                             }
                         }
@@ -146,7 +151,7 @@ class Documents(val platform: Platform) {
         if (!platform.apps.containsKey(appName)) {
             throw Exception("No app named $appName specified.")
         }
-        val appDefinition = platform.apps[appName];
+        val appDefinition = platform.apps[appName]
         if (appDefinition == null || appDefinition.contractId.toBuffer().isEmpty()) {
             throw Exception("Missing contract ID for $appName")
         }
@@ -158,11 +163,14 @@ class Documents(val platform: Platform) {
 
     fun get(dataContractId: Identifier, documentType: String, opts: DocumentQuery, callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.FIRST): List<Document> {
         try {
-            val domainQuery = MulticallListQuery(object: MulticallMethod<List<ByteArray>> {
-                override fun execute(): List<ByteArray>{
-                    return platform.client.getDocuments(dataContractId.toBuffer(), documentType, opts, platform.documentsRetryCallback)
-                }
-            }, callType)
+            val domainQuery = MulticallListQuery(
+                object : MulticallMethod<List<ByteArray>> {
+                    override fun execute(): List<ByteArray> {
+                        return platform.client.getDocuments(dataContractId.toBuffer(), documentType, opts, platform.documentsRetryCallback)
+                    }
+                },
+                callType
+            )
             return when (domainQuery.query()) {
                 MulticallQuery.Companion.Status.AGREE,
                 MulticallQuery.Companion.Status.FOUND -> {
@@ -181,7 +189,7 @@ class Documents(val platform: Platform) {
                 }
             }
         } catch (e: Exception) {
-            log.error("Document query: unable to get documents of ${dataContractId}: $e")
+            log.error("Document query: unable to get documents of $dataContractId: $e")
             throw e
         }
     }

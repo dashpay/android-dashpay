@@ -10,11 +10,11 @@ import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import org.bitcoinj.core.ECKey
 import org.dashevo.Client
+import org.dashevo.client.ClientOptions
+import org.dashevo.platform.Platform
 import org.dashj.platform.dapiclient.DapiClient
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dpp.identifier.Identifier
-import org.dashevo.client.ClientOptions
-import org.dashevo.platform.Platform
 
 class GetNetworkStatus {
 
@@ -62,7 +62,6 @@ class GetNetworkStatus {
             val mnList = getMnList()
             val invalidNodes = mnList.filter { it["isValid"] == false }
             val validNodes = mnList.filter { it["isValid"] == true }
-
 
             println("${mnList.size} masternodes found")
             println("Ignoring ${mnList.filter { it["isValid"] == false }.size} invalid masternodes")
@@ -136,12 +135,12 @@ class GetNetworkStatus {
                         platformGrpcSuccess = false
                     }
                 } catch (e: Exception) {
-
                 }
                 println(rpcClient.reportErrorStatus())
 
-                if (!jsonRpcSuccess || !coreGrpcSuccess || !platformGrpcSuccess || !getDataContractSuccess ||!getDocumentsSuccess
-                    || !getIdentitiesByPublicKeyHashesSuccess) {
+                if (!jsonRpcSuccess || !coreGrpcSuccess || !platformGrpcSuccess || !getDataContractSuccess || !getDocumentsSuccess ||
+                    !getIdentitiesByPublicKeyHashesSuccess
+                ) {
                     badNodes.add(
                         mapOf(
                             "ip" to service.split(":")[0],

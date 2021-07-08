@@ -6,6 +6,10 @@
  */
 package org.dashj.platform.examples
 
+import java.io.File
+import java.security.SecureRandom
+import java.util.Date
+import java.util.Scanner
 import org.bitcoinj.core.Address
 import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.utils.BriefLogFormatter
@@ -14,10 +18,6 @@ import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.KeyChain
 import org.dashevo.Client
 import org.dashevo.client.ClientOptions
-import java.io.File
-import java.security.SecureRandom
-import java.util.*
-
 
 class CreateWalletsWithBalance {
     companion object {
@@ -87,7 +87,6 @@ class CreateWalletsWithBalance {
                     return
                 } else {
                     println("Wallet funding transaction: $txid")
-
                 }
 
                 // get tx information
@@ -95,13 +94,11 @@ class CreateWalletsWithBalance {
                 println(txBytes)
             }
 
-
             // print usernames and associated recovery phrases
             println("\nRecovery Phrase, First Address")
             for (phrase in recoveryPhraseMap) {
                 println("${phrase.key}, ${phrase.value}")
             }
-
         }
     }
 }

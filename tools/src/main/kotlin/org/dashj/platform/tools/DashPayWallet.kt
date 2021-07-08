@@ -8,22 +8,25 @@ package org.dashj.platform.tools
 
 import com.google.common.base.Stopwatch
 import io.grpc.StatusRuntimeException
+import java.lang.Long.max
+import java.util.concurrent.atomic.AtomicBoolean
 import org.bitcoinj.core.Context
 import org.bitcoinj.core.PeerGroup
 import org.bitcoinj.crypto.KeyCrypterException
 import org.bitcoinj.evolution.EvolutionContact
 import org.bouncycastle.crypto.params.KeyParameter
 import org.dashevo.platform.DomainDocument
-import org.dashj.platform.dashpay.*
+import org.dashj.platform.dashpay.BlockchainIdentity
+import org.dashj.platform.dashpay.Contact
+import org.dashj.platform.dashpay.ContactRequest
+import org.dashj.platform.dashpay.ContactRequests
+import org.dashj.platform.dashpay.Profile
+import org.dashj.platform.dashpay.Profiles
 import org.dashj.platform.dpp.document.Document
-import org.dashj.platform.dpp.toBase58
-import org.dashj.platform.dashpay.*
 import org.dashj.platform.dpp.identifier.Identifier
 import org.slf4j.LoggerFactory
-import java.lang.Long.max
-import java.util.concurrent.atomic.AtomicBoolean
 
-class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: PeerGroup?, val password: String? = null) {
+class DashPayWallet(val blockchainIdentity: BlockchainIdentity, val peerGroup: PeerGroup?, val password: String? = null) {
     val wallet = blockchainIdentity.wallet!!
     val platform = blockchainIdentity.platform
     val contactRequests = arrayListOf<ContactRequest>()
@@ -38,32 +41,32 @@ class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: 
     fun getContactRequestLastTimestamp(): Long {
         var lastTimestamp = 0L
         contactRequests.forEach {
-            lastTimestamp = max(lastTimestamp, it.createdAt?: 0L)
+            lastTimestamp = max(lastTimestamp, it.createdAt ?: 0L)
         }
         return lastTimestamp
     }
 
-    fun getSentContactRequests() : List<ContactRequest> {
+    fun getSentContactRequests(): List<ContactRequest> {
         return contactRequests.filter {
             it.ownerId == blockchainIdentity.uniqueIdentifier
         }
     }
 
-    fun getRecievedContactRequests() : List<ContactRequest> {
+    fun getRecievedContactRequests(): List<ContactRequest> {
         return contactRequests.filter {
             it.toUserId == blockchainIdentity.uniqueIdentifier
         }
     }
 
-    fun getSentContactRequestsMap() : Map<Identifier, ContactRequest> {
+    fun getSentContactRequestsMap(): Map<Identifier, ContactRequest> {
         return getSentContactRequests().associateBy({ it.toUserId }, { it })
     }
 
-    fun getRecievedContactRequestsMap() : Map<Identifier, ContactRequest> {
+    fun getRecievedContactRequestsMap(): Map<Identifier, ContactRequest> {
         return getRecievedContactRequests().associateBy({ it.ownerId }, { it })
     }
 
-    fun getContactIdentities() : Set<Identifier> {
+    fun getContactIdentities(): Set<Identifier> {
         val result = hashSetOf<Identifier>()
         getRecievedContactRequests().forEach {
             result.add(it.ownerId)
@@ -88,7 +91,6 @@ class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: 
                 return
             }
 
-
             if (blockchainIdentity.registrationStatus != BlockchainIdentity.RegistrationStatus.REGISTERED) {
                 log.info("update contacts not completed username registration/recovery is not complete")
                 return
@@ -107,12 +109,14 @@ class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: 
             Context.propagate(wallet.context)
             var encryptionKey: KeyParameter? = null
 
-            var lastContactRequestTime = if (contactRequests.size > 0)
+            var lastContactRequestTime = if (contactRequests.size > 0) {
                 getContactRequestLastTimestamp() - (60 * 1000) * 12
-            else 0L
+            } else {
+                0L
+            }
 
             updatingContacts.set(true)
-            //checkDatabaseIntegrity()
+            // checkDatabaseIntegrity()
 
             // Get all out our contact requests
             val toContactDocuments = ContactRequests(platform).get(userId, toUserId = false, afterTime = lastContactRequestTime, retrieveAll = true)
@@ -167,7 +171,7 @@ class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: 
                 peerGroup?.recalculateFastCatchupAndFilter(PeerGroup.FilterRecalculateMode.SEND_IF_CHANGED)
             }
 
-            //obtain profiles from new contacts
+            // obtain profiles from new contacts
             if (userIdList.isNotEmpty()) {
                 updateContactProfiles(userIdList.toList(), 0L)
             }
@@ -177,7 +181,7 @@ class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: 
 
             // fire listeners if there were new contacts
             if (fromContactDocuments.isNotEmpty() || toContactDocuments.isNotEmpty()) {
-            //    fireContactsUpdatedListeners()
+                //    fireContactsUpdatedListeners()
             }
 
             log.info("updating contacts and profiles took $watch")
@@ -193,7 +197,7 @@ class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: 
         }
     }
 
-    fun getEstablishedContacts() : List<Contact> {
+    fun getEstablishedContacts(): List<Contact> {
         val establishedContacts = arrayListOf<Contact>()
         val sentRequests = getSentContactRequestsMap()
         val receivedRequests = getRecievedContactRequestsMap()
@@ -245,7 +249,7 @@ class DashPayWallet (val blockchainIdentity: BlockchainIdentity, val peerGroup: 
         if (userIdList.isNotEmpty()) {
             val identifierList = userIdList.map { Identifier.from(it) }
             val profileDocuments =
-                Profiles(platform).getList(identifierList, lastContactRequestTime) //only handles 100 userIds
+                Profiles(platform).getList(identifierList, lastContactRequestTime) // only handles 100 userIds
             val profileById = profileDocuments.associateBy({ it.ownerId }, { it })
 
             val nameDocuments = platform.names.getList(identifierList)

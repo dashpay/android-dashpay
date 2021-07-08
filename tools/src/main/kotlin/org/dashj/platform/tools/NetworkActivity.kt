@@ -8,14 +8,14 @@ package org.dashj.platform.tools
 
 import org.dashevo.Client
 import org.dashevo.client.ClientOptions
+import org.dashevo.platform.Documents
+import org.dashevo.platform.Names
+import org.dashevo.platform.Platform
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dashpay.ContactRequest
 import org.dashj.platform.dashpay.ContactRequests
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.identifier.Identifier
-import org.dashevo.platform.Documents
-import org.dashevo.platform.Names
-import org.dashevo.platform.Platform
 
 class NetworkActivity {
     companion object {
@@ -38,7 +38,6 @@ class NetworkActivity {
         }
 
         private fun getNetworkActivity() {
-
             val nameDocuments = getNameDocuments()
             val contactRequests = getContactRequests()
             val establishedContacts = getEstablishedContacts(contactRequests)
@@ -52,13 +51,12 @@ class NetworkActivity {
             println("Registered usernames (.dash): ${nameDocuments.size}")
             println("Contact Requests:             ${contactRequests.size} [all sent] ")
             println("Established Contacts:         ${establishedContacts.size} [both sent and accepted]")
-            println("Average Contacts per user:    ${"%.2f".format(establishedContacts.size.toDouble()/nameDocuments.size)}")
+            println("Average Contacts per user:    ${"%.2f".format(establishedContacts.size.toDouble() / nameDocuments.size)}")
 
             println("--------------------------------------------")
             val identities = getIdentitiesWithoutUsernames(nameDocuments, contactRequests)
             println("Identities without usernames: ${identities.size}")
             println("                            : $identities")
-
         }
 
         fun getIdentityForName(nameDocument: Document): Identifier {
@@ -71,13 +69,13 @@ class NetworkActivity {
         }
 
         private fun getIdentitiesWithoutUsernames(nameDocuments: List<Document>, contactRequests: List<ContactRequest>): List<Identifier> {
-            val contactRequestByOwnerId = contactRequests.associateBy({it.ownerId}, {it})
-            val namesByOwnerId = nameDocuments.associateBy({ getIdentityForName(it) }, {it})
+            val contactRequestByOwnerId = contactRequests.associateBy({ it.ownerId }, { it })
+            val namesByOwnerId = nameDocuments.associateBy({ getIdentityForName(it) }, { it })
 
             return contactRequestByOwnerId.filter { !namesByOwnerId.contains(it.key) }.map { it.key }
         }
 
-        //TODO: This could use Documents.getAll
+        // TODO: This could use Documents.getAll
         private fun getAllDocuments(contractDocument: String): List<Document> {
             var startAt = 0
             var documents: List<Document>? = null
@@ -97,7 +95,7 @@ class NetworkActivity {
                     startAt += Documents.DOCUMENT_LIMIT
                 } catch (e: Exception) {
                     println("\nError retrieving results (startAt =  $startAt)")
-                    println(e.message);
+                    println(e.message)
                 }
             } while (requests == 0 || documents!!.size >= 100)
 
@@ -109,28 +107,29 @@ class NetworkActivity {
             val nameDocuments = arrayListOf<Document>()
 
             allNameDocuments.forEach {
-                if (it.data["normalizedParentDomainName"] == "dash")
+                if (it.data["normalizedParentDomainName"] == "dash") {
                     nameDocuments.add(it)
+                }
             }
 
             return nameDocuments
         }
 
         private fun getContactRequests(): List<ContactRequest> {
-            val allDocuments = getAllDocuments(ContactRequests.CONTACTREQUEST_DOCUMENT);
+            val allDocuments = getAllDocuments(ContactRequests.CONTACTREQUEST_DOCUMENT)
             return allDocuments.map { ContactRequest(it) }
         }
 
-        private fun getEstablishedContacts(contactRequests: List<ContactRequest>) :List<Pair<ContactRequest, ContactRequest>> {
+        private fun getEstablishedContacts(contactRequests: List<ContactRequest>): List<Pair<ContactRequest, ContactRequest>> {
             val establishedContacts = arrayListOf<Pair<ContactRequest, ContactRequest>>()
-            val contactsRequestByOwnerId = contactRequests.associateBy({it.ownerId}, {it})
+            val contactsRequestByOwnerId = contactRequests.associateBy({ it.ownerId }, { it })
             val ownerIds = contactsRequestByOwnerId.keys
-            val contactRequestsByToUserId = contactRequests.associateBy({it.toUserId}, {it})
+            val contactRequestsByToUserId = contactRequests.associateBy({ it.toUserId }, { it })
 
             for (sentContactRequest in contactRequests) {
                 val sender = sentContactRequest.ownerId
                 val recipient = sentContactRequest.toUserId
-                val receivedContactRequest = contactRequests.find { it.toUserId == sender && it.ownerId == recipient}
+                val receivedContactRequest = contactRequests.find { it.toUserId == sender && it.ownerId == recipient }
                 if (receivedContactRequest != null) {
                     val contact = Pair(sentContactRequest, receivedContactRequest)
                     establishedContacts.add(contact)

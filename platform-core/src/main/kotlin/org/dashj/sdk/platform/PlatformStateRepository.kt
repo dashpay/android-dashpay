@@ -28,17 +28,17 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
     private val preorderSalts = hashMapOf<Sha256Hash, Sha256Hash>()
 
     override fun fetchDataContract(id: Identifier): DataContract? {
-        if (contractsMap.containsKey(id))
+        if (contractsMap.containsKey(id)) {
             return contractsMap[id]
-
+        }
         val contractInfo = platform.apps.values.find { it.contractId == id }
-        if (contractInfo?.contract != null)
+        if (contractInfo?.contract != null) {
             return contractInfo.contract
-
+        }
         val contract = platform.contracts.get(id)
-        if (contract != null)
+        if (contract != null) {
             storeDataContract(contract)
-
+        }
         return contract
     }
 
@@ -47,7 +47,7 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
     }
 
     override fun fetchTransaction(id: String): Transaction? {
-        val txData = platform.client.getTransaction(id)?: return null
+        val txData = platform.client.getTransaction(id) ?: return null
         return Transaction(null, txData.toByteArray())
     }
 
@@ -64,8 +64,9 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
     }
 
     override fun storeDataContract(dataContract: DataContract) {
-        if (!contractsMap.containsKey(dataContract.id))
+        if (!contractsMap.containsKey(dataContract.id)) {
             contractsMap[dataContract.id] = dataContract
+        }
     }
 
     override fun storeDocument(document: Document) {
@@ -73,8 +74,9 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
     }
 
     override fun storeIdentity(identity: Identity) {
-        if (!identityMap.containsKey(identity.id))
+        if (!identityMap.containsKey(identity.id)) {
             identityMap[identity.id]
+        }
     }
 
     override fun storeIdentityPublicKeyHashes(identifier: Identifier, publicKeyHashes: List<ByteArray>) {
@@ -82,13 +84,14 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
     }
 
     override fun verifyInstantLock(instantLock: InstantSendLock): Boolean {
-        //TODO: can we do anything here?
+        // TODO: can we do anything here?
         return false
     }
 
     override fun fetchIdentity(id: Identifier): Identity? {
-        if (identityMap.containsKey(id))
+        if (identityMap.containsKey(id)) {
             return identityMap[id]
+        }
 
         val identity = platform.identities.get(id)
 

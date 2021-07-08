@@ -5,12 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 import com.google.common.io.BaseEncoding
-import io.grpc.StatusRuntimeException
-import org.bitcoinj.core.ECKey
-import org.bitcoinj.core.Utils
-import org.bitcoinj.params.EvoNetParams
-import org.dashj.platform.dpp.identifier.Identifier
-import org.dashevo.platform.Platform
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -77,9 +71,8 @@ purpose: UNKNOWN
         val googleop = BaseEncoding.base64().omitPadding().decode(sig)
 
         val b = bouncy
-        //val bouncy64 =
-            assertEquals(bouncy64(b), google64(b))
-            assertEquals(bouncy64(b), google64op(b))
-
+        // val bouncy64 =
+        assertEquals(bouncy64(b), google64(b))
+        assertEquals(bouncy64(b), google64op(b))
     }
 }

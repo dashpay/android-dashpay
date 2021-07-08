@@ -6,17 +6,17 @@
  */
 package org.dashj.platform.examples
 
+import java.util.Date
+import kotlin.random.Random
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.DeterministicKeyChain
 import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.KeyChainGroup
 import org.bitcoinj.wallet.Wallet
 import org.dashevo.Client
-import org.dashj.platform.dashpay.BlockchainIdentity
 import org.dashevo.client.ClientOptions
+import org.dashj.platform.dashpay.BlockchainIdentity
 import org.json.JSONObject
-import java.util.*
-import kotlin.random.Random
 
 class UpdateProfile {
     companion object {
@@ -38,16 +38,19 @@ class UpdateProfile {
         fun updateProfile() {
             val platform = sdk.platform
 
-            val wallet = Wallet(platform.params,
+            val wallet = Wallet(
+                platform.params,
                 KeyChainGroup.builder(platform.params)
-                    .addChain(DeterministicKeyChain.builder()
-                        .accountPath(DerivationPathFactory.get(platform.params).bip44DerivationPath(0))
-                        .seed(DeterministicSeed(DefaultIdentity(platform.params).seed, null, "", Date().time))
-                        .build())
-                    .build())
+                    .addChain(
+                        DeterministicKeyChain.builder()
+                            .accountPath(DerivationPathFactory.get(platform.params).bip44DerivationPath(0))
+                            .seed(DeterministicSeed(DefaultIdentity(platform.params).seed, null, "", Date().time))
+                            .build()
+                    )
+                    .build()
+            )
 
             wallet.initializeAuthenticationKeyChains(wallet.keyChainSeed, null)
-
 
             val blockchainIdentity = BlockchainIdentity(platform, 0, wallet)
             blockchainIdentity.recoverIdentity(wallet.blockchainIdentityKeyChain.watchingKey.pubKeyHash)
@@ -60,7 +63,6 @@ class UpdateProfile {
 
             println("Current Profile: ----------------------")
             println(JSONObject(currentProfile.toJSON()).toString(2))
-
 
             println("Updated Profile: ----------------------")
             println(JSONObject(updatedProfile.toJSON()).toString(2))

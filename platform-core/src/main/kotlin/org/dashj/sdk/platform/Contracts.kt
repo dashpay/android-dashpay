@@ -14,7 +14,6 @@ import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.*
 
 class Contracts(val platform: Platform) {
 
@@ -22,12 +21,12 @@ class Contracts(val platform: Platform) {
         private val log: Logger = LoggerFactory.getLogger(Contracts::class.java)
     }
 
-    fun broadcast(dataContract: DataContract, identity: Identity, privateKey: ECKey, index: Int) : DataContractCreateTransition {
-        val  dataContractCreateTransition = platform.dpp.dataContract.createStateTransition(dataContract);
+    fun broadcast(dataContract: DataContract, identity: Identity, privateKey: ECKey, index: Int): DataContractCreateTransition {
+        val dataContractCreateTransition = platform.dpp.dataContract.createStateTransition(dataContract)
 
         platform.broadcastStateTransition(dataContractCreateTransition, identity, privateKey, index)
 
-        return dataContractCreateTransition;
+        return dataContractCreateTransition
     }
 
     fun create(documentDefinitions: MutableMap<String, Any?>, identity: Identity): DataContract {
@@ -39,7 +38,7 @@ class Contracts(val platform: Platform) {
     }
 
     fun get(identifier: Identifier): DataContract? {
-        var localContract: ClientAppDefinition? = null;
+        var localContract: ClientAppDefinition? = null
 
         for (appName in platform.apps.keys) {
             val app = platform.apps[appName]
@@ -50,7 +49,7 @@ class Contracts(val platform: Platform) {
         }
 
         if (localContract?.contract != null) {
-            return localContract.contract;
+            return localContract.contract
         } else {
             try {
                 val rawContract = platform.client.getDataContract(identifier.toBuffer(), platform.contractsRetryCallback) ?: return null
@@ -63,12 +62,11 @@ class Contracts(val platform: Platform) {
                 } else {
                     localContract.contract = contract
                 }
-                return contract;
+                return contract
             } catch (e: Exception) {
                 log.error("Failed to get dataContract: $e")
                 throw e
             }
-
         }
     }
 }

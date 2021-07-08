@@ -1,17 +1,15 @@
 package org.dashj.platform.dashpay
 
-
+import java.util.Timer
+import kotlin.concurrent.timerTask
 import org.bouncycastle.crypto.params.KeyParameter
+import org.dashevo.platform.Documents
+import org.dashevo.platform.Platform
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dashpay.callback.SendContactRequestCallback
 import org.dashj.platform.dpp.document.Document
-import org.dashj.platform.dpp.identity.Identity
 import org.dashj.platform.dpp.identifier.Identifier
-import org.dashevo.platform.Documents
-import org.dashevo.platform.Platform
-import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.concurrent.timerTask
+import org.dashj.platform.dpp.identity.Identity
 
 class ContactRequests(val platform: Platform) {
 
@@ -90,14 +88,14 @@ class ContactRequests(val platform: Platform) {
     ): List<Document> {
         val documentQuery = DocumentQuery.Builder()
 
-        if (toUserId)
+        if (toUserId) {
             documentQuery.where(listOf("toUserId", "==", userId))
-        else
+        } else {
             documentQuery.where(listOf("\$ownerId", "==", userId))
-
-        if (afterTime > 0)
+        }
+        if (afterTime > 0) {
             documentQuery.where(listOf("\$createdAt", ">", afterTime))
-
+        }
         if (retrieveAll) {
             documentQuery.limit(-1)
         } else {
@@ -106,7 +104,8 @@ class ContactRequests(val platform: Platform) {
 
         return platform.documents.getAll(
             CONTACTREQUEST_DOCUMENT,
-            documentQuery.startAt(startAt).build())
+            documentQuery.startAt(startAt).build()
+        )
     }
 
     suspend fun watchContactRequest(
@@ -149,19 +148,21 @@ class ContactRequests(val platform: Platform) {
             .where("toUserId", "==", toUserId)
         val result = platform.documents.get(CONTACTREQUEST_DOCUMENT, documentQuery.build())
 
-
         if (result.isNotEmpty()) {
             callback.onComplete(fromUserId, toUserId)
         } else {
             if (retryCount > 0) {
-                Timer("monitorSendContactRequestStatus", false).schedule(timerTask {
-                    val nextDelay = delayMillis * when (retryDelayType) {
-                        RetryDelayType.SLOW20 -> 5 / 4
-                        RetryDelayType.SLOW50 -> 3 / 2
-                        else -> 1
-                    }
-                    watchContactRequest(fromUserId, toUserId, retryCount - 1, nextDelay, retryDelayType, callback)
-                }, delayMillis)
+                Timer("monitorSendContactRequestStatus", false).schedule(
+                    timerTask {
+                        val nextDelay = delayMillis * when (retryDelayType) {
+                            RetryDelayType.SLOW20 -> 5 / 4
+                            RetryDelayType.SLOW50 -> 3 / 2
+                            else -> 1
+                        }
+                        watchContactRequest(fromUserId, toUserId, retryCount - 1, nextDelay, retryDelayType, callback)
+                    },
+                    delayMillis
+                )
             } else callback.onTimeout(fromUserId, toUserId)
         }
     }

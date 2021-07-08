@@ -6,13 +6,13 @@
  */
 package org.dashj.platform.examples
 
+import java.lang.Thread.sleep
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.quorums.InstantSendLock
 import org.dashevo.Client
-import org.dashj.platform.dpp.identity.IdentityPublicKey
 import org.dashevo.client.ClientOptions
+import org.dashj.platform.dpp.identity.IdentityPublicKey
 import org.json.JSONObject
-import java.lang.Thread.sleep
 
 class CreateIdentity {
     companion object {
@@ -35,22 +35,28 @@ class CreateIdentity {
 
                 if (identity == null) {
                     // only create the identity if it does not exist
-                    platform.identities.register(cftx, islock, listOf(IdentityPublicKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1,
-                        DefaultIdentity.publicKey
-                    )))
+                    platform.identities.register(
+                        cftx, islock,
+                        listOf(
+                            IdentityPublicKey(
+                                0, IdentityPublicKey.TYPES.ECDSA_SECP256K1,
+                                DefaultIdentity.publicKey
+                            )
+                        )
+                    )
                     sleep(10000)
                     identity = platform.identities.get(cftx.creditBurnIdentityIdentifier.toString())
                 }
 
                 // check that the identity public key matches our public key information
-                if (identity!!.publicKeys[0].data.contentEquals(DefaultIdentity.publicKey))
+                if (identity!!.publicKeys[0].data.contentEquals(DefaultIdentity.publicKey)) {
                     println("Identity public key verified")
+                }
 
                 // display information
                 println("Identity Created: ${cftx.creditBurnIdentityIdentifier.toStringBase58()}")
                 println(JSONObject(identity!!.toJSON()).toString(2))
                 println("Private Key: ${DefaultIdentity.privateKeyHex} (hex)")
-
             } catch (e: Exception) {
                 println(e.localizedMessage)
             }

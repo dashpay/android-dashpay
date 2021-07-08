@@ -7,10 +7,10 @@
 package org.dashj.platform.examples
 
 import org.dashevo.Client
-import org.dashj.platform.dapiclient.model.DocumentQuery
-import org.dashj.platform.dpp.document.Document
 import org.dashevo.client.ClientOptions
 import org.dashevo.platform.Documents
+import org.dashj.platform.dapiclient.model.DocumentQuery
+import org.dashj.platform.dpp.document.Document
 
 class RegisteredNames {
     companion object {
@@ -41,8 +41,8 @@ class RegisteredNames {
                     for (doc in documents) {
                         println(
                             "Name: %-20s".format(doc.data["label"]) +
-                                    " (domain: " + doc.data["normalizedParentDomainName"] +
-                                    ") Identity: " + doc.ownerId
+                                " (domain: " + doc.data["normalizedParentDomainName"] +
+                                ") Identity: " + doc.ownerId
                         )
                     }
 

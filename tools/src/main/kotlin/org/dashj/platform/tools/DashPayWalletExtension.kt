@@ -2,13 +2,12 @@ package org.dashj.platform.tools
 
 import org.bitcoinj.wallet.Wallet
 import org.bitcoinj.wallet.WalletExtension
-import org.dashj.platform.dashpay.BlockchainIdentity
 
 class DashPayWalletExtension : WalletExtension {
     companion object {
         const val NAME = "org.dashevo.dashpay.DashPayWalletExtension"
     }
-    //val blockchainIdentity: BlockchainIdentity
+    // val blockchainIdentity: BlockchainIdentity
     override fun deserializeWalletExtension(containingWallet: Wallet?, data: ByteArray?) {
         TODO("Not yet implemented")
     }

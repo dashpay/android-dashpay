@@ -3,7 +3,6 @@ package org.dashevo.platform
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Transaction
 import org.dashj.platform.dapiclient.model.DocumentQuery
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test

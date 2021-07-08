@@ -10,12 +10,15 @@ import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.params.MobileDevNetParams
 import org.bitcoinj.params.PalinkaDevNetParams
 import org.bitcoinj.params.TestNet3Params
-import org.bitcoinj.wallet.*
-import org.dashevo.client.ClientAppDefinition
+import org.bitcoinj.wallet.DerivationPathFactory
+import org.bitcoinj.wallet.DeterministicKeyChain
+import org.bitcoinj.wallet.DeterministicSeed
+import org.bitcoinj.wallet.KeyChainGroup
+import org.bitcoinj.wallet.Wallet
 import org.dashevo.client.ClientApps
 import org.dashevo.client.ClientOptions
-import org.dashj.platform.dapiclient.DapiClient
 import org.dashevo.platform.Platform
+import org.dashj.platform.dapiclient.DapiClient
 
 class Client(private val clientOptions: ClientOptions) {
     val params = when (clientOptions.network) {
@@ -33,7 +36,7 @@ class Client(private val clientOptions: ClientOptions) {
     val apps: ClientApps
         get() = ClientApps(platform.apps)
 
-    var wallet : Wallet? = null
+    var wallet: Wallet? = null
 
     init {
         val needWallet = clientOptions.walletOptions != null
@@ -50,9 +53,9 @@ class Client(private val clientOptions: ClientOptions) {
             val chainBuilder = DeterministicKeyChain.builder()
                 .accountPath(DerivationPathFactory.get(platform.params).bip44DerivationPath(clientOptions.walletAccountIndex))
 
-            if (seed != null)
+            if (seed != null) {
                 chainBuilder.seed(seed)
-
+            }
             wallet = Wallet(
                 platform.params,
                 KeyChainGroup.builder(platform.params)
@@ -64,7 +67,7 @@ class Client(private val clientOptions: ClientOptions) {
         }
 
         // Create the DapiClient with parameters
-        platform.client  = when {
+        platform.client = when {
             clientOptions.dapiAddressListProvider != null -> {
                 DapiClient(clientOptions.dapiAddressListProvider, clientOptions.timeout, clientOptions.retries, clientOptions.banBaseTime)
             }

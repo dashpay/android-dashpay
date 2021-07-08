@@ -11,8 +11,8 @@ import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.KeyChainGroup
 import org.bitcoinj.wallet.Wallet
 import org.dashevo.Client
-import org.dashj.platform.dpp.toHexString
 import org.dashevo.client.ClientOptions
+import org.dashj.platform.dpp.toHexString
 
 class GetIdentityFromSeed {
     companion object {
@@ -28,7 +28,7 @@ class GetIdentityFromSeed {
             sdk = Client(ClientOptions(network = args[0]))
             if (args.size > 1) {
                 for (i in 0 until args.size - 1) {
-                    wordlist.add(args[i+1])
+                    wordlist.add(args[i + 1])
                 }
             }
             getIdentityFromSeed()

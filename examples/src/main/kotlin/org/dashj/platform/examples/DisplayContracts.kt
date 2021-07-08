@@ -35,7 +35,7 @@ class DisplayContracts {
                     println(JSONObject(contract.toJSON()).toString(2))
                 } catch (e: Exception) {
                     println("\nError retrieving results for app:${app.key}")
-                    println(e.message);
+                    println(e.message)
                 }
             }
         }

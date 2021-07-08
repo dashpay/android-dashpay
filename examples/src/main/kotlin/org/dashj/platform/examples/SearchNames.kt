@@ -6,8 +6,13 @@
  */
 package org.dashj.platform.examples
 
+import java.util.Scanner
 import org.bitcoinj.core.Coin
 import org.dashevo.Client
+import org.dashevo.client.ClientOptions
+import org.dashevo.platform.Documents
+import org.dashevo.platform.DomainDocument
+import org.dashevo.platform.Names
 import org.dashj.platform.dashpay.ContactRequest
 import org.dashj.platform.dashpay.ContactRequests
 import org.dashj.platform.dashpay.Profile
@@ -15,12 +20,6 @@ import org.dashj.platform.dashpay.Profiles
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
 import org.dashj.platform.dpp.util.CreditsConverter
-import org.dashevo.client.ClientOptions
-import org.dashevo.platform.Documents
-import org.dashevo.platform.DomainDocument
-import org.dashevo.platform.Names
-import java.util.*
-
 
 class SearchNames {
     companion object {
@@ -53,7 +52,7 @@ class SearchNames {
             val identities = hashMapOf<Identifier, Identity>()
             val contactRequests = hashMapOf<Identifier, List<ContactRequest>>()
             var requests = 0
-            var transitionCount = 3 //identity + preorder + domain
+            var transitionCount = 3 // identity + preorder + domain
             do {
                 try {
                     val results = platform.names.search(text, Names.DEFAULT_PARENT_DOMAIN, false, startAtIndex = startAt)
@@ -87,12 +86,11 @@ class SearchNames {
                 }
             } while (requests == 0 || documents!!.size >= Documents.DOCUMENT_LIMIT)
 
-
             for (doc in documents) {
                 println(
                     "Name: " + doc.value.label +
-                            " (domain: " + doc.value.normalizedParentDomainName +
-                            ") Identity: " + doc.value.ownerId
+                        " (domain: " + doc.value.normalizedParentDomainName +
+                        ") Identity: " + doc.value.ownerId
                 )
 
                 if (profiles.containsKey(doc.key)) {

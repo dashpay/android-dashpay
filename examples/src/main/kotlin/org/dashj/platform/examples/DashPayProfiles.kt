@@ -7,10 +7,10 @@
 package org.dashj.platform.examples
 
 import org.dashevo.Client
-import org.dashj.platform.dapiclient.model.DocumentQuery
-import org.dashj.platform.dpp.document.Document
 import org.dashevo.client.ClientOptions
 import org.dashevo.platform.Documents
+import org.dashj.platform.dapiclient.model.DocumentQuery
+import org.dashj.platform.dpp.document.Document
 import org.json.JSONObject
 
 class DashPayProfiles {
@@ -40,13 +40,13 @@ class DashPayProfiles {
                 try {
                     documents = platform.documents.get("dashpay.profile", queryOpts)
 
-                    requests += 1;
+                    requests += 1
 
                     for (doc in documents) {
                         println(
                             "displayName: " + doc.data["displayName"] +
-                                    " (avatar: " + doc.data["avatarUrl"] +
-                                    ") Identity: " + doc.ownerId
+                                " (avatar: " + doc.data["avatarUrl"] +
+                                ") Identity: " + doc.ownerId
                         )
                         println("-> publicMessage: " + doc.data["publicMessage"])
                         println()
@@ -54,7 +54,7 @@ class DashPayProfiles {
                         println("------------------------------------------------------------")
                     }
 
-                    startAt += Documents.DOCUMENT_LIMIT;
+                    startAt += Documents.DOCUMENT_LIMIT
                 } catch (e: Exception) {
                     println("\nError retrieving results (startAt =  $startAt)")
                     println(e.message)

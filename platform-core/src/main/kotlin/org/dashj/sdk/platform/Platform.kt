@@ -9,6 +9,7 @@ package org.dashevo.platform
 import com.google.common.base.Stopwatch
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
+import kotlin.collections.HashMap
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Sha256Hash
@@ -18,20 +19,18 @@ import org.bitcoinj.params.MobileDevNetParams
 import org.bitcoinj.params.PalinkaDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.dashevo.client.ClientAppDefinition
+import org.dashevo.platform.multicall.MulticallException
 import org.dashj.platform.dapiclient.DapiClient
 import org.dashj.platform.dapiclient.MaxRetriesReachedException
 import org.dashj.platform.dapiclient.NoAvailableAddressesForRetryException
-import org.dashj.platform.dapiclient.grpc.*
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dpp.DashPlatformProtocol
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
 import org.dashj.platform.dpp.statetransition.StateTransitionIdentitySigned
 import org.dashj.platform.dpp.util.Entropy
-import org.dashevo.platform.multicall.MulticallException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import kotlin.collections.HashMap
 
 class Platform(val params: NetworkParameters) {
 
@@ -80,31 +79,31 @@ class Platform(val params: NetworkParameters) {
                 apps["featureFlags"] = ClientAppDefinition("4CTBQw6eJK9Kg7k4F4v6U1RPMtkfCoPbQzUJDCi85pQb")
                 client = DapiClient(TestNet3Params.MASTERNODES.toList())
                 permanentBanList = listOf(
-                    "45.48.168.16",   // unavailable
+                    "45.48.168.16", // unavailable
                     "34.214.102.160", // no dashpay contract
                     "174.34.233.98",
                     "174.34.233.119", // unavailable
                     "174.34.233.133", // unavailable
                     "174.34.233.134", // unavailable
-                    "52.11.252.174",  // no dashpay contract
+                    "52.11.252.174", // no dashpay contract
                     "34.209.124.112", // no dashpay contract
                     "174.34.233.118", // unavailable
                     "174.34.233.120", // unavailable
                     "178.62.203.249", // unavailable
                     "60.205.218.5",
                     "51.68.175.79",
-                    "80.208.231.9",   // no dashpay contract
+                    "80.208.231.9", // no dashpay contract
                     "206.189.147.240", // unavailable
-                    "178.62.203.249",  // unavailable
-                    "35.164.180.39",   // no dashpay contract
-                    "80.209.231.29",   // no dashpay contract
-                    "80.208.228.172",  // no dashpay contract
-                    "34.208.190.130",  // no dashpay contract
-                    "174.34.233.117",  // no dashpay contract
-                    "174.34.233.127",  // no dashpay contract
+                    "178.62.203.249", // unavailable
+                    "35.164.180.39", // no dashpay contract
+                    "80.209.231.29", // no dashpay contract
+                    "80.208.228.172", // no dashpay contract
+                    "34.208.190.130", // no dashpay contract
+                    "174.34.233.117", // no dashpay contract
+                    "174.34.233.127", // no dashpay contract
                     "143.110.156.147", // no dashpay contract
-                    "174.34.233.121",  // no dashpay contract
-                    "174.34.233.132"   // no waitForStateTransitionResult, no dashpay contract
+                    "174.34.233.121", // no dashpay contract
+                    "174.34.233.132" // no waitForStateTransitionResult, no dashpay contract
                 )
             }
             params.id.contains("evonet") -> {
@@ -121,13 +120,13 @@ class Platform(val params: NetworkParameters) {
                 apps["dpns"] = ClientAppDefinition("9mdK1irvadi6ibMsxvkpVR4vxEvABf8Bx9QQ1GD495um")
                 apps["dashpay"] = ClientAppDefinition("DGTXxC9Rv3yfjciT9XSQowiLEiw5cMqGTH2ZgoL2MpB5")
                 apps["featureFlags"] = ClientAppDefinition("9AQ68hQjeHJy1QmMRgWSaCaNrkEQzx7Xv6BNi9d4NtCg")
-                //apps["thumbnail"] = ClientAppDefinition("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
+                // apps["thumbnail"] = ClientAppDefinition("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
                 client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList())
             }
         }
     }
 
-    fun getAppList() : List<Identifier> {
+    fun getAppList(): List<Identifier> {
         return apps.map { it.value.contractId }
     }
 
@@ -143,7 +142,7 @@ class Platform(val params: NetworkParameters) {
     }
 
     fun broadcastStateTransition(signedStateTransition: StateTransitionIdentitySigned) {
-        //TODO: validate transition structure here
+        // TODO: validate transition structure here
         client.broadcastStateTransitionAndWait(signedStateTransition, retryCallback = broadcastRetryCallback)
     }
 
@@ -231,15 +230,15 @@ class Platform(val params: NetworkParameters) {
 
             // check getIdentity
             if (fullTest) {
-                identities.get(Identifier.from(Entropy.generate())) //this should return null
+                identities.get(Identifier.from(Entropy.generate())) // this should return null
             }
 
             try {
                 if (fullTest) {
                     val response = client.getStatus()
                     response!!.network.peerCount > 0 &&
-                            /*response.errors.isBlank() &&*/
-                            params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.MINIMUM) <= response.version.protocolVersion
+                        /*response.errors.isBlank() &&*/
+                        params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.MINIMUM) <= response.version.protocolVersion
                 }
                 log.info("platform check: $watch")
                 true

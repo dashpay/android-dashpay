@@ -77,7 +77,7 @@ class ClientOptions(
         fun baseBanTime(banBaseTime: Int) = apply {
             this.banBaseTime = banBaseTime
         }
-        fun build() : ClientOptions {
+        fun build(): ClientOptions {
             return ClientOptions(apps, walletOptions, walletAccountIndex, network, seeds, dapiAddressListProvider, dapiAddresses, timeout, retries, banBaseTime)
         }
     }

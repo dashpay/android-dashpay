@@ -2,10 +2,12 @@ package org.dashevo.platform.multicall
 
 import org.slf4j.LoggerFactory
 
-class MulticallListQuery<T>(method: MulticallMethod<List<T>>,
-                            callType: MulticallQuery.Companion.CallType,
-                            callsToMake: Int = 3,
-                            requiredSuccessRate:Double = 0.51):
+class MulticallListQuery<T>(
+    method: MulticallMethod<List<T>>,
+    callType: MulticallQuery.Companion.CallType,
+    callsToMake: Int = 3,
+    requiredSuccessRate: Double = 0.51
+) :
     MulticallQuery<List<T>>(method, callType, callsToMake, requiredSuccessRate) {
 
     companion object {
@@ -30,7 +32,7 @@ class MulticallListQuery<T>(method: MulticallMethod<List<T>>,
                 } else {
                     if (results.isEmpty()) {
                         results.add(result)
-                        when(callType) {
+                        when (callType) {
                             MulticallQuery.Companion.CallType.FIRST -> {
                                 log.debug(toString())
                                 return MulticallQuery.Companion.Status.FOUND
@@ -78,7 +80,7 @@ class MulticallListQuery<T>(method: MulticallMethod<List<T>>,
     }
 
     override fun getResult(): List<T>? {
-        return when(callType) {
+        return when (callType) {
             MulticallQuery.Companion.CallType.UNTIL_FOUND -> results.first()
             MulticallQuery.Companion.CallType.UNANIMOUS -> {
                 if (results.isEmpty()) {
@@ -106,5 +108,4 @@ class MulticallListQuery<T>(method: MulticallMethod<List<T>>,
             }
         }
     }
-
 }

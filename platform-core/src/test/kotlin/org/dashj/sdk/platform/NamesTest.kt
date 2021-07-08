@@ -10,7 +10,7 @@ class NamesTest : PlatformNetwork() {
     @Test
     fun getTest() {
         val label = "x-hash-eng"
-        val ownerId = "CtbiVfTcKFpt5dhmWYHwK9yp1CKR5dci9WdHokYGqyjG";
+        val ownerId = "CtbiVfTcKFpt5dhmWYHwK9yp1CKR5dci9WdHokYGqyjG"
 
         val byLabel = DomainDocument(platform.names.get(label)!!)
         val byResolve = DomainDocument(platform.names.resolve("$label.${Names.DEFAULT_PARENT_DOMAIN}")!!)
@@ -49,7 +49,7 @@ class NamesTest : PlatformNetwork() {
         assertEquals("username", label)
         assertEquals(Names.DEFAULT_PARENT_DOMAIN, domain)
     }
-    
+
     @Test
     fun getLargeListTest() {
         val userIds = arrayListOf(
@@ -159,7 +159,8 @@ class NamesTest : PlatformNetwork() {
             "HM9iGTQxMrVab3nLkVBneWLnA6hfuxXE8i5BV2t64a3C",
             "3M5KzNS9Azcupw7i3WXt9RDcf64hU4HWJrrHrr7LEuEd",
             "Ez8Pp7ogFsBJGoyF1x5dCidQMd32C7WKSLLLvivZG2Po",
-            "8h4LEvwymMy7hKeUEKyYTomnewjx5SnwUeDHPMGULo4r")
+            "8h4LEvwymMy7hKeUEKyYTomnewjx5SnwUeDHPMGULo4r"
+        )
 
         val list = platform.names.getList(userIds.map { Identifier.from(it) })
         val nameList = list.map { DomainDocument(it) }

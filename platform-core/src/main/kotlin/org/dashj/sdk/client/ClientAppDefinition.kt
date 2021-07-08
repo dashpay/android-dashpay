@@ -15,5 +15,5 @@ data class ClientAppDefinition(
     var contract: DataContract?
 ) {
     constructor(contractId: String, contract: DataContract? = null) :
-            this(Identifier.from(contractId), contract)
+    this(Identifier.from(contractId), contract)
 }

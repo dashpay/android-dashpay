@@ -7,15 +7,17 @@
 
 package org.dashj.platform.dashpay
 
+import java.util.Date
+import kotlin.collections.HashMap
 import org.bitcoinj.core.ECKey
-import org.dashj.platform.dapiclient.model.DocumentQuery
-import org.dashj.platform.dpp.document.*
-import org.dashj.platform.dpp.identifier.Identifier
-import org.dashj.platform.dpp.identity.Identity
 import org.dashevo.platform.Documents
 import org.dashevo.platform.Platform
-import java.util.*
-import kotlin.collections.HashMap
+import org.dashj.platform.dapiclient.model.DocumentQuery
+import org.dashj.platform.dpp.document.Document
+import org.dashj.platform.dpp.document.DocumentCreateTransition
+import org.dashj.platform.dpp.document.DocumentsBatchTransition
+import org.dashj.platform.dpp.identifier.Identifier
+import org.dashj.platform.dpp.identity.Identity
 
 class Profiles(
     val platform: Platform
@@ -34,7 +36,7 @@ class Profiles(
         identity: Identity,
         id: Int,
         signingKey: ECKey
-    ) : Document {
+    ): Document {
         val profileDocument = createProfileDocument(displayName, publicMessage, avatarUrl, avatarHash, avatarFingerprint, identity)
         profileDocument.createdAt = Date().time
 
@@ -56,7 +58,7 @@ class Profiles(
         identity: Identity,
         id: Int,
         signingKey: ECKey
-    ) : Document {
+    ): Document {
         val currentProfile = get(identity.id)
 
         val profileData = hashMapOf<String, Any?>()
@@ -83,8 +85,8 @@ class Profiles(
         transitionMap: HashMap<String, List<Document>>,
         identity: Identity,
         id: Int,
-        signingKey: ECKey,
-    ) : DocumentsBatchTransition {
+        signingKey: ECKey
+    ): DocumentsBatchTransition {
         val profileStateTransition =
             platform.dpp.document.createStateTransition(transitionMap)
         profileStateTransition.sign(identity.getPublicKeyById(id)!!, signingKey.privateKeyAsHex)
@@ -142,7 +144,6 @@ class Profiles(
         }
     }
 
-
     /**
      * Returns all profiles associated with the given identity ids
      *
@@ -157,7 +158,7 @@ class Profiles(
         val documents = ArrayList<Document>()
 
         while (startAt < userIds.size) {
-            val subsetSize = if (startAt + Documents.DOCUMENT_LIMIT > userIds.size ) {
+            val subsetSize = if (startAt + Documents.DOCUMENT_LIMIT > userIds.size) {
                 userIds.size - startAt
             } else {
                 Documents.DOCUMENT_LIMIT

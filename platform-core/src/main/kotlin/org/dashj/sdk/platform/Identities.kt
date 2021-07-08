@@ -45,7 +45,6 @@ class Identities(val platform: Platform) {
         assetLockPrivateKey: ECKey,
         identityPublicKeys: List<IdentityPublicKey>
     ): Identity {
-
         try {
             val assetLock = InstantAssetLockProof(outputIndex, transaction, instantLock)
 
@@ -53,9 +52,9 @@ class Identities(val platform: Platform) {
 
             identityCreateTransition.signByPrivateKey(assetLockPrivateKey)
 
-            platform.broadcastStateTransition(identityCreateTransition);
+            platform.broadcastStateTransition(identityCreateTransition)
 
-            //get the identity from Platform since it cannot be recreated from the transition with the balance, etc
+            // get the identity from Platform since it cannot be recreated from the transition with the balance, etc
             platform.stateRepository.addValidIdentity(identityCreateTransition.identityId)
 
             return Identity(identityCreateTransition.identityId, identityPublicKeys, 0, identityCreateTransition.protocolVersion)
@@ -72,7 +71,6 @@ class Identities(val platform: Platform) {
         assetLockPrivateKey: ECKey,
         identityPublicKeys: List<IdentityPublicKey>
     ): Identity {
-
         try {
             val assetLock = ChainAssetLockProof(coreHeight, transaction.getOutput(outputIndex).outPointFor)
 
@@ -80,9 +78,9 @@ class Identities(val platform: Platform) {
 
             identityCreateTransition.signByPrivateKey(assetLockPrivateKey)
 
-            platform.broadcastStateTransition(identityCreateTransition);
+            platform.broadcastStateTransition(identityCreateTransition)
 
-            //get the identity from Platform since it cannot be recreated from the transition with the balance, etc
+            // get the identity from Platform since it cannot be recreated from the transition with the balance, etc
             platform.stateRepository.addValidIdentity(identityCreateTransition.identityId)
 
             return Identity(identityCreateTransition.identityId, identityPublicKeys, 0, identityCreateTransition.protocolVersion)
@@ -98,12 +96,12 @@ class Identities(val platform: Platform) {
 
     fun get(id: Identifier): Identity? {
         val identityBuffer = platform.client.getIdentity(id.toBuffer(), platform.identitiesRetryCallback) ?: return null
-        return platform.dpp.identity.createFromBuffer(identityBuffer.toByteArray());
+        return platform.dpp.identity.createFromBuffer(identityBuffer.toByteArray())
     }
 
     fun getByPublicKeyHash(pubKeyHash: ByteArray): Identity? {
         val identityBuffer = platform.client.getIdentityByFirstPublicKey(pubKeyHash) ?: return null
-        return platform.dpp.identity.createFromBuffer(identityBuffer.toByteArray());
+        return platform.dpp.identity.createFromBuffer(identityBuffer.toByteArray())
     }
 
     fun topUp(
@@ -127,7 +125,6 @@ class Identities(val platform: Platform) {
         instantLock: InstantSendLock,
         assetLockPrivateKey: ECKey
     ): Boolean {
-
         try {
             val assetLock = InstantAssetLockProof(outputIndex, transaction, instantLock)
 

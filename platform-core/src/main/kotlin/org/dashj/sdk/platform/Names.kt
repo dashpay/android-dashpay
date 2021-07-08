@@ -6,18 +6,18 @@
  */
 package org.dashevo.platform
 
+import java.io.ByteArrayOutputStream
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Sha256Hash
+import org.dashevo.platform.multicall.MulticallQuery
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dpp.document.DataDocumentTransition
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
 import org.dashj.platform.dpp.util.Entropy
-import org.dashevo.platform.multicall.MulticallQuery
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.io.ByteArrayOutputStream
 
 class Names(val platform: Platform) {
 
@@ -53,7 +53,6 @@ class Names(val platform: Platform) {
     }
 
     fun preorder(name: String, identity: Identity, identityHDPrivateKey: ECKey, preOrderSaltRaw: ByteArray): Document? {
-
         val (normalizedParentDomainName, normalizedLabel) = normalizedNames(name)
         val fullDomainName = "$normalizedLabel.$normalizedParentDomainName"
 
@@ -86,7 +85,7 @@ class Names(val platform: Platform) {
         identity: Identity
     ): Document {
         val map = HashMap<String, Any?>(1)
-        map["saltedDomainHash"] = saltedDomainHash.bytes;//.bytes.toBase64()
+        map["saltedDomainHash"] = saltedDomainHash.bytes; // .bytes.toBase64()
 
         val preorderDocument = platform.documents.create(
             DPNS_PREORDER_DOCUMENT,
@@ -160,11 +159,11 @@ class Names(val platform: Platform) {
         preorderSaltBase: ByteArray,
         isUniqueIdentity: Boolean = true
     ): Document {
-        val recordType = if (isUniqueIdentity)
+        val recordType = if (isUniqueIdentity) {
             "dashUniqueIdentityId"
-        else
+        } else {
             "dashAliasIdentityId"
-
+        }
         val records = hashMapOf<String, Any?>(
             recordType to identity.id
         )
@@ -225,7 +224,7 @@ class Names(val platform: Platform) {
      * @param parentDomain String
      * @return Document? The document for the given name or null if the name does not exist
      */
-    fun get(name:String, parentDomain: String): Document? {
+    fun get(name: String, parentDomain: String): Document? {
         return get(name, parentDomain, MulticallQuery.Companion.CallType.FIRST)
     }
 
@@ -301,7 +300,7 @@ class Names(val platform: Platform) {
         return results
     }
 
-    //TODO: getList/getListHelper can be refactored into Documents
+    // TODO: getList/getListHelper can be refactored into Documents
     /**
      * Gets all of the unique usernames associated with a list of userId's
      */
@@ -313,7 +312,7 @@ class Names(val platform: Platform) {
         val documents = ArrayList<Document>()
 
         while (startAt < userIds.size) {
-            val subsetSize = if (startAt + Documents.DOCUMENT_LIMIT > userIds.size ) {
+            val subsetSize = if (startAt + Documents.DOCUMENT_LIMIT > userIds.size) {
                 userIds.size - startAt
             } else {
                 Documents.DOCUMENT_LIMIT
@@ -333,7 +332,7 @@ class Names(val platform: Platform) {
      * @param userIds A list of identity ids that must be limited to 100 in size
      */
     private fun getListHelper(
-        userIds: List<Identifier>,
+        userIds: List<Identifier>
     ): List<Document> {
         val documentQuery = DocumentQuery.Builder()
         documentQuery.whereIn("records.dashUniqueIdentityId", userIds)

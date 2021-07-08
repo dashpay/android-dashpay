@@ -8,8 +8,21 @@ package org.dashj.platform.dashpay
 
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
+import java.io.ByteArrayOutputStream
+import java.util.Date
+import java.util.Timer
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
+import kotlin.concurrent.timerTask
 import kotlinx.coroutines.delay
-import org.bitcoinj.core.*
+import org.bitcoinj.core.Address
+import org.bitcoinj.core.Coin
+import org.bitcoinj.core.ECKey
+import org.bitcoinj.core.NetworkParameters
+import org.bitcoinj.core.Sha256Hash
+import org.bitcoinj.core.Transaction
+import org.bitcoinj.core.TransactionConfidence
+import org.bitcoinj.core.TransactionOutPoint
 import org.bitcoinj.crypto.ChildNumber
 import org.bitcoinj.crypto.DeterministicKey
 import org.bitcoinj.crypto.EncryptedData
@@ -26,6 +39,10 @@ import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
 import org.bitcoinj.wallet.ZeroConfCoinSelector
 import org.bouncycastle.crypto.params.KeyParameter
+import org.dashevo.platform.Names
+import org.dashevo.platform.Platform
+import org.dashevo.platform.multicall.MulticallMethod
+import org.dashevo.platform.multicall.MulticallQuery
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dashpay.callback.RegisterIdentityCallback
 import org.dashj.platform.dashpay.callback.RegisterNameCallback
@@ -42,16 +59,7 @@ import org.dashj.platform.dpp.statetransition.StateTransitionIdentitySigned
 import org.dashj.platform.dpp.toHexString
 import org.dashj.platform.dpp.util.Cbor
 import org.dashj.platform.dpp.util.HashUtils
-import org.dashevo.platform.Names
-import org.dashevo.platform.Platform
-import org.dashevo.platform.multicall.MulticallMethod
-import org.dashevo.platform.multicall.MulticallQuery
 import org.slf4j.LoggerFactory
-import java.io.ByteArrayOutputStream
-import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
-import kotlin.concurrent.timerTask
 
 class BlockchainIdentity {
 
@@ -134,7 +142,7 @@ class BlockchainIdentity {
 
     var index: Int = 0
 
-    //lateinit var usernames: List<String>
+    // lateinit var usernames: List<String>
 
     var currentUsername: String? = null
 
@@ -144,7 +152,7 @@ class BlockchainIdentity {
     val registrationFundingAddress: Address
         get() = Address.fromKey(wallet!!.params, registrationFundingPrivateKey)
 
-    //var dashpayBioString: String
+    // var dashpayBioString: String
 
     lateinit var registrationStatus: RegistrationStatus
 
@@ -169,10 +177,8 @@ class BlockchainIdentity {
     // profile
     var lastProfileDocument: Document? = null
 
-
-
     constructor(platform: Platform, uniqueId: Sha256Hash) : this(platform) {
-        Preconditions.checkArgument(uniqueId != Sha256Hash.ZERO_HASH, "uniqueId must not be zero");
+        Preconditions.checkArgument(uniqueId != Sha256Hash.ZERO_HASH, "uniqueId must not be zero")
         this.uniqueId = uniqueId
         this.isLocal = false
         this.keysCreated = 0
@@ -186,14 +192,14 @@ class BlockchainIdentity {
     constructor(platform: Platform, index: Int, wallet: Wallet) : this(
         platform
     ) {
-        Preconditions.checkArgument(index != Int.MAX_VALUE && index != Int.MIN_VALUE, "index must be found");
+        Preconditions.checkArgument(index != Int.MAX_VALUE && index != Int.MIN_VALUE, "index must be found")
 
         this.wallet = wallet
         this.isLocal = true
         this.keysCreated = 0
         this.currentMainKeyIndex = 0
         this.currentMainKeyType = IdentityPublicKey.TYPES.ECDSA_SECP256K1
-        this.index = index;
+        this.index = index
         this.usernameStatuses = HashMap()
         this.keyInfo = HashMap()
         this.registrationStatus = RegistrationStatus.UNKNOWN
@@ -206,9 +212,9 @@ class BlockchainIdentity {
         lockedOutpoint: TransactionOutPoint,
         wallet: Wallet
     ) :
-            this(platform, index, wallet) {
-        Preconditions.checkArgument(lockedOutpoint.hash != Sha256Hash.ZERO_HASH, "utxo must not be null");
-        this.lockedOutpoint = lockedOutpoint;
+    this(platform, index, wallet) {
+        Preconditions.checkArgument(lockedOutpoint.hash != Sha256Hash.ZERO_HASH, "utxo must not be null")
+        this.lockedOutpoint = lockedOutpoint
         this.uniqueId = Sha256Hash.twiceOf(lockedOutpoint.bitcoinSerialize())
     }
 
@@ -217,22 +223,23 @@ class BlockchainIdentity {
         transaction: CreditFundingTransaction,
         wallet: Wallet,
         registeredIdentity: Identity? = null
-    ) :
-            this(platform, transaction.usedDerivationPathIndex, transaction.lockedOutpoint, wallet) {
+    ) : this(platform, transaction.usedDerivationPathIndex, transaction.lockedOutpoint, wallet) {
         Preconditions.checkArgument(!transaction.creditBurnPublicKey.isPubKeyOnly || transaction.creditBurnPublicKey.isEncrypted)
         creditFundingTransaction = transaction
         registrationFundingPrivateKey = transaction.creditBurnPublicKey
 
-        //see if the identity is registered.
+        // see if the identity is registered.
         try {
             identity = if (registeredIdentity != null) {
                 registeredIdentity
             } else {
                 platform.identities.get(uniqueIdString)
             }
-            registrationStatus = if (identity != null)
+            registrationStatus = if (identity != null) {
                 RegistrationStatus.REGISTERED
-            else RegistrationStatus.UNKNOWN
+            } else {
+                RegistrationStatus.UNKNOWN
+            }
         } catch (x: Exception) {
             // swallow and leave the status as unknown
             registrationStatus = RegistrationStatus.UNKNOWN
@@ -244,8 +251,7 @@ class BlockchainIdentity {
         transaction: CreditFundingTransaction,
         usernameStatus: MutableMap<String, Any>,
         wallet: Wallet
-    ) :
-            this(platform, transaction, wallet) {
+    ) : this(platform, transaction, wallet) {
         if (getUsernames().isNotEmpty()) {
             val usernameSalts = HashMap<String, ByteArray>()
             for (username in usernameStatus.keys) {
@@ -256,7 +262,7 @@ class BlockchainIdentity {
                 }
             }
             this.usernameStatuses = copyMap(usernameStatus)
-            this.usernameSalts = usernameSalts;
+            this.usernameSalts = usernameSalts
         }
     }
 
@@ -273,11 +279,10 @@ class BlockchainIdentity {
         registrationStatus: RegistrationStatus,
         wallet: Wallet
     ) :
-            this(platform, transaction, usernameStatus, wallet) {
-        creditBalance = credits;
-        this.registrationStatus = registrationStatus;
+    this(platform, transaction, usernameStatus, wallet) {
+        creditBalance = credits
+        this.registrationStatus = registrationStatus
     }
-
 
     // MARK: - Full Registration agglomerate
 
@@ -298,8 +303,11 @@ class BlockchainIdentity {
         return createFundingTransaction(AuthenticationKeyChain.KeyChainType.INVITATION_FUNDING, credits, keyParameter)
     }
 
-    private fun createFundingTransaction(type: AuthenticationKeyChain.KeyChainType,
-                                         credits: Coin, keyParameter: KeyParameter?): CreditFundingTransaction {
+    private fun createFundingTransaction(
+        type: AuthenticationKeyChain.KeyChainType,
+        credits: Coin,
+        keyParameter: KeyParameter?
+    ): CreditFundingTransaction {
         Preconditions.checkArgument(if (wallet!!.isEncrypted) keyParameter != null else true)
         val privateKey = wallet!!.currentAuthenticationKey(type)
         val request = SendRequest.creditFundingTransaction(wallet!!.params, privateKey, credits)
@@ -355,8 +363,7 @@ class BlockchainIdentity {
                     signingKey!!,
                     identityPublicKeys
                 )
-            }
-            else throw InvalidIdentityAssetLockProofError("instantLock == null")
+            } else throw InvalidIdentityAssetLockProofError("instantLock == null")
         } else {
             identity = platform.identities.register(
                 creditFundingTransaction!!.outputIndex,
@@ -383,7 +390,7 @@ class BlockchainIdentity {
 
         identity =
             platform.identities.get(creditFundingTransaction.creditBurnIdentityIdentifier.toStringBase58())
-                ?: return false
+            ?: return false
 
         registrationStatus = RegistrationStatus.REGISTERED
 
@@ -415,10 +422,10 @@ class BlockchainIdentity {
     }
 
     private fun finalizeIdentityRegistration(fundingTransaction: CreditFundingTransaction) {
-        this.creditFundingTransaction = fundingTransaction;
+        this.creditFundingTransaction = fundingTransaction
         this.registrationFundingPrivateKey = fundingTransaction.creditBurnPublicKey
-        this.lockedOutpoint = fundingTransaction.lockedOutpoint;
-        finalizeIdentityRegistration(fundingTransaction.creditBurnIdentityIdentifier);
+        this.lockedOutpoint = fundingTransaction.lockedOutpoint
+        finalizeIdentityRegistration(fundingTransaction.creditBurnIdentityIdentifier)
     }
 
     private fun finalizeIdentityRegistration(uniqueId: Sha256Hash) {
@@ -434,19 +441,18 @@ class BlockchainIdentity {
 
     fun unregisterLocally(): Boolean {
         return if (isLocal && !registered) {
-            //[self.wallet unregisterBlockchainIdentity : self];
-            //deletePersistentObjectAndSave(true)
+            // [self.wallet unregisterBlockchainIdentity : self];
+            // deletePersistentObjectAndSave(true)
             true
         } else false
     }
 
-
     // MARK: Registering
-    //Preorder stage
+    // Preorder stage
     fun registerPreorderedSaltedDomainHashesForUsernames(usernames: List<String>, keyParameter: KeyParameter?) {
         val transition = createPreorderTransition(usernames)
         if (transition == null) {
-            return;
+            return
         }
         signStateTransition(transition, keyParameter)
 
@@ -468,9 +474,11 @@ class BlockchainIdentity {
             for (preorderTransition in transition.transitions) {
                 preorderTransition as DocumentCreateTransition
                 if ((preorderTransition.data["saltedDomainHash"] as ByteArray).contentEquals(saltedDomainHashData)) {
-                    val usernameStatus = if (usernameStatuses.containsKey(username))
+                    val usernameStatus = if (usernameStatuses.containsKey(username)) {
                         usernameStatuses[username] as MutableMap<String, Any>
-                    else HashMap()
+                    } else {
+                        HashMap()
+                    }
                     usernameStatus[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.PREORDERED
                     usernameStatuses[username] = usernameStatus
                     saveUsername(username, UsernameStatus.PREORDERED, null, true)
@@ -504,9 +512,11 @@ class BlockchainIdentity {
             for (nameDocumentTransition in transition.transitions) {
                 nameDocumentTransition as DocumentCreateTransition
                 if (nameDocumentTransition.data["normalizedLabel"] == normalizedName) {
-                    val usernameStatus = if (usernameStatuses.containsKey(username))
+                    val usernameStatus = if (usernameStatuses.containsKey(username)) {
                         usernameStatuses[username] as MutableMap<String, Any>
-                    else HashMap()
+                    } else {
+                        HashMap()
+                    }
                     usernameStatus[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.CONFIRMED
                     usernameStatus[BLOCKCHAIN_USERNAME_UNIQUE] = Names.isUniqueIdentity(nameDocumentTransition)
                     usernameStatuses[username] = usernameStatus
@@ -575,7 +585,7 @@ class BlockchainIdentity {
             }
             val saltedDomainHashData = platform.names.getSaltedDomainHashBytes(salt, fullUsername)
             mSaltedDomainHashes[unregisteredUsername] = saltedDomainHashData
-            usernameSalts[unregisteredUsername] = salt //is this required?
+            usernameSalts[unregisteredUsername] = salt // is this required?
         }
         return mSaltedDomainHashes
     }
@@ -588,7 +598,7 @@ class BlockchainIdentity {
             val document = platform.names.createPreorderDocument(Sha256Hash.wrap(saltedDomainHash), identity!!)
             usernamePreorderDocuments.add(document)
         }
-        return usernamePreorderDocuments;
+        return usernamePreorderDocuments
     }
 
     fun createDomainDocuments(unregisteredUsernames: List<String>): List<Document> {
@@ -611,7 +621,7 @@ class BlockchainIdentity {
         val transitionMap = hashMapOf<String, List<Document>?>(
             "create" to usernamePreorderDocuments
         )
-        return platform.dpp.document.createStateTransition(transitionMap);
+        return platform.dpp.document.createStateTransition(transitionMap)
     }
 
     fun createDomainTransition(unregisteredUsernames: List<String>): DocumentsBatchTransition? {
@@ -620,11 +630,10 @@ class BlockchainIdentity {
         val transitionMap = hashMapOf<String, List<Document>?>(
             "create" to usernameDomainDocuments
         )
-        return platform.dpp.document.createStateTransition(transitionMap);
+        return platform.dpp.document.createStateTransition(transitionMap)
     }
 
     // MARK: Usernames
-
 
     fun addUsername(username: String, status: UsernameStatus, save: Boolean) {
         val map = HashMap<String, UsernameStatus>()
@@ -636,7 +645,7 @@ class BlockchainIdentity {
             saveNewUsername(username, UsernameStatus.INITIAL)
         }
         if (registered && status != UsernameStatus.CONFIRMED) {
-            //do we trigger a listener here?
+            // do we trigger a listener here?
         }
     }
 
@@ -706,9 +715,8 @@ class BlockchainIdentity {
         signingAlgorithm: IdentityPublicKey.TYPES,
         keyParameter: KeyParameter? = null
     ) {
-
         var privateKey = maybeDecryptKey(keyIndex, signingAlgorithm, keyParameter)
-        Preconditions.checkState(privateKey != null, "The private key should exist");
+        Preconditions.checkState(privateKey != null, "The private key should exist")
 
         val identityPublicKey = IdentityPublicKey(keyIndex, signingAlgorithm, privateKey!!.pubKey)
         transition.sign(identityPublicKey, privateKey.privateKeyAsHex)
@@ -727,8 +735,9 @@ class BlockchainIdentity {
         keyParameter: KeyParameter?
     ): ECKey? {
         var privateKey = privateKeyAtIndex(keyIndex, signingAlgorithm)
-        if (privateKey!!.isEncrypted)
+        if (privateKey!!.isEncrypted) {
             privateKey = privateKey.decrypt(wallet!!.keyCrypter, keyParameter)
+        }
         return privateKey
     }
 
@@ -737,8 +746,9 @@ class BlockchainIdentity {
         keyParameter: KeyParameter?
     ): ECKey? {
         var privateKey = encryptedPrivateKey
-        if (encryptedPrivateKey!!.isEncrypted)
+        if (encryptedPrivateKey!!.isEncrypted) {
             privateKey = encryptedPrivateKey.decrypt(wallet!!.keyCrypter, keyParameter)
+        }
         return privateKey
     }
 
@@ -770,7 +780,6 @@ class BlockchainIdentity {
         Preconditions.checkState(isLocal, "this must own a wallet")
 
         when (type) {
-
             IdentityPublicKey.TYPES.ECDSA_SECP256K1 -> {
                 val authenticationChain = wallet!!.blockchainIdentityKeyChain
                 val key = authenticationChain.watchingKey
@@ -805,9 +814,8 @@ class BlockchainIdentity {
              - usernameStatuses
              - DashPay stuff...
          */
-        //TODO()
+        // TODO()
     }
-
 
     fun save() {
         // save updates to creditBalance, registrationStatus, type
@@ -854,12 +862,14 @@ class BlockchainIdentity {
         retryDelayType: RetryDelayType,
         callback: RegisterIdentityCallback
     ) {
-        val identityQuery = MulticallQuery(object: MulticallMethod<Identity?> {
-            override fun execute(): Identity? {
-                return platform.identities.get(uniqueIdString)
-            }
-        }, MulticallQuery.Companion.CallType.MAJORITY_FOUND)
-
+        val identityQuery = MulticallQuery(
+            object : MulticallMethod<Identity?> {
+                override fun execute(): Identity? {
+                    return platform.identities.get(uniqueIdString)
+                }
+            },
+            MulticallQuery.Companion.CallType.MAJORITY_FOUND
+        )
 
         // have more than half the nodes returned success and do they all agree?
         if (identityQuery.queryFound()) {
@@ -870,17 +880,20 @@ class BlockchainIdentity {
             callback.onComplete(uniqueIdString)
         } else {
             if (retryCount > 0) {
-                Timer("monitorBlockchainIdentityStatus", false).schedule(timerTask {
-                    val nextDelay = delayMillis * when (retryDelayType) {
-                        RetryDelayType.SLOW20 -> 5 / 4
-                        RetryDelayType.SLOW50 -> 3 / 2
-                        else -> 1
-                    }
-                    watchIdentity(retryCount - 1, nextDelay, retryDelayType, callback)
-                }, delayMillis)
+                Timer("monitorBlockchainIdentityStatus", false).schedule(
+                    timerTask {
+                        val nextDelay = delayMillis * when (retryDelayType) {
+                            RetryDelayType.SLOW20 -> 5 / 4
+                            RetryDelayType.SLOW50 -> 3 / 2
+                            else -> 1
+                        }
+                        watchIdentity(retryCount - 1, nextDelay, retryDelayType, callback)
+                    },
+                    delayMillis
+                )
             } else callback.onTimeout()
         }
-        //throw exception or return false
+        // throw exception or return false
     }
 
     @Deprecated("v18 makes this function obsolete")
@@ -889,12 +902,14 @@ class BlockchainIdentity {
         delayMillis: Long,
         retryDelayType: RetryDelayType
     ): String? {
-
-        val identityQuery = MulticallQuery(object: MulticallMethod<Identity?> {
-            override fun execute(): Identity? {
-                return platform.identities.get(uniqueIdString)
-            }
-        }, MulticallQuery.Companion.CallType.MAJORITY_FOUND)
+        val identityQuery = MulticallQuery(
+            object : MulticallMethod<Identity?> {
+                override fun execute(): Identity? {
+                    return platform.identities.get(uniqueIdString)
+                }
+            },
+            MulticallQuery.Companion.CallType.MAJORITY_FOUND
+        )
 
         if (identityQuery.queryFound()) {
             identity = identityQuery.getResult()
@@ -935,10 +950,10 @@ class BlockchainIdentity {
         retryDelayType: RetryDelayType,
         callback: RegisterPreorderCallback
     ) {
-
         val query = DocumentQuery.Builder()
             .where(
-                listOf("saltedDomainHash",
+                listOf(
+                    "saltedDomainHash",
                     "in",
                     saltedDomainHashes.map {
                         it.value
@@ -953,9 +968,11 @@ class BlockchainIdentity {
                 val saltedDomainHashData = saltedDomainHashes[username] as ByteArray
                 for (preorderDocument in preorderDocuments) {
                     if ((preorderDocument.data["saltedDomainHash"] as ByteArray).contentEquals(saltedDomainHashData)) {
-                        var usernameStatus = if (usernameStatuses.containsKey(username))
+                        var usernameStatus = if (usernameStatuses.containsKey(username)) {
                             usernameStatuses[username] as MutableMap<String, Any>
-                        else HashMap()
+                        } else {
+                            HashMap()
+                        }
                         usernameStatus[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.PREORDERED
                         usernameStatuses[username] = usernameStatus
                         saveUsername(username, UsernameStatus.PREORDERED, null, true)
@@ -965,20 +982,23 @@ class BlockchainIdentity {
             }
             if (usernamesLeft.size > 0 && retryCount > 0) {
                 val saltedDomainHashesLeft = saltedDomainHashes.filter { usernamesLeft.containsKey(it.key) }
-                Timer("monitorBlockchainIdentityStatus", false).schedule(timerTask {
-                    val nextDelay = delayMillis * when (retryDelayType) {
-                        RetryDelayType.SLOW20 -> 5 / 4
-                        RetryDelayType.SLOW50 -> 3 / 2
-                        else -> 1
-                    }
-                    watchPreorder(
-                        saltedDomainHashesLeft,
-                        retryCount - 1,
-                        nextDelay,
-                        retryDelayType,
-                        callback
-                    )
-                }, delayMillis)
+                Timer("monitorBlockchainIdentityStatus", false).schedule(
+                    timerTask {
+                        val nextDelay = delayMillis * when (retryDelayType) {
+                            RetryDelayType.SLOW20 -> 5 / 4
+                            RetryDelayType.SLOW50 -> 3 / 2
+                            else -> 1
+                        }
+                        watchPreorder(
+                            saltedDomainHashesLeft,
+                            retryCount - 1,
+                            nextDelay,
+                            retryDelayType,
+                            callback
+                        )
+                    },
+                    delayMillis
+                )
             } else if (usernamesLeft.size > 0) {
                 val saltedDomainHashesLeft = saltedDomainHashes.filter { usernamesLeft.containsKey(it.key) }
                 callback.onTimeout(saltedDomainHashesLeft.keys.toList())
@@ -987,20 +1007,23 @@ class BlockchainIdentity {
             }
         } else {
             if (retryCount > 0) {
-                Timer("monitorForDPNSPreorderSaltedDomainHashes", false).schedule(timerTask {
-                    val nextDelay = delayMillis * when (retryDelayType) {
-                        RetryDelayType.SLOW20 -> 5 / 4
-                        RetryDelayType.SLOW50 -> 3 / 2
-                        else -> 1
-                    }
-                    watchPreorder(
-                        saltedDomainHashes,
-                        retryCount - 1,
-                        nextDelay,
-                        retryDelayType,
-                        callback
-                    )
-                }, delayMillis)
+                Timer("monitorForDPNSPreorderSaltedDomainHashes", false).schedule(
+                    timerTask {
+                        val nextDelay = delayMillis * when (retryDelayType) {
+                            RetryDelayType.SLOW20 -> 5 / 4
+                            RetryDelayType.SLOW50 -> 3 / 2
+                            else -> 1
+                        }
+                        watchPreorder(
+                            saltedDomainHashes,
+                            retryCount - 1,
+                            nextDelay,
+                            retryDelayType,
+                            callback
+                        )
+                    },
+                    delayMillis
+                )
             } else {
                 callback.onTimeout(saltedDomainHashes.keys.toList())
             }
@@ -1013,7 +1036,6 @@ class BlockchainIdentity {
         delayMillis: Long,
         retryDelayType: RetryDelayType
     ): Pair<Boolean, List<String>> {
-
         val query = DocumentQuery.Builder()
             .where(
                 listOf(
@@ -1031,9 +1053,11 @@ class BlockchainIdentity {
                 val saltedDomainHashData = saltedDomainHashes[username] as ByteArray
                 for (preorderDocument in preorderDocuments) {
                     if ((preorderDocument.data["saltedDomainHash"] as ByteArray).contentEquals(saltedDomainHashData)) {
-                        var usernameStatus = if (usernameStatuses.containsKey(username))
+                        var usernameStatus = if (usernameStatuses.containsKey(username)) {
                             usernameStatuses[username] as MutableMap<String, Any>
-                        else HashMap()
+                        } else {
+                            HashMap()
+                        }
                         usernameStatus[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.PREORDERED
                         usernameStatuses[username] = usernameStatus
                         saveUsername(username, UsernameStatus.PREORDERED, null, true)
@@ -1056,7 +1080,6 @@ class BlockchainIdentity {
                     nextDelay,
                     retryDelayType
                 )
-
             } else if (usernamesLeft.size > 0) {
                 val saltedDomainHashesLeft = saltedDomainHashes.filter { usernamesLeft.containsKey(it.key) }
                 return Pair(false, saltedDomainHashesLeft.keys.toList())
@@ -1081,7 +1104,7 @@ class BlockchainIdentity {
                 return Pair(false, saltedDomainHashes.keys.toList())
             }
         }
-        //throw exception or return false
+        // throw exception or return false
         return Pair(false, saltedDomainHashes.keys.toList())
     }
 
@@ -1104,7 +1127,6 @@ class BlockchainIdentity {
         retryDelayType: RetryDelayType,
         callback: RegisterNameCallback
     ) {
-
         val query = DocumentQuery.Builder()
             .where("normalizedParentDomainName", "==", Names.DEFAULT_PARENT_DOMAIN)
             .where(listOf("normalizedLabel", "in", usernames.map { "${it.toLowerCase()}" })).build()
@@ -1116,9 +1138,11 @@ class BlockchainIdentity {
                 val normalizedName = username.toLowerCase()
                 for (nameDocument in nameDocuments) {
                     if (nameDocument.data["normalizedLabel"] == normalizedName) {
-                        var usernameStatus = if (usernameStatuses.containsKey(username))
+                        var usernameStatus = if (usernameStatuses.containsKey(username)) {
                             usernameStatuses[username] as MutableMap<String, Any>
-                        else HashMap()
+                        } else {
+                            HashMap()
+                        }
                         usernameStatus[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.CONFIRMED
                         usernameStatus[BLOCKCHAIN_USERNAME_UNIQUE] = Names.isUniqueIdentity(nameDocument)
                         usernameStatuses[username] = usernameStatus
@@ -1128,14 +1152,17 @@ class BlockchainIdentity {
                 }
             }
             if (usernamesLeft.size > 0 && retryCount > 0) {
-                Timer("monitorForDPNSUsernames", false).schedule(timerTask {
-                    val nextDelay = delayMillis * when (retryDelayType) {
-                        RetryDelayType.SLOW20 -> 5 / 4
-                        RetryDelayType.SLOW50 -> 3 / 2
-                        else -> 1
-                    }
-                    watchUsernames(usernamesLeft, retryCount - 1, nextDelay, retryDelayType, callback)
-                }, delayMillis)
+                Timer("monitorForDPNSUsernames", false).schedule(
+                    timerTask {
+                        val nextDelay = delayMillis * when (retryDelayType) {
+                            RetryDelayType.SLOW20 -> 5 / 4
+                            RetryDelayType.SLOW50 -> 3 / 2
+                            else -> 1
+                        }
+                        watchUsernames(usernamesLeft, retryCount - 1, nextDelay, retryDelayType, callback)
+                    },
+                    delayMillis
+                )
             } else if (usernamesLeft.size > 0) {
                 callback.onTimeout(usernamesLeft)
             } else {
@@ -1143,14 +1170,17 @@ class BlockchainIdentity {
             }
         } else {
             if (retryCount > 0) {
-                Timer("monitorBlockchainIdentityStatus", false).schedule(timerTask {
-                    val nextDelay = delayMillis * when (retryDelayType) {
-                        RetryDelayType.SLOW20 -> 5 / 4
-                        RetryDelayType.SLOW50 -> 3 / 2
-                        else -> 1
-                    }
-                    watchUsernames(usernames, retryCount - 1, nextDelay, retryDelayType, callback)
-                }, delayMillis)
+                Timer("monitorBlockchainIdentityStatus", false).schedule(
+                    timerTask {
+                        val nextDelay = delayMillis * when (retryDelayType) {
+                            RetryDelayType.SLOW20 -> 5 / 4
+                            RetryDelayType.SLOW50 -> 3 / 2
+                            else -> 1
+                        }
+                        watchUsernames(usernames, retryCount - 1, nextDelay, retryDelayType, callback)
+                    },
+                    delayMillis
+                )
             } else {
                 callback.onTimeout(usernames)
             }
@@ -1164,7 +1194,6 @@ class BlockchainIdentity {
         delayMillis: Long,
         retryDelayType: RetryDelayType
     ): Pair<Boolean, List<String>> {
-
         val query = DocumentQuery.Builder()
             .where("normalizedParentDomainName", "==", Names.DEFAULT_PARENT_DOMAIN)
             .where(listOf("normalizedLabel", "in", usernames.map { "${it.toLowerCase()}" })).build()
@@ -1176,9 +1205,11 @@ class BlockchainIdentity {
                 val normalizedName = username.toLowerCase()
                 for (nameDocument in nameDocuments) {
                     if (nameDocument.data["normalizedLabel"] == normalizedName) {
-                        val usernameStatus = if (usernameStatuses.containsKey(username))
+                        val usernameStatus = if (usernameStatuses.containsKey(username)) {
                             usernameStatuses[username] as MutableMap<String, Any>
-                        else HashMap()
+                        } else {
+                            HashMap()
+                        }
                         usernameStatus[BLOCKCHAIN_USERNAME_STATUS] = UsernameStatus.CONFIRMED
                         usernameStatus[BLOCKCHAIN_USERNAME_UNIQUE] = Names.isUniqueIdentity(nameDocument)
                         usernameStatuses[username] = usernameStatus
@@ -1213,7 +1244,7 @@ class BlockchainIdentity {
                 return Pair(false, usernames)
             }
         }
-        //throw exception or return false
+        // throw exception or return false
         return Pair(false, usernames)
     }
 
@@ -1233,9 +1264,14 @@ class BlockchainIdentity {
         return platform.dpp.document.createStateTransition(transitionMap)
     }
 
-    fun registerProfile(displayName: String?, publicMessage: String?,
-                        avatarUrl: String?, avatarHash: ByteArray? = null,
-                        avatarFingerprint: ByteArray?, keyParameter: KeyParameter?) : Profile {
+    fun registerProfile(
+        displayName: String?,
+        publicMessage: String?,
+        avatarUrl: String?,
+        avatarHash: ByteArray? = null,
+        avatarFingerprint: ByteArray?,
+        keyParameter: KeyParameter?
+    ): Profile {
         val currentProfile = getProfileFromPlatform()
         val transition = if (currentProfile == null) {
             createProfileTransition(displayName, publicMessage, avatarUrl, avatarHash, avatarFingerprint)
@@ -1247,7 +1283,6 @@ class BlockchainIdentity {
 
         platform.broadcastStateTransition(transition)
         return Profile(lastProfileDocument!!)
-
     }
 
     private fun replaceProfileTransition(
@@ -1257,7 +1292,6 @@ class BlockchainIdentity {
         avatarHash: ByteArray? = null,
         avatarFingerprint: ByteArray? = null
     ): DocumentsBatchTransition {
-
         // first obtain the current document
         val currentProfile = getProfileFromPlatform()
 
@@ -1301,9 +1335,14 @@ class BlockchainIdentity {
         return platform.dpp.document.createStateTransition(transitionMap)
     }
 
-    fun updateProfile(displayName: String?, publicMessage: String?,
-                      avatarUrl: String?, avatarHash: ByteArray? = null,
-                      avatarFingerprint: ByteArray?, keyParameter: KeyParameter?) : Profile {
+    fun updateProfile(
+        displayName: String?,
+        publicMessage: String?,
+        avatarUrl: String?,
+        avatarHash: ByteArray? = null,
+        avatarFingerprint: ByteArray?,
+        keyParameter: KeyParameter?
+    ): Profile {
         val transition = replaceProfileTransition(displayName, publicMessage, avatarUrl, avatarHash, avatarFingerprint)
 
         signStateTransition(transition, keyParameter)
@@ -1329,7 +1368,6 @@ class BlockchainIdentity {
         delayMillis: Long,
         retryDelayType: RetryDelayType
     ): Profile? {
-
         val updatedAt = if (lastProfileDocument?.updatedAt != null) {
             lastProfileDocument!!.updatedAt!!
         } else {
@@ -1374,14 +1412,17 @@ class BlockchainIdentity {
             callback.onComplete(uniqueIdString, profileResult)
         } else {
             if (retryCount > 0) {
-                Timer("monitorUpdateProfileStatus", false).schedule(timerTask {
-                    val nextDelay = delayMillis * when (retryDelayType) {
-                        RetryDelayType.SLOW20 -> 5 / 4
-                        RetryDelayType.SLOW50 -> 3 / 2
-                        else -> 1
-                    }
-                    watchProfile(retryCount - 1, nextDelay, retryDelayType, callback)
-                }, delayMillis)
+                Timer("monitorUpdateProfileStatus", false).schedule(
+                    timerTask {
+                        val nextDelay = delayMillis * when (retryDelayType) {
+                            RetryDelayType.SLOW20 -> 5 / 4
+                            RetryDelayType.SLOW50 -> 3 / 2
+                            else -> 1
+                        }
+                        watchProfile(retryCount - 1, nextDelay, retryDelayType, callback)
+                    },
+                    delayMillis
+                )
             } else callback.onTimeout()
         }
     }
@@ -1449,7 +1490,7 @@ class BlockchainIdentity {
         )
     }
 
-    private fun padAccountLabel() : String {
+    private fun padAccountLabel(): String {
         return if (accountLabel.length < 16) {
             accountLabel + " ".repeat(16 - accountLabel.length)
         } else {
@@ -1548,10 +1589,9 @@ class BlockchainIdentity {
         keyIndex: Int,
         keyParameter: KeyParameter?
     ): String {
-
         val keyCrypter = KeyCrypterECDH()
 
-        //first decrypt our identity key if necessary (currently uses the first key [0])
+        // first decrypt our identity key if necessary (currently uses the first key [0])
         val decryptedIdentityKey =
             maybeDecryptKey(keyIndex, signingAlgorithm, keyParameter)
 
@@ -1567,17 +1607,15 @@ class BlockchainIdentity {
     }
 
     fun addContactPaymentKeyChain(contactIdentity: Identity, contactRequest: Document, encryptionKey: KeyParameter?) {
-
         val accountReference = if (contactRequest.data.containsKey("accountReference")) {
             contactRequest.data["accountReference"] as Int
         } else {
-            0 //default account reference
+            0 // default account reference
         }
 
         val contact = EvolutionContact(uniqueId, account, contactIdentity.id.toSha256Hash(), accountReference)
 
         if (!wallet!!.hasSendingKeyChain(contact)) {
-
             val xpub = decryptExtendedPublicKey(
                 contactRequest.data["encryptedPublicKey"] as ByteArray,
                 contactIdentity,
@@ -1639,19 +1677,19 @@ class BlockchainIdentity {
 
     fun getContactForTransaction(tx: Transaction): String? {
         val contact = wallet!!.getFriendFromTransaction(tx) ?: return null
-        return if (uniqueId == contact.evolutionUserId)
+        return if (uniqueId == contact.evolutionUserId) {
             contact.friendUserId.toStringBase58()
-        else
+        } else {
             contact.evolutionUserId.toStringBase58()
+        }
     }
-
 
     fun getAccountReference(encryptionKey: KeyParameter?, fromIdentity: Identity): Int {
         val privateKey = maybeDecryptKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, encryptionKey)
 
         val receiveChain = getReceiveFromContactChain(fromIdentity, encryptionKey)
 
-        val extendedPublicKey = receiveChain.watchingKey.dropPrivateBytes();
+        val extendedPublicKey = receiveChain.watchingKey.dropPrivateBytes()
 
         val accountSecretKey = HDUtils.hmacSha256(privateKey!!.privKeyBytes, extendedPublicKey.serializeContactPub())
 
@@ -1666,7 +1704,7 @@ class BlockchainIdentity {
         return versionBits or (accountSecretKey28 xor shortenedAccountBits)
     }
 
-    fun getInvitationHistory() : Map<Identifier, Identity?> {
+    fun getInvitationHistory(): Map<Identifier, Identity?> {
         val inviteTxs = wallet!!.identityFundingTransactions
         val listIds = inviteTxs.map { Identifier.from(it.creditBurnIdentityIdentifier) }
 

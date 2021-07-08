@@ -6,11 +6,11 @@
  */
 package org.dashj.platform.examples
 
+import java.lang.Thread.sleep
 import org.dashevo.Client
 import org.dashevo.client.ClientOptions
 import org.dashevo.client.WalletOptions
 import org.json.JSONObject
-import java.lang.Thread.sleep
 
 class CreateContract {
     companion object {

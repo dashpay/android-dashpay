@@ -28,7 +28,7 @@ class DocumentsTest : PlatformNetwork() {
             // good
         }
 
-        val saltedDomainHash = Sha256Hash.wrap(Entropy.generate());
+        val saltedDomainHash = Sha256Hash.wrap(Entropy.generate())
         val data = hashMapOf(
             "saltedDomainHash" to saltedDomainHash
         )
@@ -40,7 +40,6 @@ class DocumentsTest : PlatformNetwork() {
 
         assertEquals(saltedDomainHash, document.data["saltedDomainHash"])
     }
-
 
     @Test
     fun getTest() {
@@ -75,10 +74,13 @@ class DocumentsTest : PlatformNetwork() {
 
     @Test
     fun getNoResultsTest() {
-        val results = platform.documents.get(Names.DPNS_DOMAIN_DOCUMENT, DocumentQuery.builder()
-            .where("normalizedLabel", "==", "39383838")
-            .where("normalizedParentDomainName", "==", "dash")
-            .build())
+        val results = platform.documents.get(
+            Names.DPNS_DOMAIN_DOCUMENT,
+            DocumentQuery.builder()
+                .where("normalizedLabel", "==", "39383838")
+                .where("normalizedParentDomainName", "==", "dash")
+                .build()
+        )
         assertEquals(results, listOf<ByteArray>())
     }
 }

@@ -1,9 +1,9 @@
 package org.dashevo.platform.multicall
 
+import org.dashevo.platform.PlatformNetwork
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dpp.Factory
 import org.dashj.platform.dpp.document.Document
-import org.dashevo.platform.PlatformNetwork
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -12,9 +12,9 @@ class MultiCallTest : PlatformNetwork() {
     val dataContractId = platform.apps["dpns"]!!.contractId
     val documentType = "domain"
     val defaultQuery = DocumentQuery.builder().build()
-        //.where("normalizedLabel", "==", "x-hash-eng-225793297")
-        //.where("normalizedParentDomainName", "==", "dash")
-        //.build()
+    // .where("normalizedLabel", "==", "x-hash-eng-225793297")
+    // .where("normalizedParentDomainName", "==", "dash")
+    // .build()
     val noResultsQuery = DocumentQuery.builder()
         .where("normalizedLabel", "==", "39383838")
         .where("normalizedParentDomainName", "==", "dash")
@@ -23,44 +23,53 @@ class MultiCallTest : PlatformNetwork() {
         .where("normalizedLabel", "==", "")
         .where("normalizedParentDomainName", "==", "dash")
         .build()
-    fun multicall(callType: MulticallQuery.Companion.CallType, opts: DocumentQuery = defaultQuery)
-    : Pair<MulticallQuery.Companion.Status, List<Document>>{
-       try {
-           val domainQuery = MulticallListQuery(object: MulticallMethod<List<ByteArray>> {
-               override fun execute(): List<ByteArray>{
-                   return platform.client.getDocuments(dataContractId.toBuffer(), documentType, opts, platform.documentsRetryCallback)
-               }
-           }, callType)
-           return when (domainQuery.query()) {
-               MulticallQuery.Companion.Status.FOUND -> {
-                   Pair(domainQuery.status(), domainQuery.getResult()!!.map {
-                       platform.dpp.document.createFromBuffer(it, Factory.Options(true))
-                   })
-               }
-               MulticallQuery.Companion.Status.AGREE -> {
-                   if (domainQuery.foundSuccess()) {
-                       Pair(domainQuery.status(), domainQuery.getResult()!!.map {
-                           platform.dpp.document.createFromBuffer(it, Factory.Options(true))
-                       })
-                   } else {
-                       Pair(domainQuery.status(), listOf())
-                   }
-               }
-               MulticallQuery.Companion.Status.NOT_FOUND -> {
-                   Pair(domainQuery.status(), listOf())
-               }
-               MulticallQuery.Companion.Status.ERRORS -> {
-                   throw domainQuery.exception()
-               }
-               MulticallQuery.Companion.Status.DISAGREE -> {
-                   throw MulticallException(listOf())
-               }
-           }
-       } catch (e: Exception) {
-           println("Document query: unable to get documents of ${dataContractId}: $e")
-           throw e
-       }
-   }
+    fun multicall(callType: MulticallQuery.Companion.CallType, opts: DocumentQuery = defaultQuery):
+    Pair<MulticallQuery.Companion.Status, List<Document>> {
+        try {
+            val domainQuery = MulticallListQuery(
+                object : MulticallMethod<List<ByteArray>> {
+                    override fun execute(): List<ByteArray> {
+                        return platform.client.getDocuments(dataContractId.toBuffer(), documentType, opts, platform.documentsRetryCallback)
+                    }
+                },
+                callType
+            )
+            return when (domainQuery.query()) {
+                MulticallQuery.Companion.Status.FOUND -> {
+                    Pair(
+                        domainQuery.status(),
+                        domainQuery.getResult()!!.map {
+                            platform.dpp.document.createFromBuffer(it, Factory.Options(true))
+                        }
+                    )
+                }
+                MulticallQuery.Companion.Status.AGREE -> {
+                    if (domainQuery.foundSuccess()) {
+                        Pair(
+                            domainQuery.status(),
+                            domainQuery.getResult()!!.map {
+                                platform.dpp.document.createFromBuffer(it, Factory.Options(true))
+                            }
+                        )
+                    } else {
+                        Pair(domainQuery.status(), listOf())
+                    }
+                }
+                MulticallQuery.Companion.Status.NOT_FOUND -> {
+                    Pair(domainQuery.status(), listOf())
+                }
+                MulticallQuery.Companion.Status.ERRORS -> {
+                    throw domainQuery.exception()
+                }
+                MulticallQuery.Companion.Status.DISAGREE -> {
+                    throw MulticallException(listOf())
+                }
+            }
+        } catch (e: Exception) {
+            println("Document query: unable to get documents of $dataContractId: $e")
+            throw e
+        }
+    }
     @Test
     fun unanimousTest() {
         val results = multicall(MulticallQuery.Companion.CallType.UNANIMOUS)
@@ -130,6 +139,4 @@ class MultiCallTest : PlatformNetwork() {
         assertEquals(MulticallQuery.Companion.Status.NOT_FOUND, results.first)
         assertTrue(results.second.isEmpty())
     }
-
-
 }

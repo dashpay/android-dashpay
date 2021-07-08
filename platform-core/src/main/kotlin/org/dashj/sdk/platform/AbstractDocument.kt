@@ -27,33 +27,39 @@ abstract class AbstractDocument(val document: Document) {
     val updatedAt: Long?
         get() = document.updatedAt
 
-    fun toJSON() : Map<String, Any?> {
+    fun toJSON(): Map<String, Any?> {
         return document.toJSON()
     }
 
-    fun toObject() : Map<String, Any?> {
+    fun toObject(): Map<String, Any?> {
         return document.toObject()
     }
 
     protected fun getFieldString(fieldName: String): String? {
         val field = document.data[fieldName]
-        return if (field != null)
+        return if (field != null) {
             field as String
-        else null
+        } else {
+            null
+        }
     }
 
     protected fun getFieldByteArray(fieldName: String): ByteArray? {
         val field = document.data[fieldName]
-        return if (field != null)
+        return if (field != null) {
             HashUtils.byteArrayfromBase64orByteArray(field)
-        else null
+        } else {
+            null
+        }
     }
 
     protected fun getFieldMap(fieldName: String): Map<String, Any>? {
         val field = document.data[fieldName]
-        return if (field != null)
+        return if (field != null) {
             field as Map<String, Any>
-        else null
+        } else {
+            null
+        }
     }
 
     override fun equals(other: Any?): Boolean {
@@ -76,7 +82,6 @@ abstract class AbstractDocument(val document: Document) {
     fun hashOnce(): ByteArray {
         return document.hashOnce()
     }
-
 
     override fun toString(): String {
         return "Document(${document.toJSON()})"
