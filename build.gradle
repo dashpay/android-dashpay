@@ -1,3 +1,5 @@
+import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
+
 buildscript {
     ext.kotlin_version = '1.4.32'
     ext.dashpay_version = '0.20-SNAPSHOT'
@@ -6,19 +8,44 @@ buildscript {
     ext.dashj_version = '0.18-SNAPSHOT'
     repositories {
         mavenCentral()
-        maven { url "https://kotlin.bintray.com/kotlinx" }
+        maven { url "https://plugins.gradle.org/m2/" }
+        //maven { url "https://kotlin.bintray.com/kotlinx" }
     }
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jlleitschuh.gradle:ktlint-gradle:8.2.0"
     }
 }
 
 allprojects {
     repositories {
         mavenLocal()
+        mavenCentral()
         maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots/' }
     }
     version dashpay_version
     group = 'org.dashj.platform'
+}
+
+subprojects {
+    apply plugin: "org.jlleitschuh.gradle.ktlint" // Version should be inherited from parent
+    repositories {
+        // Required to download KtLint
+        mavenCentral()
+    }
+    ktlint {
+        version = "0.34.2"
+        debug = true
+        verbose = true
+        android = false
+        outputToConsole = true
+        reporters = [ReporterType.PLAIN, ReporterType.CHECKSTYLE]
+        ignoreFailures = false
+        enableExperimentalRules = true
+        filter {
+            exclude("**/generated/**")
+            include("**/kotlin/**")
+        }
+    }
 }

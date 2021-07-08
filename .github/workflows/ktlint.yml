@@ -1,10 +1,15 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: Kotlin Linter
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
-on: push
+on:
+  push:
+  pull_request:
+    paths:
+      - "**/*.kt"
+      - ".github/workflows/ktlint.yml"
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -17,19 +22,10 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
+
     # Runs a set of commands using the runners shell
-    - name: Run a multi-line script
+    - name: Kotlin Linter
       run: |
-    #    git clone https://github.com/dashevo/android-dpp.git
-    #    cd android-dpp
-    #    ./gradlew assemble
-    #    cd ..
-    #    git clone https://github.com/dashevo/dapi-client-android.git
-    #    cd dapi-client-android
-    #    ./gradlew assemble
-    #    cd ..
         chmod +x gradlew
         chmod +x gradle/wrapper/gradle-wrapper.jar
-        ./gradlew assemble
-    # don't run tests for now
-    #    ./gradlew build test --info -x ktlintCheck -x ktlintApplyToIdea -x ktlintApplyToIdeaGlobally -x ktlintFormat -x ktlintKotlinScriptCheck -x ktlintKotlinScriptFormat -x ktlintMainSourceSetCheck -x ktlintMainSourceSetFormat -x ktlintTestSourceSetCheck -x ktlintTestSourceSetFormat
+        ./gradlew ktlintCheck

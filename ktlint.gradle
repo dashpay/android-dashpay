@@ -1,0 +1,15 @@
+
+ktlint {
+    version = "0.34.2"
+    debug = true
+    verbose = true
+    android = false
+    outputToConsole = true
+    reporters = [ReporterType.PLAIN, ReporterType.CHECKSTYLE]
+    ignoreFailures = false
+    enableExperimentalRules = true
+    filter {
+        exclude("**/generated/**")
+        include("**/kotlin/**")
+    }
+}
