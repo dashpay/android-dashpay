@@ -14,6 +14,7 @@ import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.Date
 
 class Contracts(val platform: Platform) {
 

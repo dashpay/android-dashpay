@@ -23,6 +23,10 @@ import org.dashevo.platform.multicall.MulticallException
 import org.dashj.platform.dapiclient.DapiClient
 import org.dashj.platform.dapiclient.MaxRetriesReachedException
 import org.dashj.platform.dapiclient.NoAvailableAddressesForRetryException
+import org.dashj.platform.dapiclient.grpc.BroadcastRetryCallback
+import org.dashj.platform.dapiclient.grpc.DefaultGetDataContractWithContractIdRetryCallback
+import org.dashj.platform.dapiclient.grpc.DefaultGetDocumentsWithContractIdRetryCallback
+import org.dashj.platform.dapiclient.grpc.DefaultGetIdentityWithIdentitiesRetryCallback
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dpp.DashPlatformProtocol
 import org.dashj.platform.dpp.identifier.Identifier
