@@ -81,7 +81,11 @@ class CreateWallets {
             if (args.size >= 2) {
                 network = args[0]
                 configurationFile = args[1]
-                contact = args[2]
+                contact = if (args.size > 2) {
+                    args[2]
+                } else {
+                    ""
+                }
                 sdk = Client(ClientOptions(network = network))
                 println("------------------------------------------------")
                 println("CreateWallets($network: $configurationFile)")
@@ -183,9 +187,21 @@ class CreateWallets {
                 println("pubkey hash: ${cftx.creditBurnPublicKeyId}")
 
                 // we need to wait until the transaction is confirmed or instantsend
-                val transaction = runRpc("getrawtransaction ${cftxid!!.trim()} true")
-                val status = JSONObject(transaction).toMap()
+                var transaction = runRpc("getrawtransaction ${cftxid!!.trim()} true")
+                var status = JSONObject(transaction).toMap()
                 Thread.sleep(5000)
+
+                while (!status.containsKey("confirmations") || (status["confirmations"] as Int) < 10) {
+                    transaction = runRpc("getrawtransaction ${cftxid.trim()} true")
+                    status = JSONObject(transaction).toMap()
+                    Thread.sleep(5000)
+                }
+
+                val blockResult = runRpc("getblock ${status["blockhash"] as String} true")
+                var block = JSONObject(blockResult).toMap()
+
+                cftx.confidence.appearedAtChainHeight = block!!["height"] as Int
+
                 val blockchainIdentity = BlockchainIdentity(platform, cftx, wallet)
 
                 blockchainIdentity.registerIdentity(null)
@@ -202,7 +218,7 @@ class CreateWallets {
                             val names = blockchainIdentity.getUnregisteredUsernames()
                             blockchainIdentity.registerPreorderedSaltedDomainHashesForUsernames(names, null)
                             val set =
-                                blockchainIdentity.getUsernamesWithStatus(BlockchainIdentity.UsernameStatus.PREORDER_REGISTRATION_PENDING)
+                                blockchainIdentity.getUsernamesWithStatus(BlockchainIdentity.UsernameStatus.PREORDERED)
                             val saltedDomainHashes = blockchainIdentity.saltedDomainHashesForUsernames(set)
                             blockchainIdentity.watchPreorder(
                                 saltedDomainHashes,

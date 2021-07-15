@@ -1950,7 +1950,7 @@ public class WalletTool {
     }
 
     private static void createIdentity(OptionSpec<WaitForEnum> waitForFlag) {
-        blockchainIdentity.registerIdentity(null);
+        blockchainIdentity.registerIdentity(null, true);
         blockchainIdentity.watchIdentity(10, 2000, RetryDelayType.SLOW20, new RegisterIdentityCallback() {
             @Override
             public void onComplete(@NotNull String uniqueId) {

@@ -315,7 +315,7 @@ public class ForwardingServiceEvo {
     private static void registerIdentity() {
         //this is a base64 id, which is not used by dapi-client
         //lastIdentityId = platform.getIdentities().register(Identity.IdentityType.USER, lastTx);
-        lastBlockchainIdentity.registerIdentity(null);
+        lastBlockchainIdentity.registerIdentity(null, true);
         //System.out.println("Identity created: " + lastIdentityId);
         //this is the base58 id
         lastIdentityId = lastTx.getCreditBurnIdentityIdentifier().toStringBase58();
