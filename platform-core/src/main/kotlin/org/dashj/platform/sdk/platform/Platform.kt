@@ -121,9 +121,16 @@ class Platform(val params: NetworkParameters) {
                 client = DapiClient(MobileDevNetParams.MASTERNODES.toList())
             }
             params.id.contains("palinka") -> {
-                apps["dpns"] = ClientAppDefinition("9mdK1irvadi6ibMsxvkpVR4vxEvABf8Bx9QQ1GD495um")
-                apps["dashpay"] = ClientAppDefinition("DGTXxC9Rv3yfjciT9XSQowiLEiw5cMqGTH2ZgoL2MpB5")
-                apps["featureFlags"] = ClientAppDefinition("9AQ68hQjeHJy1QmMRgWSaCaNrkEQzx7Xv6BNi9d4NtCg")
+                apps["dpns"] = ClientAppDefinition("8WExqeabDEg2zu4ioTBrzt7nB9X4YA8Ggq3ja1z6h7B3")
+                apps["dashpay"] = ClientAppDefinition("2Tmp9qxQaE9pYbpxa1mEVRL8fiNBmY4sdTnmk5cEmVd4")
+                apps["featureFlags"] = ClientAppDefinition("5McDmoegV2xvuvpSJVvZyYRPbZQ4F5DC5bxcWQXMuV2z")
+                // apps["thumbnail"] = ClientAppDefinition("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
+                client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList())
+            }
+            params.id.contains("schnapps") -> {
+                apps["dpns"] = ClientAppDefinition("4BrYpaW5s26UWoBk9zEAYWxJANX7LFinmToprWo3VwgS")
+                apps["dashpay"] = ClientAppDefinition("9FmdUoXZJijvARgA3Vcg73ThYp5P4AaLis1WpXp9VGg1")
+                apps["featureFlags"] = ClientAppDefinition("5zcqp5wWJKCjxHVV4PHN6C6rx6oZgUT1FRvWACNhGCJZ")
                 // apps["thumbnail"] = ClientAppDefinition("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
                 client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList())
             }
