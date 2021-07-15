@@ -95,7 +95,7 @@ class Identities(val platform: Platform) {
     }
 
     fun get(id: Identifier): Identity? {
-        val identityBuffer = platform.client.getIdentity(id.toBuffer(), platform.identitiesRetryCallback) ?: return null
+        val identityBuffer = platform.client.getIdentity(id.toBuffer(), true, platform.identitiesRetryCallback) ?: return null
         return platform.dpp.identity.createFromBuffer(identityBuffer.toByteArray())
     }
 

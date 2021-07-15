@@ -53,7 +53,7 @@ class Contracts(val platform: Platform) {
             return localContract.contract
         } else {
             try {
-                val rawContract = platform.client.getDataContract(identifier.toBuffer(), platform.contractsRetryCallback) ?: return null
+                val rawContract = platform.client.getDataContract(identifier.toBuffer(), true, platform.contractsRetryCallback) ?: return null
 
                 val contract = platform.dpp.dataContract.createFromBuffer(rawContract.toByteArray())
                 val app = ClientAppDefinition(contract.id, contract)

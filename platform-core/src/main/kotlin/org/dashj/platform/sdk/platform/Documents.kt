@@ -166,7 +166,7 @@ class Documents(val platform: Platform) {
             val domainQuery = MulticallListQuery(
                 object : MulticallMethod<List<ByteArray>> {
                     override fun execute(): List<ByteArray> {
-                        return platform.client.getDocuments(dataContractId.toBuffer(), documentType, opts, platform.documentsRetryCallback)
+                        return platform.client.getDocuments(dataContractId.toBuffer(), documentType, opts, true, platform.documentsRetryCallback)
                     }
                 },
                 callType
