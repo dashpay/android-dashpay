@@ -321,7 +321,55 @@ class BlockchainIdentity {
         registrationStatus = RegistrationStatus.NOT_REGISTERED
     }
 
-    fun registerIdentity(keyParameter: KeyParameter?) {
+    fun registerIdentity(keyParameter: KeyParameter?, useISLock: Boolean = true) {
+        if (useISLock) {
+            try {
+                registerIdentityWithISLock(keyParameter)
+            } catch (e: InvalidIdentityAssetLockProofError) {
+                registerIdentityWithChainLock(keyParameter)
+            }
+        } else {
+            registerIdentityWithChainLock(keyParameter)
+        }
+    }
+
+    fun registerIdentityWithChainLock(keyParameter: KeyParameter?) {
+        Preconditions.checkState(
+            registrationStatus != RegistrationStatus.REGISTERED,
+            "The identity must not be registered"
+        )
+        Preconditions.checkState(creditFundingTransaction != null, "The credit funding transaction must exist")
+
+        var identityPrivateKey = privateKeyAtIndex(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1)
+        val identityPublicKey =
+            IdentityPublicKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, identityPrivateKey!!.pubKey)
+        val identityPublicKeys = listOf(identityPublicKey)
+
+        val signingKey = maybeDecryptKey(creditFundingTransaction!!.creditBurnPublicKey, keyParameter)
+
+        val coreHeight = if (creditFundingTransaction!!.confidence.confidenceType == TransactionConfidence.ConfidenceType.BUILDING) {
+            creditFundingTransaction!!.confidence.appearedAtChainHeight
+        } else {
+            val txInfo = platform.client.getTransaction(creditFundingTransaction!!.txId.toString())
+            txInfo?.height ?: -1
+        }.toLong()
+
+        identity = platform.identities.register(
+            creditFundingTransaction!!.outputIndex,
+            creditFundingTransaction!!,
+            coreHeight,
+            signingKey!!,
+            identityPublicKeys
+        )
+
+        registrationStatus = RegistrationStatus.REGISTERED
+
+        finalizeIdentityRegistration(creditFundingTransaction!!)
+
+        registrationStatus = RegistrationStatus.REGISTERED
+    }
+
+    fun registerIdentityWithISLock(keyParameter: KeyParameter?) {
         Preconditions.checkState(
             registrationStatus != RegistrationStatus.REGISTERED,
             "The identity must not be registered"
