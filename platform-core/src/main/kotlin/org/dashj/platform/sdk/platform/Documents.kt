@@ -12,9 +12,6 @@ import org.dashj.platform.dpp.Factory
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
-import org.dashj.platform.sdk.platform.multicall.MulticallException
-import org.dashj.platform.sdk.platform.multicall.MulticallListQuery
-import org.dashj.platform.sdk.platform.multicall.MulticallMethod
 import org.dashj.platform.sdk.platform.multicall.MulticallQuery
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -163,30 +160,17 @@ class Documents(val platform: Platform) {
 
     fun get(dataContractId: Identifier, documentType: String, opts: DocumentQuery, callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.FIRST): List<Document> {
         try {
-            val domainQuery = MulticallListQuery(
-                object : MulticallMethod<List<ByteArray>> {
-                    override fun execute(): List<ByteArray> {
-                        return platform.client.getDocuments(dataContractId.toBuffer(), documentType, opts, true, platform.documentsRetryCallback)
-                    }
-                },
-                callType
+            val documentResponse = platform.client.getDocuments(
+                dataContractId.toBuffer(),
+                documentType,
+                opts,
+                Features.proveDocuments,
+                platform.documentsRetryCallback
             )
-            return when (domainQuery.query()) {
-                MulticallQuery.Companion.Status.AGREE,
-                MulticallQuery.Companion.Status.FOUND -> {
-                    domainQuery.getResult()!!.map {
-                        platform.dpp.document.createFromBuffer(it, Factory.Options(true))
-                    }
-                }
-                MulticallQuery.Companion.Status.NOT_FOUND -> {
-                    listOf()
-                }
-                MulticallQuery.Companion.Status.DISAGREE -> {
-                    throw MulticallException(listOf())
-                }
-                MulticallQuery.Companion.Status.ERRORS -> {
-                    throw domainQuery.exception()
-                }
+            return documentResponse.documents.map {
+                val document = platform.dpp.document.createFromBuffer(it, Factory.Options(true))
+                document.metadata = documentResponse.metadata.getMetadata()
+                document
             }
         } catch (e: Exception) {
             log.error("Document query: unable to get documents of $dataContractId: $e")

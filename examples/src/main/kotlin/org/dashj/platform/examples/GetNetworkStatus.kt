@@ -125,7 +125,7 @@ class GetNetworkStatus {
                 // Note: this does not need to be an identity that actually exists
                 try {
                     val response = rpcClient.getIdentity(identifier.toBuffer())
-                    val id = platform.dpp.identity.createFromBuffer(response!!.toByteArray()).id.toString()
+                    val id = platform.dpp.identity.createFromBuffer(response.identity).id.toString()
                     println("\t+ L2 gRPC Success.\tRetrieved identity: $id")
                 } catch (e: StatusRuntimeException) {
                     if (e.status == Status.NOT_FOUND) {

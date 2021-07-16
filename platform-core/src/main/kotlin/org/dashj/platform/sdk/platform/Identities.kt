@@ -10,6 +10,7 @@ import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Transaction
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.quorums.InstantSendLock
+import org.dashj.platform.dapiclient.errors.NotFoundException
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.ChainAssetLockProof
 import org.dashj.platform.dpp.identity.Identity
@@ -95,8 +96,15 @@ class Identities(val platform: Platform) {
     }
 
     fun get(id: Identifier): Identity? {
-        val identityBuffer = platform.client.getIdentity(id.toBuffer(), true, platform.identitiesRetryCallback) ?: return null
-        return platform.dpp.identity.createFromBuffer(identityBuffer.toByteArray())
+        return try {
+            val identityResponse =
+                platform.client.getIdentity(id.toBuffer(), Features.proveIdentities, platform.identitiesRetryCallback)
+            val identity = platform.dpp.identity.createFromBuffer(identityResponse.identity)
+            identity.metadata = identityResponse.metadata.getMetadata()
+            identity
+        } catch (e: NotFoundException) {
+            null
+        }
     }
 
     fun getByPublicKeyHash(pubKeyHash: ByteArray): Identity? {
