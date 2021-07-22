@@ -155,7 +155,7 @@ class Platform(val params: NetworkParameters) {
 
     fun broadcastStateTransition(signedStateTransition: StateTransitionIdentitySigned) {
         // TODO: validate transition structure here
-        client.broadcastStateTransitionAndWait(signedStateTransition, retryCallback = broadcastRetryCallback)
+        client.broadcastStateTransitionAndWait(signedStateTransition, retryCallback = broadcastRetryCallback, verifyProof = MerkLibVerifyProof(signedStateTransition))
     }
 
     fun hasApp(appName: String): Boolean {
