@@ -26,6 +26,7 @@ import org.dashj.platform.dapiclient.grpc.DefaultGetDataContractWithContractIdRe
 import org.dashj.platform.dapiclient.grpc.DefaultGetDocumentsWithContractIdRetryCallback
 import org.dashj.platform.dapiclient.grpc.DefaultGetIdentityWithIdentitiesRetryCallback
 import org.dashj.platform.dapiclient.model.DocumentQuery
+import org.dashj.platform.dapiclient.model.MerkLibVerifyProof
 import org.dashj.platform.dpp.DashPlatformProtocol
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
@@ -128,9 +129,9 @@ class Platform(val params: NetworkParameters) {
                 client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList())
             }
             params.id.contains("schnapps") -> {
-                apps["dpns"] = ClientAppDefinition("4BrYpaW5s26UWoBk9zEAYWxJANX7LFinmToprWo3VwgS")
-                apps["dashpay"] = ClientAppDefinition("9FmdUoXZJijvARgA3Vcg73ThYp5P4AaLis1WpXp9VGg1")
-                apps["featureFlags"] = ClientAppDefinition("5zcqp5wWJKCjxHVV4PHN6C6rx6oZgUT1FRvWACNhGCJZ")
+                apps["dpns"] = ClientAppDefinition("4KJF8PDRAw1rFrFTD95fE3QeutG47TwsJWjBs3wUhNWK")
+                apps["dashpay"] = ClientAppDefinition("3RcLJv6CRo7arseKxt82swXQ5t7snaPdNsdP7Kv4LeEr")
+                apps["featureFlags"] = ClientAppDefinition("7PZZ9fLygvBzY6V5XeD6JuKb2CgxwAiVzcUtSiMnzydf")
                 // apps["thumbnail"] = ClientAppDefinition("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
                 client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList())
             }
