@@ -45,6 +45,10 @@ compileJava.options.encoding = 'UTF-8'
 compileTestJava.options.encoding = 'UTF-8'
 javadoc.options.encoding = 'UTF-8'
 
+tasks.withType(Test) {
+    systemProperty "java.library.path", "platform-core/src/main/jniLibs"
+}
+
 task sourcesJar(type: Jar) {
     classifier 'sources'
     from sourceSets.main.allSource

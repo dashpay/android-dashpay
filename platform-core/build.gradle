@@ -62,6 +62,10 @@ publishing {
     }
 }
 
+tasks.withType(Test) {
+    systemProperty "java.library.path", "platform-core/src/main/jniLibs"
+}
+
 test {
     useJUnitPlatform()
 }

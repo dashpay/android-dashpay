@@ -43,6 +43,10 @@ compileJava.options.encoding = 'UTF-8'
 compileTestJava.options.encoding = 'UTF-8'
 javadoc.options.encoding = 'UTF-8'
 
+tasks.withType(JavaExec) {
+    systemProperty "java.library.path", "platform-core/src/main/jniLibs"
+}
+
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from javadoc.destinationDir
