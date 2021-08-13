@@ -79,36 +79,57 @@ class Platform(val params: NetworkParameters) {
     init {
         when {
             params.id.contains("test") -> {
-                apps["dpns"] = ClientAppDefinition("76wgB8KBxLGhtEzn4Hp5zgheyzzpHYvfcWGLs69B2ahq")
-                apps["dashpay"] = ClientAppDefinition("6wfobip5Mfn6NNGK9JTQ5eHtZozpkNx4aZUsnCxkfgj5")
-                apps["featureFlags"] = ClientAppDefinition("4CTBQw6eJK9Kg7k4F4v6U1RPMtkfCoPbQzUJDCi85pQb")
+                apps["dpns"] = ClientAppDefinition("H2P7t8e3z2Naf55RiUrEK63fLfeGzaza5x5etm9J1ppG")
+                apps["dashpay"] = ClientAppDefinition("HpJZGdjnHjUucndek2kc1P9RBhTQZxjHFeQKnanxVVJp")
+                apps["featureFlags"] = ClientAppDefinition("2ddvAY6hEb514Bog78DLcdAzP8PuiqdmijpAXP5nyVX5")
                 client = DapiClient(TestNet3Params.MASTERNODES.toList())
                 permanentBanList = listOf(
+                    "3.90.167.67",
+                    "18.236.78.191",
                     "45.48.168.16", // unavailable
                     "34.214.102.160", // no dashpay contract
                     "174.34.233.98",
+                    "174.34.233.112",
                     "174.34.233.119", // unavailable
                     "174.34.233.133", // unavailable
                     "174.34.233.134", // unavailable
                     "52.11.252.174", // no dashpay contract
                     "34.209.124.112", // no dashpay contract
+                    "35.247.4.64",
+                    "136.244.113.166",
+                    "174.34.233.113", // no dashpay contract
+                    "174.34.233.114", // no dashpay contract
+                    "174.34.233.115",
+                    "174.34.233.116",
                     "174.34.233.118", // unavailable
                     "174.34.233.120", // unavailable
                     "178.62.203.249", // unavailable
                     "60.205.218.5",
                     "51.68.175.79",
+                    "51.195.122.4",
+                    "51.195.122.6",
+                    "54.190.73.116", // no dashpay contract
                     "80.208.231.9", // no dashpay contract
                     "206.189.147.240", // unavailable
                     "178.62.203.249", // unavailable
+                    "65.21.248.22",
+                    "65.21.248.190",
+                    "65.21.240.224",
                     "35.164.180.39", // no dashpay contract
                     "80.209.231.29", // no dashpay contract
                     "80.208.228.172", // no dashpay contract
+                    "95.179.171.177",
                     "34.208.190.130", // no dashpay contract
                     "174.34.233.117", // no dashpay contract
                     "174.34.233.127", // no dashpay contract
                     "143.110.156.147", // no dashpay contract
                     "174.34.233.121", // no dashpay contract
-                    "174.34.233.132" // no waitForStateTransitionResult, no dashpay contract
+                    "174.34.233.132", // no waitForStateTransitionResult, no dashpay contract
+                    "135.125.232.20",
+                    "135.125.239.254",
+                    "135.181.37.140",
+                    "159.224.190.244",
+                    "54.148.229.157"
                 )
             }
             params.id.contains("evonet") -> {
