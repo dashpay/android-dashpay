@@ -29,7 +29,6 @@ import org.bitcoinj.params.DevNetParams;
 import org.bitcoinj.params.EvoNetParams;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.MobileDevNetParams;
-import org.bitcoinj.params.PalinkaDevNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.quorums.InstantSendLock;
@@ -75,7 +74,7 @@ public class ForwardingServiceEvo {
         // This line makes the log output more compact and easily read, especially when using the JDK log adapter.
         BriefLogFormatter.initWithSilentBitcoinJ();
         if (args.length < 1) {
-            System.err.println("Usage: address-to-send-back-to [regtest|testnet|evonet|palinka|devnet] [devnet-name] [devnet-sporkaddress] [devnet-port] [devnet-dnsseed...]");
+            System.err.println("Usage: address-to-send-back-to [regtest|testnet|schnapps|devnet] [devnet-name] [devnet-sporkaddress] [devnet-port] [devnet-dnsseed...]");
             return;
         }
 
@@ -90,9 +89,6 @@ public class ForwardingServiceEvo {
         } else if (args.length > 1 && args[1].equals("regtest")) {
             params = RegTestParams.get();
             filePrefix = "forwarding-service-regtest";
-        } else if (args.length > 1 && args[1].equals("palinka")) {
-            params = PalinkaDevNetParams.get();
-            filePrefix = "forwarding-service-palinka";
         } else if (args.length > 1 && args[1].equals("mobile")) {
             params = MobileDevNetParams.get();
             filePrefix = "forwarding-service-mobile";

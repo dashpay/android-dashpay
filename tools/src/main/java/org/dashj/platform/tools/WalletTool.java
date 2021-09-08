@@ -83,7 +83,6 @@ import org.bitcoinj.evolution.SimplifiedMasternodeListEntry;
 import org.bitcoinj.params.EvoNetParams;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.MobileDevNetParams;
-import org.bitcoinj.params.PalinkaDevNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.protocols.payments.PaymentProtocol;
@@ -380,9 +379,9 @@ public class WalletTool {
                 params = MainNetParams.get();
                 chainFileName = new File("mainnet.spvchain");
                 break;
-            case PALINKA:
-                params = PalinkaDevNetParams.get();
-                chainFileName = new File("palinka-devnet.spvchain");
+            case SCHNAPPS:
+                params = SchnappsDevNetParams.get();
+                chainFileName = new File("schnapps-devnet.spvchain");
                 break;
             case EVONET:
                 params = EvoNetParams.get();

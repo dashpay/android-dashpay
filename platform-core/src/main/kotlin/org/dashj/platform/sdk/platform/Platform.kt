@@ -16,7 +16,6 @@ import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.evolution.SimplifiedMasternodeListManager
 import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.params.MobileDevNetParams
-import org.bitcoinj.params.PalinkaDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.dashj.platform.dapiclient.DapiClient
 import org.dashj.platform.dapiclient.MaxRetriesReachedException
@@ -142,19 +141,12 @@ class Platform(val params: NetworkParameters) {
                 apps["dashpay"] = ClientAppDefinition("FqAxLy1KMzGTb2Xj4A2tpxw89srN5VK8D6yuMnkzzk5P")
                 client = DapiClient(MobileDevNetParams.MASTERNODES.toList())
             }
-            params.id.contains("palinka") -> {
-                apps["dpns"] = ClientAppDefinition("8WExqeabDEg2zu4ioTBrzt7nB9X4YA8Ggq3ja1z6h7B3")
-                apps["dashpay"] = ClientAppDefinition("2Tmp9qxQaE9pYbpxa1mEVRL8fiNBmY4sdTnmk5cEmVd4")
-                apps["featureFlags"] = ClientAppDefinition("5McDmoegV2xvuvpSJVvZyYRPbZQ4F5DC5bxcWQXMuV2z")
-                // apps["thumbnail"] = ClientAppDefinition("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
-                client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList())
-            }
             params.id.contains("schnapps") -> {
                 apps["dpns"] = ClientAppDefinition("4KJF8PDRAw1rFrFTD95fE3QeutG47TwsJWjBs3wUhNWK")
                 apps["dashpay"] = ClientAppDefinition("3RcLJv6CRo7arseKxt82swXQ5t7snaPdNsdP7Kv4LeEr")
                 apps["featureFlags"] = ClientAppDefinition("7PZZ9fLygvBzY6V5XeD6JuKb2CgxwAiVzcUtSiMnzydf")
                 // apps["thumbnail"] = ClientAppDefinition("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
-                client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList())
+                client = DapiClient(SchnappsDevNetParams.get().defaultMasternodeList.toList())
             }
         }
     }
