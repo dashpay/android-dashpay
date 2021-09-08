@@ -6,7 +6,6 @@
  */
 package org.dashj.platform.sdk
 
-import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.params.MobileDevNetParams
 import org.bitcoinj.params.SchnappsDevNetParams
 import org.bitcoinj.params.TestNet3Params
@@ -22,7 +21,6 @@ import org.dashj.platform.sdk.platform.Platform
 
 class Client(private val clientOptions: ClientOptions) {
     val params = when (clientOptions.network) {
-        "evonet" -> EvoNetParams.get()
         "mobile" -> MobileDevNetParams.get()
         "testnet" -> TestNet3Params.get()
         "schnapps" -> SchnappsDevNetParams.get()

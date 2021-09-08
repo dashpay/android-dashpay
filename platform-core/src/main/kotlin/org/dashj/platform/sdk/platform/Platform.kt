@@ -14,8 +14,8 @@ import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.evolution.SimplifiedMasternodeListManager
-import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.params.MobileDevNetParams
+import org.bitcoinj.params.SchnappsDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.dashj.platform.dapiclient.DapiClient
 import org.dashj.platform.dapiclient.MaxRetriesReachedException
@@ -130,11 +130,6 @@ class Platform(val params: NetworkParameters) {
                     "159.224.190.244",
                     "54.148.229.157"
                 )
-            }
-            params.id.contains("evonet") -> {
-                apps["dpns"] = ClientAppDefinition("3VvS19qomuGSbEYWbTsRzeuRgawU3yK4fPMzLrbV62u8")
-                apps["dashpay"] = ClientAppDefinition("5kML7KqerxF2wU7acywVhpVRHtJGrNGh9swcmqNmFg2s")
-                client = DapiClient(EvoNetParams.MASTERNODES.toList())
             }
             params.id.contains("mobile") -> {
                 apps["dpns"] = ClientAppDefinition("CVZzFCbz4Rcf2Lmu9mvtC1CmvPukHy5kS2LNtNaBFM2N")

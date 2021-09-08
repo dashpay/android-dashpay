@@ -26,7 +26,6 @@ import org.bitcoinj.evolution.CreditFundingTransaction;
 import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.net.discovery.MasternodePeerDiscovery;
 import org.bitcoinj.params.DevNetParams;
-import org.bitcoinj.params.EvoNetParams;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.MobileDevNetParams;
 import org.bitcoinj.params.RegTestParams;
@@ -92,10 +91,6 @@ public class ForwardingServiceEvo {
         } else if (args.length > 1 && args[1].equals("mobile")) {
             params = MobileDevNetParams.get();
             filePrefix = "forwarding-service-mobile";
-            platform = new Platform(params);
-        } else if (args.length > 1 && args[1].equals("evonet")) {
-            params = EvoNetParams.get();
-            filePrefix = "forwarding-service-evonet";
             platform = new Platform(params);
         } else if( args.length > 6 && args[1].equals("devnet")) {
             String [] dnsSeeds = new String[args.length - 5];

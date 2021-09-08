@@ -11,7 +11,7 @@ import java.security.SecureRandom
 import java.util.Date
 import java.util.Scanner
 import org.bitcoinj.core.Address
-import org.bitcoinj.params.EvoNetParams
+import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.utils.BriefLogFormatter
 import org.bitcoinj.wallet.DeterministicKeyChain
 import org.bitcoinj.wallet.DeterministicSeed
@@ -22,7 +22,7 @@ import org.dashj.platform.sdk.client.ClientOptions
 class CreateWalletsWithBalance {
     companion object {
         lateinit var sdk: Client
-        private val PARAMS = EvoNetParams.get()
+        private val PARAMS = TestNet3Params.get()
         var configurationFile: String = ""
         var network: String = ""
         var balance: Double = 1.0

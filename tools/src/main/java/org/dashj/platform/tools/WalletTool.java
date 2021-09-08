@@ -80,10 +80,10 @@ import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.evolution.CreditFundingTransaction;
 import org.bitcoinj.evolution.SimplifiedMasternodeList;
 import org.bitcoinj.evolution.SimplifiedMasternodeListEntry;
-import org.bitcoinj.params.EvoNetParams;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.MobileDevNetParams;
 import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.params.SchnappsDevNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.protocols.payments.PaymentProtocol;
 import org.bitcoinj.protocols.payments.PaymentProtocolException;
@@ -382,10 +382,6 @@ public class WalletTool {
             case SCHNAPPS:
                 params = SchnappsDevNetParams.get();
                 chainFileName = new File("schnapps-devnet.spvchain");
-                break;
-            case EVONET:
-                params = EvoNetParams.get();
-                chainFileName = new File("evonet-devnet.spvchain");
                 break;
             case MOBILE:
                 params = MobileDevNetParams.get();

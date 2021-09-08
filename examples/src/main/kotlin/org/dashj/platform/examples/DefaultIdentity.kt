@@ -4,8 +4,8 @@ import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.core.Utils
-import org.bitcoinj.params.EvoNetParams
 import org.bitcoinj.params.MobileDevNetParams
+import org.bitcoinj.params.SchnappsDevNetParams
 import org.bitcoinj.params.TestNet3Params
 
 /*
@@ -60,7 +60,6 @@ class DefaultIdentity(val params: NetworkParameters) {
 
     constructor(network: String) : this (
         when (network) {
-            "evonet" -> EvoNetParams.get()
             "schnapps" -> SchnappsDevNetParams.get()
             "mobile" -> MobileDevNetParams.get()
             "testnet" -> TestNet3Params.get()
@@ -74,9 +73,6 @@ class DefaultIdentity(val params: NetworkParameters) {
         when {
             params.id.contains("test") -> {
                 seed = "chief capital exile you toilet jaguar session crisp lawn mosquito tool lottery"
-            }
-            params.id.contains("evonet") -> {
-                seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
             }
             params.id.contains("mobile") -> {
                 seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
