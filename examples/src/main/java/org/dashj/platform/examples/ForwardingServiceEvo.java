@@ -28,6 +28,7 @@ import org.bitcoinj.net.discovery.MasternodePeerDiscovery;
 import org.bitcoinj.params.DevNetParams;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.params.SchnappsDevNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.quorums.InstantSendLock;
 import org.bitcoinj.utils.BriefLogFormatter;
@@ -87,6 +88,9 @@ public class ForwardingServiceEvo {
         } else if (args.length > 1 && args[1].equals("regtest")) {
             params = RegTestParams.get();
             filePrefix = "forwarding-service-regtest";
+        } else if (args.length > 1 && args[1].equals("schnapps")) {
+            params = SchnappsDevNetParams.get();
+            filePrefix = "forwarding-service-schnapps";
         } else if( args.length > 6 && args[1].equals("devnet")) {
             String [] dnsSeeds = new String[args.length - 5];
             System.arraycopy(args, 5, dnsSeeds, 0, args.length - 5);
