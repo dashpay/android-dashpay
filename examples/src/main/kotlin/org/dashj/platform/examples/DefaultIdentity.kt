@@ -4,9 +4,7 @@ import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.core.Utils
-import org.bitcoinj.params.EvoNetParams
-import org.bitcoinj.params.MobileDevNetParams
-import org.bitcoinj.params.PalinkaDevNetParams
+import org.bitcoinj.params.SchnappsDevNetParams
 import org.bitcoinj.params.TestNet3Params
 
 /*
@@ -61,9 +59,7 @@ class DefaultIdentity(val params: NetworkParameters) {
 
     constructor(network: String) : this (
         when (network) {
-            "evonet" -> EvoNetParams.get()
-            "palinka" -> PalinkaDevNetParams.get()
-            "mobile" -> MobileDevNetParams.get()
+            "schnapps" -> SchnappsDevNetParams.get()
             "testnet" -> TestNet3Params.get()
             else -> throw IllegalArgumentException("network $network is not valid")
         }
@@ -75,15 +71,6 @@ class DefaultIdentity(val params: NetworkParameters) {
         when {
             params.id.contains("test") -> {
                 seed = "chief capital exile you toilet jaguar session crisp lawn mosquito tool lottery"
-            }
-            params.id.contains("evonet") -> {
-                seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
-            }
-            params.id.contains("mobile") -> {
-                seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
-            }
-            params.id.contains("palinka") -> {
-                seed = "pigeon they festival caution film possible address gadget load clutch sure margin"
             }
             params.id.contains("schnapps") -> {
                 seed = "badge flight captain accident aspect expand average angle drift gather march survey"

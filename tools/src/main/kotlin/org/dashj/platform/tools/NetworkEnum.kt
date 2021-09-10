@@ -17,5 +17,5 @@ package org.dashj.platform.tools
 
 enum class NetworkEnum {
     MAIN, PROD, // alias for MAIN
-    TEST, REGTEST, MOBILE, EVONET, PALINKA, DEVNET
+    TEST, REGTEST, SCHNAPPS, DEVNET
 }

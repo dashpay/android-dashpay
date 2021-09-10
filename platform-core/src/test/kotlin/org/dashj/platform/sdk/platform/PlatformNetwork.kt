@@ -23,18 +23,6 @@ open class PlatformNetwork {
                 assetLockTxId = "1175bf329cf6d35839f67aa57da87636a76b4837ce76b46ababa2a415be8d866"
                 seed = "mango air virus pigeon crowd attract review lemon lion assume lab rain"
             }
-            platform.params.id.contains("evonet") -> {
-                assetLockTxId = "1175bf329cf6d35839f67aa57da87636a76b4837ce76b46ababa2a415be8d866"
-                seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
-            }
-            platform.params.id.contains("mobile") -> {
-                assetLockTxId = "1175bf329cf6d35839f67aa57da87636a76b4837ce76b46ababa2a415be8d866"
-                seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
-            }
-            platform.params.id.contains("palinka") -> {
-                assetLockTxId = "1175bf329cf6d35839f67aa57da87636a76b4837ce76b46ababa2a415be8d866"
-                seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
-            }
             else -> {
                 assetLockTxId = ""
                 seed = ""

@@ -29,7 +29,7 @@ class ShowContactRequests {
             val network = if (args.isNotEmpty()) {
                 args[0]
             } else {
-                println("Enter the network in which to make a contact request query (palinka, evonet, mobile): ")
+                println("Enter the network in which to make a contact request query (testnet, schnapps): ")
                 scanner.next()
             }
 

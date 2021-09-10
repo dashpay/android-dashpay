@@ -17,7 +17,7 @@ import org.bitcoinj.core.Coin
 import org.bitcoinj.core.Transaction
 import org.bitcoinj.core.TransactionOutput
 import org.bitcoinj.evolution.CreditFundingTransaction
-import org.bitcoinj.params.EvoNetParams
+import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.utils.BriefLogFormatter
 import org.bitcoinj.wallet.AuthenticationKeyChain
 import org.bitcoinj.wallet.CoinSelection
@@ -66,7 +66,7 @@ fun String.runCommand(workingDir: File): String? {
 class CreateWallets {
     companion object {
         lateinit var sdk: Client
-        private val PARAMS = EvoNetParams.get()
+        private val PARAMS = TestNet3Params.get()
         var configurationFile: String = ""
         var network: String = ""
         var contact: String = ""

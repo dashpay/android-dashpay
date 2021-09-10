@@ -14,9 +14,7 @@ import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.evolution.SimplifiedMasternodeListManager
-import org.bitcoinj.params.EvoNetParams
-import org.bitcoinj.params.MobileDevNetParams
-import org.bitcoinj.params.PalinkaDevNetParams
+import org.bitcoinj.params.SchnappsDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.dashj.platform.dapiclient.DapiClient
 import org.dashj.platform.dapiclient.MaxRetriesReachedException
@@ -132,29 +130,12 @@ class Platform(val params: NetworkParameters) {
                     "54.148.229.157"
                 )
             }
-            params.id.contains("evonet") -> {
-                apps["dpns"] = ClientAppDefinition("3VvS19qomuGSbEYWbTsRzeuRgawU3yK4fPMzLrbV62u8")
-                apps["dashpay"] = ClientAppDefinition("5kML7KqerxF2wU7acywVhpVRHtJGrNGh9swcmqNmFg2s")
-                client = DapiClient(EvoNetParams.MASTERNODES.toList())
-            }
-            params.id.contains("mobile") -> {
-                apps["dpns"] = ClientAppDefinition("CVZzFCbz4Rcf2Lmu9mvtC1CmvPukHy5kS2LNtNaBFM2N")
-                apps["dashpay"] = ClientAppDefinition("FqAxLy1KMzGTb2Xj4A2tpxw89srN5VK8D6yuMnkzzk5P")
-                client = DapiClient(MobileDevNetParams.MASTERNODES.toList())
-            }
-            params.id.contains("palinka") -> {
-                apps["dpns"] = ClientAppDefinition("8WExqeabDEg2zu4ioTBrzt7nB9X4YA8Ggq3ja1z6h7B3")
-                apps["dashpay"] = ClientAppDefinition("2Tmp9qxQaE9pYbpxa1mEVRL8fiNBmY4sdTnmk5cEmVd4")
-                apps["featureFlags"] = ClientAppDefinition("5McDmoegV2xvuvpSJVvZyYRPbZQ4F5DC5bxcWQXMuV2z")
-                // apps["thumbnail"] = ClientAppDefinition("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
-                client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList())
-            }
             params.id.contains("schnapps") -> {
                 apps["dpns"] = ClientAppDefinition("4KJF8PDRAw1rFrFTD95fE3QeutG47TwsJWjBs3wUhNWK")
                 apps["dashpay"] = ClientAppDefinition("3RcLJv6CRo7arseKxt82swXQ5t7snaPdNsdP7Kv4LeEr")
                 apps["featureFlags"] = ClientAppDefinition("7PZZ9fLygvBzY6V5XeD6JuKb2CgxwAiVzcUtSiMnzydf")
                 // apps["thumbnail"] = ClientAppDefinition("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
-                client = DapiClient(PalinkaDevNetParams.get().defaultMasternodeList.toList())
+                client = DapiClient(SchnappsDevNetParams.get().defaultMasternodeList.toList())
             }
         }
     }

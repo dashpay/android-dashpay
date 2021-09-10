@@ -13,12 +13,12 @@ import org.json.JSONObject
 
 /**
  * This is an example that will register all the names from the command line
- * using an example identity on mobile devnet
+ * using an example identity on schnapps devnet
  */
 
 class RegisterNames {
     companion object {
-        val sdk = Client(ClientOptions(network = "mobile"))
+        val sdk = Client(ClientOptions(network = "schnapps"))
 
         @JvmStatic
         fun main(args: Array<String>) {

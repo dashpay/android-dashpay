@@ -16,7 +16,7 @@ import org.json.JSONObject
 
 class CreateIdentity {
     companion object {
-        val sdk = Client(ClientOptions(network = "palinka"))
+        val sdk = Client(ClientOptions(network = "schnapps"))
 
         @JvmStatic
         fun main(args: Array<String>) {

@@ -10,7 +10,7 @@ import org.dashj.platform.sdk.client.ClientOptions
 
 class WatchContactRequest {
     companion object {
-        val sdk = Client(ClientOptions(network = "mobile"))
+        val sdk = Client(ClientOptions(network = "schnapps"))
 
         @JvmStatic
         fun main(args: Array<String>) {
