@@ -8,7 +8,7 @@ echo Recovery Phrase, Username, Display Name, Username Created Date, Balance, Fi
 
 for /F "tokens=*" %%A in (list.txt) do (
 	echo processing recovery phrase: %%A
-	if exist *.spvchain del mobile-devnet.spvchain
+	if exist *.spvchain del *.spvchain
 	if exist *.wallet del wallettool.wallet
 	if exist *.dat del simplifiedmasternodelistmanager.dat
 

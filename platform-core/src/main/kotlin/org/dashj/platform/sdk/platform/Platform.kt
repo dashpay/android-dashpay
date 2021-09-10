@@ -14,7 +14,6 @@ import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.evolution.SimplifiedMasternodeListManager
-import org.bitcoinj.params.MobileDevNetParams
 import org.bitcoinj.params.SchnappsDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.dashj.platform.dapiclient.DapiClient
@@ -130,11 +129,6 @@ class Platform(val params: NetworkParameters) {
                     "159.224.190.244",
                     "54.148.229.157"
                 )
-            }
-            params.id.contains("mobile") -> {
-                apps["dpns"] = ClientAppDefinition("CVZzFCbz4Rcf2Lmu9mvtC1CmvPukHy5kS2LNtNaBFM2N")
-                apps["dashpay"] = ClientAppDefinition("FqAxLy1KMzGTb2Xj4A2tpxw89srN5VK8D6yuMnkzzk5P")
-                client = DapiClient(MobileDevNetParams.MASTERNODES.toList())
             }
             params.id.contains("schnapps") -> {
                 apps["dpns"] = ClientAppDefinition("4KJF8PDRAw1rFrFTD95fE3QeutG47TwsJWjBs3wUhNWK")

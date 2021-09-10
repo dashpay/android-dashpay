@@ -6,7 +6,6 @@
  */
 package org.dashj.platform.sdk
 
-import org.bitcoinj.params.MobileDevNetParams
 import org.bitcoinj.params.SchnappsDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.wallet.DerivationPathFactory
@@ -21,7 +20,6 @@ import org.dashj.platform.sdk.platform.Platform
 
 class Client(private val clientOptions: ClientOptions) {
     val params = when (clientOptions.network) {
-        "mobile" -> MobileDevNetParams.get()
         "testnet" -> TestNet3Params.get()
         "schnapps" -> SchnappsDevNetParams.get()
         else -> throw IllegalArgumentException("network ${clientOptions.network} is not valid")
