@@ -31,7 +31,7 @@ class Contracts(val platform: Platform) {
     }
 
     fun create(documentDefinitions: MutableMap<String, Any?>, identity: Identity): DataContract {
-        return platform.dpp.dataContract.createDataContract(identity.id.toBuffer(), documentDefinitions)
+        return platform.dpp.dataContract.create(identity.id.toBuffer(), documentDefinitions)
     }
 
     fun get(identifier: String): DataContract? {
