@@ -52,9 +52,9 @@ import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
 import org.dashj.platform.dpp.identity.IdentityPublicKey
 import org.dashj.platform.dpp.statetransition.StateTransitionIdentitySigned
-import org.dashj.platform.dpp.toHexString
+import org.dashj.platform.dpp.toHex
 import org.dashj.platform.dpp.util.Cbor
-import org.dashj.platform.dpp.util.HashUtils
+import org.dashj.platform.dpp.util.Converters
 import org.dashj.platform.sdk.platform.Names
 import org.dashj.platform.sdk.platform.Platform
 import org.dashj.platform.sdk.platform.multicall.MulticallMethod
@@ -1533,7 +1533,7 @@ class BlockchainIdentity {
         val contactIdentityPublicKey = contactIdentity.getPublicKeyById(index)
         return FriendKeyChain(
             params,
-            xpub.toHexString(),
+            xpub.toHex(),
             EvolutionContact(uniqueId, account, contactIdentity.id.toSha256Hash(), accountReference)
         )
     }
@@ -1683,7 +1683,7 @@ class BlockchainIdentity {
     ): Boolean {
         val contact = EvolutionContact(uniqueId, account, contactIdentity.id.toSha256Hash(), -1)
         if (!wallet!!.hasReceivingKeyChain(contact)) {
-            val encryptedXpub = HashUtils.byteArrayfromBase64orByteArray(contactRequest.encryptedPublicKey)
+            val encryptedXpub = Converters.byteArrayfromBase64orByteArray(contactRequest.encryptedPublicKey)
             val senderKeyIndex = contactRequest.senderKeyIndex
             val recipientKeyIndex = contactRequest.recipientKeyIndex
             val contactKeyChain = getReceiveFromContactChain(contactIdentity, encryptionKey)

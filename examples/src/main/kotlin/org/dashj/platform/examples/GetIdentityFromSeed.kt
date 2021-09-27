@@ -10,7 +10,7 @@ import org.bitcoinj.script.Script
 import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.KeyChainGroup
 import org.bitcoinj.wallet.Wallet
-import org.dashj.platform.dpp.toHexString
+import org.dashj.platform.dpp.toHex
 import org.dashj.platform.sdk.Client
 import org.dashj.platform.sdk.client.ClientOptions
 
@@ -42,7 +42,7 @@ class GetIdentityFromSeed {
             val wallet = Wallet(platform.params, kcg)
             wallet.initializeAuthenticationKeyChains(seed, null)
 
-            println("Locate the identity with this first public key hash ${wallet.blockchainIdentityKeyChain.watchingKey.pubKeyHash.toHexString()}")
+            println("Locate the identity with this first public key hash ${wallet.blockchainIdentityKeyChain.watchingKey.pubKeyHash.toHex()}")
             val identity = platform.identities.getByPublicKeyHash(wallet.blockchainIdentityKeyChain.watchingKey.pubKeyHash)
             if (identity != null) {
                 println("Identity: ${identity.id}")

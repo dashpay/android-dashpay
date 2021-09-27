@@ -39,8 +39,8 @@ import org.dashj.platform.dashpay.callback.SendContactRequestCallback
 import org.dashj.platform.dashpay.callback.UpdateProfileCallback
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.identifier.Identifier
-import org.dashj.platform.dpp.toHexString
-import org.dashj.platform.dpp.util.HashUtils
+import org.dashj.platform.dpp.toHex
+import org.dashj.platform.dpp.util.Converters
 import org.dashj.platform.sdk.Client
 import org.dashj.platform.sdk.client.ClientOptions
 import org.dashj.platform.sdk.platform.DomainDocument
@@ -153,7 +153,7 @@ class CreateWallets {
                 // get tx information
                 val txBytes = runRpc("getrawtransaction $txid")!!.trim()
                 println(txBytes)
-                val walletTx = Transaction(PARAMS, HashUtils.fromHex(txBytes))
+                val walletTx = Transaction(PARAMS, Converters.fromHex(txBytes))
 
                 // create the wallet
                 val keyChainGroup = KeyChainGroup.builder(PARAMS).addChain(chain).build()
@@ -180,7 +180,7 @@ class CreateWallets {
                 }
 
                 val cftx = wallet.sendCoinsOffline(sendRequest) as CreditFundingTransaction
-                val cftxid = runRpc("sendrawtransaction ${cftx.bitcoinSerialize().toHexString()}")
+                val cftxid = runRpc("sendrawtransaction ${cftx.bitcoinSerialize().toHex()}")
                 println("credit funding tx: ${cftx.txId}")
                 println("credit funding tx sent via rpc: $cftxid")
                 println("identity id: ${cftx.creditBurnIdentityIdentifier.toStringBase58()}")

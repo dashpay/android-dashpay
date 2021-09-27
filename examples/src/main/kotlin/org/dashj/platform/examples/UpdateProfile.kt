@@ -14,6 +14,7 @@ import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.KeyChainGroup
 import org.bitcoinj.wallet.Wallet
 import org.dashj.platform.dashpay.BlockchainIdentity
+import org.dashj.platform.dpp.toHex
 import org.dashj.platform.sdk.Client
 import org.dashj.platform.sdk.client.ClientOptions
 import org.json.JSONObject
@@ -54,6 +55,7 @@ class UpdateProfile {
 
             val blockchainIdentity = BlockchainIdentity(platform, 0, wallet)
             blockchainIdentity.recoverIdentity(wallet.blockchainIdentityKeyChain.watchingKey.pubKeyHash)
+            println("pkh = ${wallet.blockchainIdentityKeyChain.watchingKey.pubKeyHash.toHex()}")
 
             val currentProfile = blockchainIdentity.getProfileFromPlatform()!!
 

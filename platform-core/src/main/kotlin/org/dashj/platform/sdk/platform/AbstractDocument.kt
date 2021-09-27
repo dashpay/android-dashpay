@@ -8,7 +8,7 @@ package org.dashj.platform.sdk.platform
 
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.identifier.Identifier
-import org.dashj.platform.dpp.util.HashUtils
+import org.dashj.platform.dpp.util.Converters
 
 abstract class AbstractDocument(val document: Document) {
 
@@ -47,7 +47,7 @@ abstract class AbstractDocument(val document: Document) {
     protected fun getFieldByteArray(fieldName: String): ByteArray? {
         val field = document.data[fieldName]
         return if (field != null) {
-            HashUtils.byteArrayfromBase64orByteArray(field)
+            Converters.byteArrayFromBase64orByteArray(field)
         } else {
             null
         }

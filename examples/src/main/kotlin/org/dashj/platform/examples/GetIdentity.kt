@@ -7,7 +7,7 @@
 package org.dashj.platform.examples
 
 import org.bitcoinj.core.ECKey
-import org.dashj.platform.dpp.toHexString
+import org.dashj.platform.dpp.toHex
 import org.dashj.platform.sdk.Client
 import org.dashj.platform.sdk.client.ClientOptions
 
@@ -36,7 +36,7 @@ class GetIdentity {
             if (identity != null) {
                 println("Identity: ${identity.id}")
                 val publicKey = ECKey.fromPublicOnly(identity.publicKeys[0].data)
-                println("Identity Public Key: ${publicKey.pubKeyHash.toHexString()}")
+                println("Identity Public Key: ${publicKey.pubKeyHash.toHex()}")
                 val nameDocuments = platform.names.getByOwnerId(identity.id)
                 if (nameDocuments.isNotEmpty()) {
                     println("Name: ${nameDocuments[0].data["label"] as String}")
