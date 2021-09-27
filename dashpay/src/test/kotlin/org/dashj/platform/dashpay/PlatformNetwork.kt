@@ -14,7 +14,7 @@ open class PlatformNetwork {
 
     val platform = Platform(SchnappsDevNetParams.get())
     // val seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
-    val seed = "version route there raw fringe derive gain prepare online salon faint scrub"
+    val seed = "jump human safe afraid brother economy erode tooth often earth quarter absent"
     val wallet: Wallet = Wallet(
         platform.params,
         KeyChainGroup.builder(platform.params)
