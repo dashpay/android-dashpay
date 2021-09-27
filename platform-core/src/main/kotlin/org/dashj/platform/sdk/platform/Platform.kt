@@ -50,7 +50,7 @@ class Platform(val params: NetworkParameters) {
     val identities = Identities(this)
     var names = Names(this)
     lateinit var client: DapiClient
-    private var permanentBanList: List<String> = listOf()
+    private var useWhiteList = false
     val documentsRetryCallback = object : DefaultGetDocumentsWithContractIdRetryCallback(apps.map { it.value.contractId }) {
         override val retryContractIds
             get() = getAppList() // always use the latest app list
@@ -81,54 +81,7 @@ class Platform(val params: NetworkParameters) {
                 apps["dashpay"] = ClientAppDefinition("HpJZGdjnHjUucndek2kc1P9RBhTQZxjHFeQKnanxVVJp")
                 apps["featureFlags"] = ClientAppDefinition("2ddvAY6hEb514Bog78DLcdAzP8PuiqdmijpAXP5nyVX5")
                 client = DapiClient(TestNet3Params.MASTERNODES.toList())
-                permanentBanList = listOf(
-                    "3.90.167.67",
-                    "18.236.78.191",
-                    "45.48.168.16", // unavailable
-                    "34.214.102.160", // no dashpay contract
-                    "174.34.233.98",
-                    "174.34.233.112",
-                    "174.34.233.119", // unavailable
-                    "174.34.233.133", // unavailable
-                    "174.34.233.134", // unavailable
-                    "52.11.252.174", // no dashpay contract
-                    "34.209.124.112", // no dashpay contract
-                    "35.247.4.64",
-                    "136.244.113.166",
-                    "174.34.233.113", // no dashpay contract
-                    "174.34.233.114", // no dashpay contract
-                    "174.34.233.115",
-                    "174.34.233.116",
-                    "174.34.233.118", // unavailable
-                    "174.34.233.120", // unavailable
-                    "178.62.203.249", // unavailable
-                    "60.205.218.5",
-                    "51.68.175.79",
-                    "51.195.122.4",
-                    "51.195.122.6",
-                    "54.190.73.116", // no dashpay contract
-                    "80.208.231.9", // no dashpay contract
-                    "206.189.147.240", // unavailable
-                    "178.62.203.249", // unavailable
-                    "65.21.248.22",
-                    "65.21.248.190",
-                    "65.21.240.224",
-                    "35.164.180.39", // no dashpay contract
-                    "80.209.231.29", // no dashpay contract
-                    "80.208.228.172", // no dashpay contract
-                    "95.179.171.177",
-                    "34.208.190.130", // no dashpay contract
-                    "174.34.233.117", // no dashpay contract
-                    "174.34.233.127", // no dashpay contract
-                    "143.110.156.147", // no dashpay contract
-                    "174.34.233.121", // no dashpay contract
-                    "174.34.233.132", // no waitForStateTransitionResult, no dashpay contract
-                    "135.125.232.20",
-                    "135.125.239.254",
-                    "135.181.37.140",
-                    "159.224.190.244",
-                    "54.148.229.157"
-                )
+                useWhiteList = true
             }
             params.id.contains("schnapps") -> {
                 apps["dpns"] = ClientAppDefinition("8F4WqzVuqyYEBMR1AraBuYG1cjk3hqUYdzLSMdYpWLbH")
@@ -194,16 +147,16 @@ class Platform(val params: NetworkParameters) {
      */
     fun setMasternodeListManager(masternodeListManager: SimplifiedMasternodeListManager) {
         client.setSimplifiedMasternodeListManager(masternodeListManager, params.defaultMasternodeList.toList())
-        banMasternodes(permanentBanList)
+        appendWhiteList(params.defaultMasternodeList.toList())
     }
 
     /**
-     * Permanently ban a list of masternodes from being used by the DAPI client
-     * @param banList List<String> a list of IP addresses of masternodes to ban
+     * Permanently add a list of masternodes that can only be used by the DAPI client
+     * @param banList List<String> a list of IP addresses of masternodes to use
      */
-    fun banMasternodes(banList: List<String>) {
+    fun appendWhiteList(banList: List<String>) {
         banList.forEach {
-            client.dapiAddressListProvider.addBannedAddress(it)
+            client.dapiAddressListProvider.addAcceptedAddress(it)
         }
     }
 
