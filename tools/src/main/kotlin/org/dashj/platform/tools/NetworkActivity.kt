@@ -9,11 +9,14 @@ package org.dashj.platform.tools
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dashpay.ContactRequest
 import org.dashj.platform.dashpay.ContactRequests
+import org.dashj.platform.dashpay.Profile
+import org.dashj.platform.dashpay.Profiles
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.sdk.Client
 import org.dashj.platform.sdk.client.ClientOptions
 import org.dashj.platform.sdk.platform.Documents
+import org.dashj.platform.sdk.platform.DomainDocument
 import org.dashj.platform.sdk.platform.Names
 import org.dashj.platform.sdk.platform.Platform
 
@@ -42,6 +45,8 @@ class NetworkActivity {
             val contactRequests = getContactRequests()
             val establishedContacts = getEstablishedContacts(contactRequests)
             val identitiesWithoutUsernames = getIdentitiesWithoutUsernames(nameDocuments, contactRequests)
+            val profileDocuments = getProfileDocuments()
+            val totalCredits = getTotalCreditBalance(nameDocuments)
 
             // Display Report
             println()
@@ -49,9 +54,12 @@ class NetworkActivity {
             println("-----------------------")
             println("Network: $network")
             println("Registered usernames (.dash): ${nameDocuments.size}")
+            println("Profiles:                     ${profileDocuments.size}")
             println("Contact Requests:             ${contactRequests.size} [all sent] ")
             println("Established Contacts:         ${establishedContacts.size} [both sent and accepted]")
             println("Average Contacts per user:    ${"%.2f".format(establishedContacts.size.toDouble() / nameDocuments.size)}")
+            println("Total Credits Available:      $totalCredits")
+            println("Total Credits/User:           ${totalCredits/nameDocuments.size}")
 
             println("--------------------------------------------")
             val identities = getIdentitiesWithoutUsernames(nameDocuments, contactRequests)
@@ -68,9 +76,9 @@ class NetworkActivity {
             }
         }
 
-        private fun getIdentitiesWithoutUsernames(nameDocuments: List<Document>, contactRequests: List<ContactRequest>): List<Identifier> {
+        private fun getIdentitiesWithoutUsernames(nameDocuments: List<DomainDocument>, contactRequests: List<ContactRequest>): List<Identifier> {
             val contactRequestByOwnerId = contactRequests.associateBy({ it.ownerId }, { it })
-            val namesByOwnerId = nameDocuments.associateBy({ getIdentityForName(it) }, { it })
+            val namesByOwnerId = nameDocuments.associateBy({ getIdentityForName(it.document) }, { it })
 
             return contactRequestByOwnerId.filter { !namesByOwnerId.contains(it.key) }.map { it.key }
         }
@@ -102,13 +110,13 @@ class NetworkActivity {
             return allDocuments
         }
 
-        private fun getNameDocuments(): List<Document> {
+        private fun getNameDocuments(): List<DomainDocument> {
             val allNameDocuments = getAllDocuments(Names.DPNS_DOMAIN_DOCUMENT)
-            val nameDocuments = arrayListOf<Document>()
+            val nameDocuments = arrayListOf<DomainDocument>()
 
             allNameDocuments.forEach {
                 if (it.data["normalizedParentDomainName"] == "dash") {
-                    nameDocuments.add(it)
+                    nameDocuments.add(DomainDocument(it))
                 }
             }
 
@@ -136,6 +144,25 @@ class NetworkActivity {
                 }
             }
             return establishedContacts
+        }
+
+        fun getProfileDocuments() : List<Profile>{
+            val allDocuments = getAllDocuments(Profiles.DOCUMENT)
+            return allDocuments.map { Profile(it) }
+        }
+
+        private fun getTotalCreditBalance(names: List<DomainDocument>): Long {
+            var credits = 0L
+            names.forEach {
+                if (it.dashUniqueIdentityId != null) {
+                    val identity = platform.identities.get(it.dashUniqueIdentityId!!)
+
+                    if (identity != null) {
+                        credits += identity.balance
+                    }
+                }
+            }
+            return credits
         }
     }
 }
