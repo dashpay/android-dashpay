@@ -80,6 +80,7 @@ import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.evolution.CreditFundingTransaction;
 import org.bitcoinj.evolution.SimplifiedMasternodeList;
 import org.bitcoinj.evolution.SimplifiedMasternodeListEntry;
+import org.bitcoinj.net.discovery.ThreeMethodPeerDiscovery;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.SchnappsDevNetParams;
@@ -1369,7 +1370,8 @@ public class WalletTool {
     }
 
     // Sets up all objects needed for network communication but does not bring up the peers.
-    private static void setup() throws BlockStoreException {
+    private static void setup() throws BlockStoreException { setup(true); }
+    private static void setup(boolean autoSave) throws BlockStoreException {
         if (store != null) return;  // Already done.
         // Will create a fresh chain if one doesn't exist or there is an issue with this one.
         boolean reset = !chainFileName.exists();
@@ -1397,7 +1399,8 @@ public class WalletTool {
             chain = new FullPrunedBlockChain(params, wallet, (FullPrunedBlockStore) store);
         }
         // This will ensure the wallet is saved when it changes.
-        wallet.autosaveToFile(walletFile, 5, TimeUnit.SECONDS, null);
+        if (autoSave)
+            wallet.autosaveToFile(walletFile, 5, TimeUnit.SECONDS, null);
         if (peerGroup == null) {
             peerGroup = new PeerGroup(params, chain);
         }
@@ -1417,13 +1420,14 @@ public class WalletTool {
                 }
             }
         } else {
-            peerGroup.setRequiredServices(0);
+            // TODO: we used to use peerGroup.setRequiredServices(0); here
+            peerGroup.addPeerDiscovery(new ThreeMethodPeerDiscovery(params, Context.get().masternodeListManager));
         }
     }
 
     private static void syncChain(OptionSpec<WaitForEnum> waitForFlag) {
         try {
-            setup();
+            setup(false);
             int startTransactions = wallet.getTransactions(true).size();
             DownloadProgressTracker listener = new DownloadProgressTracker();
 
@@ -1434,7 +1438,7 @@ public class WalletTool {
                     initializeIdentity();
 
                     peerGroup.triggerPreBlockDownloadComplete();
-
+                    wallet.autosaveToFile(walletFile, 5, TimeUnit.SECONDS, null);
                     waitAndShutdownFuture.set(waitForFlag);
                 }
             });
