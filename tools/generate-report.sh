@@ -12,7 +12,10 @@ do
   rm -f wallettool.wallet
   rm -f simplifiedmasternodelistmanager.dat
 
-  ./bin/wallet-tool create --seed="${line}" --wallet=wallettool.wallet --net=TEST --force --unixtime=1610524820
+  echo "Create wallet with next recovery phrase"
+  ./bin/wallet-tool create --seed="${line}" --wallet=wallettool.wallet --net=TEST --force --unixtime=1625107252
+  echo "Sync wallet"
   ./bin/wallet-tool sync --wallet=wallettool.wallet --net=TEST
+  echo "Obtain DashPay and wallet information"
   ./bin/wallet-tool dump-dashpay --wallet=wallettool.wallet --net=TEST --outfile=reports/users.csv --csv
 done < list.txt

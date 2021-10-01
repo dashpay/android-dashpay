@@ -1464,7 +1464,7 @@ public class WalletTool {
     private static void initializeIdentity() {
         // Determine our blockchain identity
         if (blockchainIdentity == null) {
-            List<CreditFundingTransaction> cftxs = wallet.getCreditFundingTransactions();
+            List<CreditFundingTransaction> cftxs = wallet.getIdentityFundingTransactions();
             if (!cftxs.isEmpty()) {
                 CreditFundingTransaction cftx = cftxs.get(0);
                 blockchainIdentity = new BlockchainIdentity(platform, 0, wallet);
@@ -1485,6 +1485,8 @@ public class WalletTool {
             // synchronize the Platform data here
             dashPayWallet = new DashPayWallet(blockchainIdentity, peerGroup, null);
             dashPayWallet.updateContactRequests();
+        } else {
+            throw new RuntimeException("blockchainIdentity is null");
         }
     }
 
@@ -2056,7 +2058,7 @@ public class WalletTool {
             if (!found)
                 missing.add(nameDoc);
         }
-        System.out.println("These contact requests had failures: " + missing.toString());
+        System.out.println("These contact requests had failures: " + missing);
 
         System.out.println(platform.client.reportNetworkStatus());
 
@@ -2116,8 +2118,8 @@ public class WalletTool {
             onChange(latch);
         }
     }
-    private static SettableFuture<OptionSpec<WaitForEnum>> waitAndShutdownFuture = SettableFuture.create();
-    private static FutureCallback<OptionSpec<WaitForEnum>> waitAndShutdownCallback = new FutureCallback<OptionSpec<WaitForEnum>>() {
+    private static final SettableFuture<OptionSpec<WaitForEnum>> waitAndShutdownFuture = SettableFuture.create();
+    private static final FutureCallback<OptionSpec<WaitForEnum>> waitAndShutdownCallback = new FutureCallback<OptionSpec<WaitForEnum>>() {
 
         @Override
         public void onSuccess(@org.jetbrains.annotations.Nullable OptionSpec<WaitForEnum> result) {

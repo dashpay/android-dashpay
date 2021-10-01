@@ -12,7 +12,7 @@ for /F "tokens=*" %%A in (list.txt) do (
 	if exist *.wallet del wallettool.wallet
 	if exist *.dat del simplifiedmasternodelistmanager.dat
 
-	call bin\wallet-tool create --seed="%%A" --wallet=wallettool.wallet --net=TEST --force  --unixtime=1610524820
+	call bin\wallet-tool create --seed="%%A" --wallet=wallettool.wallet --net=TEST --force  --unixtime=1625107252
 	echo Syncing wallet...
 	call bin\wallet-tool sync --wallet=wallettool.wallet --net=TEST
 	echo Exporting data about username...
