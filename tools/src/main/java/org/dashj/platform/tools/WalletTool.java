@@ -1766,7 +1766,7 @@ public class WalletTool {
             String username = blockchainIdentity.getCurrentUsername() == null ? (wasUpgraded ? "registered with upgraded wallet" : "not registered") : blockchainIdentity.getCurrentUsername();
             outputStream.println("Username:                         " + username);
             outputToCSV(username, csvFile);
-            Profile profile = dashPayWallet.getProfiles().get(blockchainIdentity.getUniqueIdString());
+            Profile profile = dashPayWallet.getProfiles().get(blockchainIdentity.getUniqueIdentifier());
             String displayName = profile != null ? profile.getDisplayName() : "No profile created";
             outputStream.println("Display Name:                     " + displayName);
             outputToCSV(displayName, csvFile);
@@ -1790,8 +1790,14 @@ public class WalletTool {
             Set<Identifier> ids = dashPayWallet.getContactIdentities();
             int inboundTx = 0, outboundTx = 0;
             Transaction firstOutboundTx = null;
+            Map<Identifier, ContactRequest> received = dashPayWallet.getRecievedContactRequestsMap();
             for (Identifier id : ids) {
-                List<Transaction> list = blockchainIdentity.getContactTransactions(id, 0);
+                ContactRequest from = received.get(id);
+                int accountRef = 0;
+                if (from != null) {
+                    accountRef = from.getAccountReference();
+                }
+                List<Transaction> list = blockchainIdentity.getContactTransactions(id, accountRef);
                 for (Transaction contactTx : list) {
                     if (contactTx.getValue(wallet).isPositive())
                         inboundTx++;
@@ -1807,12 +1813,18 @@ public class WalletTool {
                     }
                 }
             }
+            Map<Identifier, Identity> invites = blockchainIdentity.getInvitationHistory();
+            int invitesClaimed = 0;
+            for (Identity identity : invites.values()) {
+                invitesClaimed += identity != null ? 1 : 0;
+            }
+
             String firstOutboundDate = ((firstOutboundTx != null) ? ("\"" + dateFormat.format(firstOutboundTx.getUpdateTime()) + "\""): "N/A");
             outputStream.println("First Outbound Tx's Date/Time:    " + firstOutboundDate);
             outputStream.println("Outbound Username Tx's:           " + outboundTx);
             outputStream.println("Inbound Username Tx's:            " + inboundTx);
-            outputStream.println("Outbound contact requests:        " + dashPayWallet.getSentContactRequests().size());
-            outputStream.println("Inbound contact requests:         " + dashPayWallet.getRecievedContactRequests().size());
+            outputStream.println("Outbound contact requests:        " + dashPayWallet.getSentContactRequestsMap().size());
+            outputStream.println("Inbound contact requests:         " + dashPayWallet.getRecievedContactRequestsMap().size());
             outputToCSV(firstOutboundDate, csvFile);
             outputToCSV("" + outboundTx, csvFile);
             outputToCSV("" + inboundTx, csvFile);
@@ -1828,6 +1840,10 @@ public class WalletTool {
                 contactsString.append(contact.getUsername() + " ");
             }
             outputToCSV(contactsString.toString(), csvFile);
+            outputStream.println("Invites created:                  " + invites.size());
+            outputStream.println("Invites claimed:                  " + invitesClaimed);
+            outputToCSV("" + invites.size(), csvFile);
+            outputToCSV("" + invitesClaimed, csvFile);
             outputStream.println();
 
         } finally {

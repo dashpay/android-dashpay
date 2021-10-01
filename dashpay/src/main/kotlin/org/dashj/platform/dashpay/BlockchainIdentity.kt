@@ -1753,7 +1753,7 @@ class BlockchainIdentity {
     }
 
     fun getInvitationHistory(): Map<Identifier, Identity?> {
-        val inviteTxs = wallet!!.identityFundingTransactions
+        val inviteTxs = wallet!!.invitationFundingTransactions
         val listIds = inviteTxs.map { Identifier.from(it.creditBurnIdentityIdentifier) }
 
         return listIds.associateBy({ it }, { platform.identities.get(it) })

@@ -255,7 +255,7 @@ class DashPayWallet(val blockchainIdentity: BlockchainIdentity, val peerGroup: P
             val nameDocuments = platform.names.getList(identifierList)
             val nameById = nameDocuments.associateBy({ getIdentityForName(it) }, { it })
 
-            for (id in profileById.keys) {
+            for (id in nameById.keys) {
                 val nameDocument = nameById[id] // what happens if there is no username for the identity? crash
                 val username = nameDocument!!.data["normalizedLabel"] as String
                 val identityId = getIdentityForName(nameDocument)
