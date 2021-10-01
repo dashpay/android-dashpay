@@ -24,7 +24,7 @@ class Profiles(
 ) {
 
     companion object {
-        private const val DOCUMENT: String = "dashpay.profile"
+        const val DOCUMENT: String = "dashpay.profile"
     }
 
     fun create(
