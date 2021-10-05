@@ -59,7 +59,7 @@ class NetworkActivity {
             println("Established Contacts:         ${establishedContacts.size} [both sent and accepted]")
             println("Average Contacts per user:    ${"%.2f".format(establishedContacts.size.toDouble() / nameDocuments.size)}")
             println("Total Credits Available:      $totalCredits")
-            println("Total Credits/User:           ${totalCredits/nameDocuments.size}")
+            println("Total Credits/User:           ${totalCredits / nameDocuments.size}")
 
             println("--------------------------------------------")
             val identities = getIdentitiesWithoutUsernames(nameDocuments, contactRequests)
@@ -146,7 +146,7 @@ class NetworkActivity {
             return establishedContacts
         }
 
-        fun getProfileDocuments() : List<Profile>{
+        fun getProfileDocuments(): List<Profile> {
             val allDocuments = getAllDocuments(Profiles.DOCUMENT)
             return allDocuments.map { Profile(it) }
         }
