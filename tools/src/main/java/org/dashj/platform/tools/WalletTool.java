@@ -80,6 +80,7 @@ import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.evolution.CreditFundingTransaction;
 import org.bitcoinj.evolution.SimplifiedMasternodeList;
 import org.bitcoinj.evolution.SimplifiedMasternodeListEntry;
+import org.bitcoinj.net.discovery.ThreeMethodPeerDiscovery;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.SchnappsDevNetParams;
@@ -1369,7 +1370,8 @@ public class WalletTool {
     }
 
     // Sets up all objects needed for network communication but does not bring up the peers.
-    private static void setup() throws BlockStoreException {
+    private static void setup() throws BlockStoreException { setup(true); }
+    private static void setup(boolean autoSave) throws BlockStoreException {
         if (store != null) return;  // Already done.
         // Will create a fresh chain if one doesn't exist or there is an issue with this one.
         boolean reset = !chainFileName.exists();
@@ -1397,7 +1399,8 @@ public class WalletTool {
             chain = new FullPrunedBlockChain(params, wallet, (FullPrunedBlockStore) store);
         }
         // This will ensure the wallet is saved when it changes.
-        wallet.autosaveToFile(walletFile, 5, TimeUnit.SECONDS, null);
+        if (autoSave)
+            wallet.autosaveToFile(walletFile, 5, TimeUnit.SECONDS, null);
         if (peerGroup == null) {
             peerGroup = new PeerGroup(params, chain);
         }
@@ -1417,13 +1420,14 @@ public class WalletTool {
                 }
             }
         } else {
-            peerGroup.setRequiredServices(0);
+            // TODO: we used to use peerGroup.setRequiredServices(0); here
+            peerGroup.addPeerDiscovery(new ThreeMethodPeerDiscovery(params, Context.get().masternodeListManager));
         }
     }
 
     private static void syncChain(OptionSpec<WaitForEnum> waitForFlag) {
         try {
-            setup();
+            setup(false);
             int startTransactions = wallet.getTransactions(true).size();
             DownloadProgressTracker listener = new DownloadProgressTracker();
 
@@ -1434,7 +1438,7 @@ public class WalletTool {
                     initializeIdentity();
 
                     peerGroup.triggerPreBlockDownloadComplete();
-
+                    wallet.autosaveToFile(walletFile, 5, TimeUnit.SECONDS, null);
                     waitAndShutdownFuture.set(waitForFlag);
                 }
             });
@@ -1460,7 +1464,7 @@ public class WalletTool {
     private static void initializeIdentity() {
         // Determine our blockchain identity
         if (blockchainIdentity == null) {
-            List<CreditFundingTransaction> cftxs = wallet.getCreditFundingTransactions();
+            List<CreditFundingTransaction> cftxs = wallet.getIdentityFundingTransactions();
             if (!cftxs.isEmpty()) {
                 CreditFundingTransaction cftx = cftxs.get(0);
                 blockchainIdentity = new BlockchainIdentity(platform, 0, wallet);
@@ -1481,6 +1485,8 @@ public class WalletTool {
             // synchronize the Platform data here
             dashPayWallet = new DashPayWallet(blockchainIdentity, peerGroup, null);
             dashPayWallet.updateContactRequests();
+        } else {
+            throw new RuntimeException("blockchainIdentity is null");
         }
     }
 
@@ -1762,7 +1768,7 @@ public class WalletTool {
             String username = blockchainIdentity.getCurrentUsername() == null ? (wasUpgraded ? "registered with upgraded wallet" : "not registered") : blockchainIdentity.getCurrentUsername();
             outputStream.println("Username:                         " + username);
             outputToCSV(username, csvFile);
-            Profile profile = dashPayWallet.getProfiles().get(blockchainIdentity.getUniqueIdString());
+            Profile profile = dashPayWallet.getProfiles().get(blockchainIdentity.getUniqueIdentifier());
             String displayName = profile != null ? profile.getDisplayName() : "No profile created";
             outputStream.println("Display Name:                     " + displayName);
             outputToCSV(displayName, csvFile);
@@ -1786,8 +1792,14 @@ public class WalletTool {
             Set<Identifier> ids = dashPayWallet.getContactIdentities();
             int inboundTx = 0, outboundTx = 0;
             Transaction firstOutboundTx = null;
+            Map<Identifier, ContactRequest> received = dashPayWallet.getRecievedContactRequestsMap();
             for (Identifier id : ids) {
-                List<Transaction> list = blockchainIdentity.getContactTransactions(id, 0);
+                ContactRequest from = received.get(id);
+                int accountRef = 0;
+                if (from != null) {
+                    accountRef = from.getAccountReference();
+                }
+                List<Transaction> list = blockchainIdentity.getContactTransactions(id, accountRef);
                 for (Transaction contactTx : list) {
                     if (contactTx.getValue(wallet).isPositive())
                         inboundTx++;
@@ -1803,12 +1815,18 @@ public class WalletTool {
                     }
                 }
             }
+            Map<Identifier, Identity> invites = blockchainIdentity.getInvitationHistory();
+            int invitesClaimed = 0;
+            for (Identity identity : invites.values()) {
+                invitesClaimed += identity != null ? 1 : 0;
+            }
+
             String firstOutboundDate = ((firstOutboundTx != null) ? ("\"" + dateFormat.format(firstOutboundTx.getUpdateTime()) + "\""): "N/A");
             outputStream.println("First Outbound Tx's Date/Time:    " + firstOutboundDate);
             outputStream.println("Outbound Username Tx's:           " + outboundTx);
             outputStream.println("Inbound Username Tx's:            " + inboundTx);
-            outputStream.println("Outbound contact requests:        " + dashPayWallet.getSentContactRequests().size());
-            outputStream.println("Inbound contact requests:         " + dashPayWallet.getRecievedContactRequests().size());
+            outputStream.println("Outbound contact requests:        " + dashPayWallet.getSentContactRequestsMap().size());
+            outputStream.println("Inbound contact requests:         " + dashPayWallet.getRecievedContactRequestsMap().size());
             outputToCSV(firstOutboundDate, csvFile);
             outputToCSV("" + outboundTx, csvFile);
             outputToCSV("" + inboundTx, csvFile);
@@ -1824,6 +1842,10 @@ public class WalletTool {
                 contactsString.append(contact.getUsername() + " ");
             }
             outputToCSV(contactsString.toString(), csvFile);
+            outputStream.println("Invites created:                  " + invites.size());
+            outputStream.println("Invites claimed:                  " + invitesClaimed);
+            outputToCSV("" + invites.size(), csvFile);
+            outputToCSV("" + invitesClaimed, csvFile);
             outputStream.println();
 
         } finally {
@@ -2036,7 +2058,7 @@ public class WalletTool {
             if (!found)
                 missing.add(nameDoc);
         }
-        System.out.println("These contact requests had failures: " + missing.toString());
+        System.out.println("These contact requests had failures: " + missing);
 
         System.out.println(platform.client.reportNetworkStatus());
 
@@ -2096,8 +2118,8 @@ public class WalletTool {
             onChange(latch);
         }
     }
-    private static SettableFuture<OptionSpec<WaitForEnum>> waitAndShutdownFuture = SettableFuture.create();
-    private static FutureCallback<OptionSpec<WaitForEnum>> waitAndShutdownCallback = new FutureCallback<OptionSpec<WaitForEnum>>() {
+    private static final SettableFuture<OptionSpec<WaitForEnum>> waitAndShutdownFuture = SettableFuture.create();
+    private static final FutureCallback<OptionSpec<WaitForEnum>> waitAndShutdownCallback = new FutureCallback<OptionSpec<WaitForEnum>>() {
 
         @Override
         public void onSuccess(@org.jetbrains.annotations.Nullable OptionSpec<WaitForEnum> result) {

@@ -18,11 +18,11 @@ repositories {
     mavenCentral()
 }
 
-mainClassName = "org.dashevo.tools.WalletTool"
+mainClassName = "org.dashj.platform.tools.WalletTool"
 applicationName = "wallet-tool"
 
 task createExtraRunApp(type: CreateStartScripts) {
-    mainClassName = "org.dashevo.tools.NetworkActivity"
+    mainClassName = "org.dashj.platform.tools.NetworkActivity"
     classpath = startScripts.classpath
     outputDir = startScripts.outputDir
     applicationName = 'network-activity'
