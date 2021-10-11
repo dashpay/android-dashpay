@@ -1,179 +1,221 @@
 {
-  "protocolVersion": 0,
-  "$schema": "https://schema.dash.org/dpp-0-4-0/meta/data-contract",
-  "documents": {
-    "contactInfo": {
-      "indices": [
-        {
-          "properties": [
-            {"$ownerId": "asc"},
-            {"rootEncryptionKeyIndex": "asc"},
-            {"derivationEncryptionKeyIndex": "asc"}
-          ],
-          "unique": true
-        },
-        {"properties": [
-          {"$ownerId": "asc"},
-          {"$updatedAt": "asc"}
-        ]}
-      ],
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "$createdAt",
-        "$updatedAt",
-        "encToUserId",
-        "privateData",
-        "rootEncryptionKeyIndex",
-        "derivationEncryptionKeyIndex"
-      ],
-      "properties": {
-        "privateData": {
-          "minItems": 48,
-          "maxItems": 2048,
-          "description": "This is the encrypted values of aliasName + note + displayHidden encoded as an array in cbor",
-          "type": "array",
-          "byteArray": true
-        },
-        "rootEncryptionKeyIndex": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "encToUserId": {
-          "minItems": 32,
-          "maxItems": 32,
-          "type": "array",
-          "byteArray": true
-        },
-        "derivationEncryptionKeyIndex": {
-          "type": "integer",
-          "minimum": 0
-        }
+  "profile": {
+    "type": "object",
+    "indices": [
+      {
+        "properties": [
+          {
+            "$ownerId": "asc"
+          }
+        ],
+        "unique": true
+      },
+      {
+        "properties": [
+          {
+            "$ownerId": "asc"
+          },
+          {
+            "$updatedAt": "asc"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "avatarUrl": {
+        "type": "string",
+        "format": "url",
+        "maxLength": 2048
+      },
+      "avatarHash": {
+        "type": "array",
+        "byteArray": true,
+        "minItems": 32,
+        "maxItems": 32,
+        "description": "SHA256 hash of the bytes of the image specified by avatarUrl"
+      },
+      "avatarFingerprint": {
+        "type": "array",
+        "byteArray": true,
+        "minItems": 8,
+        "maxItems": 8,
+        "description": "dHash the image specified by avatarUrl"
+      },
+      "publicMessage": {
+        "type": "string",
+        "maxLength": 140
+      },
+      "displayName": {
+        "type": "string",
+        "maxLength": 25
       }
     },
-    "contactRequest": {
-      "indices": [
-        {
-          "properties": [
-            {"$ownerId": "asc"},
-            {"toUserId": "asc"},
-            {"accountReference": "asc"}
-          ],
-          "unique": true
-        },
-        {"properties": [
-          {"$ownerId": "asc"},
-          {"toUserId": "asc"}
-        ]},
-        {"properties": [
-          {"toUserId": "asc"},
-          {"$createdAt": "asc"}
-        ]},
-        {"properties": [
-          {"$ownerId": "asc"},
-          {"$createdAt": "asc"}
-        ]}
-      ],
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "$createdAt",
-        "toUserId",
-        "encryptedPublicKey",
-        "senderKeyIndex",
-        "recipientKeyIndex",
-        "accountReference"
-      ],
-      "properties": {
-        "recipientKeyIndex": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "accountReference": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "encryptedAccountLabel": {
-          "minItems": 48,
-          "maxItems": 80,
-          "type": "array",
-          "byteArray": true
-        },
-        "coreHeightCreatedAt": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "encryptedPublicKey": {
-          "minItems": 96,
-          "maxItems": 96,
-          "type": "array",
-          "byteArray": true
-        },
-        "senderKeyIndex": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "autoAcceptProof": {
-          "minItems": 38,
-          "maxItems": 102,
-          "type": "array",
-          "byteArray": true
-        },
-        "toUserId": {
-          "minItems": 32,
-          "maxItems": 32,
-          "type": "array",
-          "contentMediaType": "application/x.dash.dpp.identifier",
-          "byteArray": true
-        }
+    "required": [
+      "$createdAt",
+      "$updatedAt"
+    ],
+    "additionalProperties": false
+  },
+  "contactInfo": {
+    "type": "object",
+    "indices": [
+      {
+        "properties": [
+          {
+            "$ownerId": "asc"
+          },
+          {
+            "rootEncryptionKeyIndex": "asc"
+          },
+          {
+            "derivationEncryptionKeyIndex": "asc"
+          }
+        ],
+        "unique": true
+      },
+      {
+        "properties": [
+          {
+            "$ownerId": "asc"
+          },
+          {
+            "$updatedAt": "asc"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "encToUserId": {
+        "type": "array",
+        "byteArray": true,
+        "minItems": 32,
+        "maxItems": 32
+      },
+      "rootEncryptionKeyIndex": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "derivationEncryptionKeyIndex": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "privateData": {
+        "type": "array",
+        "byteArray": true,
+        "minItems": 48,
+        "maxItems": 2048,
+        "description": "This is the encrypted values of aliasName + note + displayHidden encoded as an array in cbor"
       }
     },
-    "profile": {
-      "indices": [
-        {
-          "properties": [{"$ownerId": "asc"}],
-          "unique": true
-        },
-        {"properties": [
-          {"$ownerId": "asc"},
-          {"$updatedAt": "asc"}
-        ]}
-      ],
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "$createdAt",
-        "$updatedAt"
-      ],
-      "properties": {
-        "avatarFingerprint": {
-          "minItems": 8,
-          "maxItems": 8,
-          "description": "dHash the image specified by avatarUrl",
-          "type": "array",
-          "byteArray": true
-        },
-        "publicMessage": {
-          "type": "string",
-          "maxLength": 140
-        },
-        "avatarUrl": {
-          "format": "url",
-          "type": "string",
-          "maxLength": 2048
-        },
-        "avatarHash": {
-          "minItems": 32,
-          "maxItems": 32,
-          "description": "SHA256 hash of the bytes of the image specified by avatarUrl",
-          "type": "array",
-          "byteArray": true
-        },
-        "displayName": {
-          "type": "string",
-          "maxLength": 25
-        }
+    "required": [
+      "$createdAt",
+      "$updatedAt",
+      "encToUserId",
+      "privateData",
+      "rootEncryptionKeyIndex",
+      "derivationEncryptionKeyIndex"
+    ],
+    "additionalProperties": false
+  },
+  "contactRequest": {
+    "type": "object",
+    "indices": [
+      {
+        "properties": [
+          {
+            "$ownerId": "asc"
+          },
+          {
+            "toUserId": "asc"
+          },
+          {
+            "accountReference": "asc"
+          }
+        ],
+        "unique": true
+      },
+      {
+        "properties": [
+          {
+            "$ownerId": "asc"
+          },
+          {
+            "toUserId": "asc"
+          }
+        ]
+      },
+      {
+        "properties": [
+          {
+            "toUserId": "asc"
+          },
+          {
+            "$createdAt": "asc"
+          }
+        ]
+      },
+      {
+        "properties": [
+          {
+            "$ownerId": "asc"
+          },
+          {
+            "$createdAt": "asc"
+          }
+        ]
       }
-    }
+    ],
+    "properties": {
+      "toUserId": {
+        "type": "array",
+        "byteArray": true,
+        "minItems": 32,
+        "maxItems": 32,
+        "contentMediaType": "application/x.dash.dpp.identifier"
+      },
+      "encryptedPublicKey": {
+        "type": "array",
+        "byteArray": true,
+        "minItems": 96,
+        "maxItems": 96
+      },
+      "senderKeyIndex": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "recipientKeyIndex": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "accountReference": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "encryptedAccountLabel": {
+        "type": "array",
+        "byteArray": true,
+        "minItems": 48,
+        "maxItems": 80
+      },
+      "autoAcceptProof": {
+        "type": "array",
+        "byteArray": true,
+        "minItems": 38,
+        "maxItems": 102
+      },
+      "coreHeightCreatedAt": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "required": [
+      "$createdAt",
+      "toUserId",
+      "encryptedPublicKey",
+      "senderKeyIndex",
+      "recipientKeyIndex",
+      "accountReference"
+    ],
+    "additionalProperties": false
   }
 }
