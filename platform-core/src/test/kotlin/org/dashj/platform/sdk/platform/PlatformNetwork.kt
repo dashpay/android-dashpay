@@ -1,7 +1,6 @@
 package org.dashj.platform.sdk.platform
-import org.bitcoinj.params.SchnappsDevNetParams
 import java.util.Date
-import org.bitcoinj.params.TestNet3Params
+import org.bitcoinj.params.SchnappsDevNetParams
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.DeterministicKeyChain
 import org.bitcoinj.wallet.DeterministicSeed
