@@ -84,10 +84,9 @@ class Platform(val params: NetworkParameters) {
                 useWhiteList = true
             }
             params.id.contains("schnapps") -> {
-                apps["dpns"] = ClientAppDefinition("8F4WqzVuqyYEBMR1AraBuYG1cjk3hqUYdzLSMdYpWLbH")
-                apps["dashpay"] = ClientAppDefinition("8Mpj1D1fSg1AtKoCFBcSg7UTfqChpFTHLQBPVrXUACxC")
-                apps["featureFlags"] = ClientAppDefinition("4DJgtvrXisjpp3VhCPdw1XHTHLmDD17fr893Mb2yfyzT")
-                // apps["thumbnail"] = ClientAppDefinition("3GV8H5ha68pchFyJF46dzdpfgPDhSr6iLht3EcYgqFKw")
+                apps["dpns"] = ClientAppDefinition("EBnvxB5RSW8NbBbXdRS3zPqFEaZnjCZ8WeurjvLTaru7")
+                apps["dashpay"] = ClientAppDefinition("GAvZdha4t3mCQyvCVvv7LMYw3CXN4X5hvFZ4S6qCAdod")
+                apps["featureFlags"] = ClientAppDefinition("G65EGcE8eQ16g7a9UBEawWpWn5ZCShca6LSqKDr7v4UP")
                 client = DapiClient(SchnappsDevNetParams.get().defaultMasternodeList.toList())
             }
         }

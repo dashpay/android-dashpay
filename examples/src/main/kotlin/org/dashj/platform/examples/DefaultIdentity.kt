@@ -73,7 +73,7 @@ class DefaultIdentity(val params: NetworkParameters) {
                 seed = "praise attract bunker screen kitchen jar history base bless income measure long"
             }
             params.id.contains("schnapps") -> {
-                seed = "jump human safe afraid brother economy erode tooth often earth quarter absent"
+                seed = "quantum alarm evoke estate siege play moon spoon later paddle rifle ancient"
             }
             else -> {
                 seed = ""

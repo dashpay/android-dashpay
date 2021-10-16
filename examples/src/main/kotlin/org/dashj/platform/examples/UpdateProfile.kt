@@ -19,6 +19,12 @@ import org.dashj.platform.sdk.Client
 import org.dashj.platform.sdk.client.ClientOptions
 import org.json.JSONObject
 
+/**
+ * This example will update the profile for the identity that is defined in
+ * DefaultIdentity for the specified network
+ *
+ * The profile must already exist for this example to work.
+ */
 class UpdateProfile {
     companion object {
         lateinit var sdk: Client
