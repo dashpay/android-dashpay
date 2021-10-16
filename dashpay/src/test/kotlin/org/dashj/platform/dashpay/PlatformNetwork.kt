@@ -13,8 +13,7 @@ import org.junit.jupiter.api.AfterEach
 open class PlatformNetwork {
 
     val platform = Platform(SchnappsDevNetParams.get())
-    // val seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
-    val seed = "jump human safe afraid brother economy erode tooth often earth quarter absent"
+    val seed = "quantum alarm evoke estate siege play moon spoon later paddle rifle ancient"
     val wallet: Wallet = Wallet(
         platform.params,
         KeyChainGroup.builder(platform.params)
