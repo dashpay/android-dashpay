@@ -77,9 +77,9 @@ class Platform(val params: NetworkParameters) {
     init {
         when {
             params.id.contains("test") -> {
-                apps["dpns"] = ClientAppDefinition("H2P7t8e3z2Naf55RiUrEK63fLfeGzaza5x5etm9J1ppG")
-                apps["dashpay"] = ClientAppDefinition("HpJZGdjnHjUucndek2kc1P9RBhTQZxjHFeQKnanxVVJp")
-                apps["featureFlags"] = ClientAppDefinition("2ddvAY6hEb514Bog78DLcdAzP8PuiqdmijpAXP5nyVX5")
+                apps["dpns"] = ClientAppDefinition("Bw9PUC3aSEGQ4j5qrvpNLrRNFPVMiUHZLr1atgfYJcmf")
+                apps["dashpay"] = ClientAppDefinition("2Vuou3EfbrtunwCZvQp1XS5PXZ5CgC1pGBz4VPT4ojmy")
+                apps["featureFlags"] = ClientAppDefinition("7jr118TzVYZoA9XcwYBjUghVF1RT77vfeTzxJEgbaKEU")
                 client = DapiClient(TestNet3Params.MASTERNODES.toList())
                 useWhiteList = true
             }
