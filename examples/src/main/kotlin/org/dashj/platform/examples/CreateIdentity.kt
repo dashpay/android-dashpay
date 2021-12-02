@@ -28,7 +28,7 @@ class CreateIdentity {
 
             val cftx = CreditFundingTransaction(platform.params, DefaultIdentity.creditBurnTx)
             cftx.setCreditBurnPublicKeyAndIndex(DefaultIdentity.identityPrivateKey, 0)
-            val islock = InstantSendLock(platform.params, DefaultIdentity.islock)
+            val islock = InstantSendLock(platform.params, DefaultIdentity.islock, InstantSendLock.ISLOCK_VERSION)
 
             try {
                 var identity = platform.identities.get(cftx.creditBurnIdentityIdentifier.toStringBase58())
