@@ -5,11 +5,11 @@ buildscript {
     ext.dashpay_version = '0.21-SNAPSHOT'
     ext.dpp_version = '0.21-SNAPSHOT'
     ext.dapi_client_version = '0.21-SNAPSHOT'
-    ext.dashj_version = '0.18-SNAPSHOT'
+    ext.dashj_version = '0.18.0-SNAPSHOT'
     repositories {
         mavenCentral()
         maven { url "https://plugins.gradle.org/m2/" }
-        //maven { url "https://kotlin.bintray.com/kotlinx" }
+        maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots/' }
     }
 
     dependencies {
