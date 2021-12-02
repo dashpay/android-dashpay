@@ -32,7 +32,7 @@ class IdentitiesTest : PlatformNetwork() {
 
     @Test
     fun getAssetLockTxTest() {
-        val tx = platform.client.getTransaction(assetLockTxId)
-        assertEquals(assetLockTxId, Transaction(platform.params, tx!!.toByteArray()).txId.toString())
+        val tx = platform.client.getTransaction(assetLockTxId)!!.transaction
+        assertEquals(assetLockTxId, Transaction(platform.params, tx).txId.toString())
     }
 }
