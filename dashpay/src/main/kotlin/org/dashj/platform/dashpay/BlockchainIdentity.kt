@@ -39,6 +39,7 @@ import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
 import org.bitcoinj.wallet.ZeroConfCoinSelector
 import org.bouncycastle.crypto.params.KeyParameter
+import org.dashj.platform.dapiclient.MaxRetriesReachedException
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dashpay.callback.RegisterIdentityCallback
 import org.dashj.platform.dashpay.callback.RegisterNameCallback
@@ -85,7 +86,8 @@ class BlockchainIdentity {
         UNKNOWN,
         REGISTERING,
         REGISTERED,
-        NOT_REGISTERED
+        NOT_REGISTERED,
+        RETRY
     }
 
     enum class UsernameStatus(val value: Int) {
@@ -229,20 +231,31 @@ class BlockchainIdentity {
         registrationFundingPrivateKey = transaction.creditBurnPublicKey
 
         // see if the identity is registered.
+        initializeIdentity(registeredIdentity)
+    }
+
+    private fun initializeIdentity(
+        registeredIdentity: Identity? = null
+    ) {
         try {
-            identity = if (registeredIdentity != null) {
-                registeredIdentity
-            } else {
-                platform.identities.get(uniqueIdString)
-            }
+            identity = registeredIdentity ?: platform.identities.get(uniqueIdString)
             registrationStatus = if (identity != null) {
                 RegistrationStatus.REGISTERED
             } else {
-                RegistrationStatus.UNKNOWN
+                RegistrationStatus.NOT_REGISTERED
             }
+        } catch (x: MaxRetriesReachedException) {
+            // network is unavailable, so retry later
+            registrationStatus = RegistrationStatus.RETRY
         } catch (x: Exception) {
             // swallow and leave the status as unknown
             registrationStatus = RegistrationStatus.UNKNOWN
+        }
+    }
+
+    fun checkIdentity() {
+        if (identity == null) {
+            initializeIdentity()
         }
     }
 
@@ -333,7 +346,7 @@ class BlockchainIdentity {
         }
     }
 
-    fun registerIdentityWithChainLock(keyParameter: KeyParameter?) {
+    private fun registerIdentityWithChainLock(keyParameter: KeyParameter?) {
         Preconditions.checkState(
             registrationStatus != RegistrationStatus.REGISTERED,
             "The identity must not be registered"
@@ -369,7 +382,7 @@ class BlockchainIdentity {
         registrationStatus = RegistrationStatus.REGISTERED
     }
 
-    fun registerIdentityWithISLock(keyParameter: KeyParameter?) {
+    private fun registerIdentityWithISLock(keyParameter: KeyParameter?) {
         Preconditions.checkState(
             registrationStatus != RegistrationStatus.REGISTERED,
             "The identity must not be registered"
@@ -642,6 +655,7 @@ class BlockchainIdentity {
 
     fun createPreorderDocuments(unregisteredUsernames: List<String>): List<Document> {
         val usernamePreorderDocuments = ArrayList<Document>()
+        checkIdentity()
         for (saltedDomainHash in saltedDomainHashesForUsernames(unregisteredUsernames).values) {
             val document = platform.names.createPreorderDocument(Sha256Hash.wrap(saltedDomainHash), identity!!)
             usernamePreorderDocuments.add(document)
@@ -651,6 +665,7 @@ class BlockchainIdentity {
 
     fun createDomainDocuments(unregisteredUsernames: List<String>): List<Document> {
         val usernameDomainDocuments = ArrayList<Document>()
+        checkIdentity()
         for (username in saltedDomainHashesForUsernames(unregisteredUsernames).keys) {
             val isUniqueIdentity =
                 usernameDomainDocuments.isEmpty() && getUsernamesWithStatus(UsernameStatus.CONFIRMED).isEmpty()
@@ -1304,6 +1319,7 @@ class BlockchainIdentity {
         avatarHash: ByteArray? = null,
         avatarFingerprint: ByteArray?
     ): DocumentsBatchTransition {
+        checkIdentity()
         val profileDocument = profiles.createProfileDocument(displayName, publicMessage, avatarUrl, avatarHash, avatarFingerprint, identity!!)
         lastProfileDocument = profileDocument
         val transitionMap = hashMapOf<String, List<Document>?>(

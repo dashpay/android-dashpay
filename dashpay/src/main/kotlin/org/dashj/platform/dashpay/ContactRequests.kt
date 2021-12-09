@@ -18,6 +18,7 @@ class ContactRequests(val platform: Platform) {
     }
 
     fun create(fromUser: BlockchainIdentity, toUser: Identity, aesKey: KeyParameter?): ContactRequest {
+        fromUser.checkIdentity()
         val contactKeyChain = fromUser.getReceiveFromContactChain(toUser, aesKey)
         val contactKey = contactKeyChain.watchingKey
         val contactPub = contactKey.serializeContactPub()
