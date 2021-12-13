@@ -231,11 +231,12 @@ class BlockchainIdentity {
         registrationFundingPrivateKey = transaction.creditBurnPublicKey
 
         // see if the identity is registered.
-        initializeIdentity(registeredIdentity)
+        initializeIdentity(registeredIdentity, false)
     }
 
     private fun initializeIdentity(
-        registeredIdentity: Identity? = null
+        registeredIdentity: Identity? = null,
+        throwException: Boolean
     ) {
         try {
             identity = registeredIdentity ?: platform.identities.get(uniqueIdString)
@@ -244,18 +245,25 @@ class BlockchainIdentity {
             } else {
                 RegistrationStatus.NOT_REGISTERED
             }
-        } catch (x: MaxRetriesReachedException) {
+        } catch (e: MaxRetriesReachedException) {
             // network is unavailable, so retry later
+            log.info("unable to obtain identity from network.  Retry later.")
             registrationStatus = RegistrationStatus.RETRY
-        } catch (x: Exception) {
+            if (throwException) {
+                throw IllegalStateException("unable to obtain identity from Platform. Retry allowed", e)
+            }
+        } catch (e: Exception) {
             // swallow and leave the status as unknown
             registrationStatus = RegistrationStatus.UNKNOWN
+            if (throwException) {
+                throw IllegalStateException("unable to obtain identity from Platform: Reason unknown", e)
+            }
         }
     }
 
     fun checkIdentity() {
         if (identity == null) {
-            initializeIdentity()
+            initializeIdentity(null, true)
         }
     }
 
@@ -1195,7 +1203,7 @@ class BlockchainIdentity {
             .where(listOf("normalizedLabel", "in", usernames.map { "${it.toLowerCase()}" })).build()
         val nameDocuments = platform.documents.get(Names.DPNS_DOMAIN_DOCUMENT, query)
 
-        if (nameDocuments != null && nameDocuments.isNotEmpty()) {
+        if (nameDocuments.isNotEmpty()) {
             val usernamesLeft = ArrayList(usernames)
             for (username in usernames) {
                 val normalizedName = username.toLowerCase()
@@ -1571,7 +1579,7 @@ class BlockchainIdentity {
         val contactIdentityPublicKey = contactIdentity.getPublicKeyById(index)
             ?: throw IllegalArgumentException("index $index does not exist for $contactIdentity")
 
-        val contactPublicKey = contactIdentityPublicKey!!.getKey()
+        val contactPublicKey = contactIdentityPublicKey.getKey()
 
         return encryptExtendedPublicKey(xpub, contactPublicKey, contactIdentityPublicKey.type, aesKey)
     }
@@ -1699,7 +1707,7 @@ class BlockchainIdentity {
     ): Boolean {
         val contact = EvolutionContact(uniqueId, account, contactIdentity.id.toSha256Hash(), -1)
         if (!wallet!!.hasReceivingKeyChain(contact)) {
-            val encryptedXpub = Converters.byteArrayfromBase64orByteArray(contactRequest.encryptedPublicKey)
+            val encryptedXpub = Converters.byteArrayFromBase64orByteArray(contactRequest.encryptedPublicKey)
             val senderKeyIndex = contactRequest.senderKeyIndex
             val recipientKeyIndex = contactRequest.recipientKeyIndex
             val contactKeyChain = getReceiveFromContactChain(contactIdentity, encryptionKey)
