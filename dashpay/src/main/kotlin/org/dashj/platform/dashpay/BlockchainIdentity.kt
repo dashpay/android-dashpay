@@ -824,10 +824,7 @@ class BlockchainIdentity {
     }
 
     fun signStateTransition(transition: StateTransitionIdentitySigned, keyParameter: KeyParameter?) {
-        /*if (keysCreated == 0) {
-            uint32_t index
-            [self createNewKeyOfType:DEFAULT_SIGNING_ALGORITHM returnIndex:&index];
-        }*/
+        checkIdentity()
         return signStateTransition(
             transition,
             identity!!.publicKeys[0].id/* currentMainKeyIndex*/,
@@ -1599,7 +1596,7 @@ class BlockchainIdentity {
         aesKey: KeyParameter?
     ): Pair<ByteArray, ByteArray> {
         val keyCrypter = KeyCrypterECDH()
-
+        checkIdentity()
         // first decrypt our identity key if necessary (currently uses the first key [0])
         val decryptedIdentityKey = maybeDecryptKey(identity!!.publicKeys[0].id, signingAlgorithm, aesKey)
 
