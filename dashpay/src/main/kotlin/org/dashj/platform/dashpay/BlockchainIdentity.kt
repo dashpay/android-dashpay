@@ -39,6 +39,7 @@ import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
 import org.bitcoinj.wallet.ZeroConfCoinSelector
 import org.bouncycastle.crypto.params.KeyParameter
+import org.dashj.platform.dapiclient.MaxRetriesReachedException
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dashpay.callback.RegisterIdentityCallback
 import org.dashj.platform.dashpay.callback.RegisterNameCallback
@@ -85,7 +86,8 @@ class BlockchainIdentity {
         UNKNOWN,
         REGISTERING,
         REGISTERED,
-        NOT_REGISTERED
+        NOT_REGISTERED,
+        RETRY
     }
 
     enum class UsernameStatus(val value: Int) {
@@ -229,20 +231,39 @@ class BlockchainIdentity {
         registrationFundingPrivateKey = transaction.creditBurnPublicKey
 
         // see if the identity is registered.
+        initializeIdentity(registeredIdentity, false)
+    }
+
+    private fun initializeIdentity(
+        registeredIdentity: Identity? = null,
+        throwException: Boolean
+    ) {
         try {
-            identity = if (registeredIdentity != null) {
-                registeredIdentity
-            } else {
-                platform.identities.get(uniqueIdString)
-            }
+            identity = registeredIdentity ?: platform.identities.get(uniqueIdString)
             registrationStatus = if (identity != null) {
                 RegistrationStatus.REGISTERED
             } else {
-                RegistrationStatus.UNKNOWN
+                RegistrationStatus.NOT_REGISTERED
             }
-        } catch (x: Exception) {
+        } catch (e: MaxRetriesReachedException) {
+            // network is unavailable, so retry later
+            log.info("unable to obtain identity from network.  Retry later.")
+            registrationStatus = RegistrationStatus.RETRY
+            if (throwException) {
+                throw IllegalStateException("unable to obtain identity from Platform. Retry allowed", e)
+            }
+        } catch (e: Exception) {
             // swallow and leave the status as unknown
             registrationStatus = RegistrationStatus.UNKNOWN
+            if (throwException) {
+                throw IllegalStateException("unable to obtain identity from Platform: Reason unknown", e)
+            }
+        }
+    }
+
+    fun checkIdentity() {
+        if (identity == null) {
+            initializeIdentity(null, true)
         }
     }
 
@@ -333,7 +354,7 @@ class BlockchainIdentity {
         }
     }
 
-    fun registerIdentityWithChainLock(keyParameter: KeyParameter?) {
+    private fun registerIdentityWithChainLock(keyParameter: KeyParameter?) {
         Preconditions.checkState(
             registrationStatus != RegistrationStatus.REGISTERED,
             "The identity must not be registered"
@@ -369,7 +390,7 @@ class BlockchainIdentity {
         registrationStatus = RegistrationStatus.REGISTERED
     }
 
-    fun registerIdentityWithISLock(keyParameter: KeyParameter?) {
+    private fun registerIdentityWithISLock(keyParameter: KeyParameter?) {
         Preconditions.checkState(
             registrationStatus != RegistrationStatus.REGISTERED,
             "The identity must not be registered"
@@ -642,6 +663,7 @@ class BlockchainIdentity {
 
     fun createPreorderDocuments(unregisteredUsernames: List<String>): List<Document> {
         val usernamePreorderDocuments = ArrayList<Document>()
+        checkIdentity()
         for (saltedDomainHash in saltedDomainHashesForUsernames(unregisteredUsernames).values) {
             val document = platform.names.createPreorderDocument(Sha256Hash.wrap(saltedDomainHash), identity!!)
             usernamePreorderDocuments.add(document)
@@ -651,6 +673,7 @@ class BlockchainIdentity {
 
     fun createDomainDocuments(unregisteredUsernames: List<String>): List<Document> {
         val usernameDomainDocuments = ArrayList<Document>()
+        checkIdentity()
         for (username in saltedDomainHashesForUsernames(unregisteredUsernames).keys) {
             val isUniqueIdentity =
                 usernameDomainDocuments.isEmpty() && getUsernamesWithStatus(UsernameStatus.CONFIRMED).isEmpty()
@@ -801,10 +824,7 @@ class BlockchainIdentity {
     }
 
     fun signStateTransition(transition: StateTransitionIdentitySigned, keyParameter: KeyParameter?) {
-        /*if (keysCreated == 0) {
-            uint32_t index
-            [self createNewKeyOfType:DEFAULT_SIGNING_ALGORITHM returnIndex:&index];
-        }*/
+        checkIdentity()
         return signStateTransition(
             transition,
             identity!!.publicKeys[0].id/* currentMainKeyIndex*/,
@@ -1180,7 +1200,7 @@ class BlockchainIdentity {
             .where(listOf("normalizedLabel", "in", usernames.map { "${it.toLowerCase()}" })).build()
         val nameDocuments = platform.documents.get(Names.DPNS_DOMAIN_DOCUMENT, query)
 
-        if (nameDocuments != null && nameDocuments.isNotEmpty()) {
+        if (nameDocuments.isNotEmpty()) {
             val usernamesLeft = ArrayList(usernames)
             for (username in usernames) {
                 val normalizedName = username.toLowerCase()
@@ -1304,6 +1324,7 @@ class BlockchainIdentity {
         avatarHash: ByteArray? = null,
         avatarFingerprint: ByteArray?
     ): DocumentsBatchTransition {
+        checkIdentity()
         val profileDocument = profiles.createProfileDocument(displayName, publicMessage, avatarUrl, avatarHash, avatarFingerprint, identity!!)
         lastProfileDocument = profileDocument
         val transitionMap = hashMapOf<String, List<Document>?>(
@@ -1555,7 +1576,7 @@ class BlockchainIdentity {
         val contactIdentityPublicKey = contactIdentity.getPublicKeyById(index)
             ?: throw IllegalArgumentException("index $index does not exist for $contactIdentity")
 
-        val contactPublicKey = contactIdentityPublicKey!!.getKey()
+        val contactPublicKey = contactIdentityPublicKey.getKey()
 
         return encryptExtendedPublicKey(xpub, contactPublicKey, contactIdentityPublicKey.type, aesKey)
     }
@@ -1575,7 +1596,7 @@ class BlockchainIdentity {
         aesKey: KeyParameter?
     ): Pair<ByteArray, ByteArray> {
         val keyCrypter = KeyCrypterECDH()
-
+        checkIdentity()
         // first decrypt our identity key if necessary (currently uses the first key [0])
         val decryptedIdentityKey = maybeDecryptKey(identity!!.publicKeys[0].id, signingAlgorithm, aesKey)
 
@@ -1683,7 +1704,7 @@ class BlockchainIdentity {
     ): Boolean {
         val contact = EvolutionContact(uniqueId, account, contactIdentity.id.toSha256Hash(), -1)
         if (!wallet!!.hasReceivingKeyChain(contact)) {
-            val encryptedXpub = Converters.byteArrayfromBase64orByteArray(contactRequest.encryptedPublicKey)
+            val encryptedXpub = Converters.byteArrayFromBase64orByteArray(contactRequest.encryptedPublicKey)
             val senderKeyIndex = contactRequest.senderKeyIndex
             val recipientKeyIndex = contactRequest.recipientKeyIndex
             val contactKeyChain = getReceiveFromContactChain(contactIdentity, encryptionKey)
