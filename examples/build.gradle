@@ -17,7 +17,7 @@ repositories {
 dependencies {
     implementation project(':platform-core')
     implementation project(':dashpay')
-    implementation 'com.google.guava:guava:27.1-android'
+    implementation 'com.google.guava:guava:28.2-android'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "org.dashj.platform:dpp:$dpp_version"
     implementation "org.dashj.platform:dapi-client:$dapi_client_version"
