@@ -89,7 +89,7 @@ public class ForwardingServiceEvo {
             params = RegTestParams.get();
             filePrefix = "forwarding-service-regtest";
         } else if (args.length > 1 && args[1].equals("schnapps")) {
-            params = SchnappsDevNetParams.get();
+            params = KrupnikDevNetParams.get();
             filePrefix = "forwarding-service-schnapps";
         } else if( args.length > 6 && args[1].equals("devnet")) {
             String [] dnsSeeds = new String[args.length - 5];

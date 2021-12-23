@@ -21,7 +21,7 @@ import org.dashj.platform.sdk.platform.Platform
 class Client(private val clientOptions: ClientOptions) {
     val params = when (clientOptions.network) {
         "testnet" -> TestNet3Params.get()
-        "schnapps" -> SchnappsDevNetParams.get()
+        "krupnik" -> KrupnikDevNetParams.get()
         else -> throw IllegalArgumentException("network ${clientOptions.network} is not valid")
     }
     val platform = Platform(params)
