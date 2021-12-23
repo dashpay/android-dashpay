@@ -14,7 +14,7 @@ import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.evolution.SimplifiedMasternodeListManager
-import org.bitcoinj.params.SchnappsDevNetParams
+import org.bitcoinj.params.KrupnikDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.dashj.platform.dapiclient.DapiClient
 import org.dashj.platform.dapiclient.MaxRetriesReachedException
@@ -83,11 +83,11 @@ class Platform(val params: NetworkParameters) {
                 client = DapiClient(TestNet3Params.MASTERNODES.toList())
                 useWhiteList = true
             }
-            params.id.contains("schnapps") -> {
-                apps["dpns"] = ClientAppDefinition("EBnvxB5RSW8NbBbXdRS3zPqFEaZnjCZ8WeurjvLTaru7")
-                apps["dashpay"] = ClientAppDefinition("GAvZdha4t3mCQyvCVvv7LMYw3CXN4X5hvFZ4S6qCAdod")
-                apps["featureFlags"] = ClientAppDefinition("G65EGcE8eQ16g7a9UBEawWpWn5ZCShca6LSqKDr7v4UP")
-                client = DapiClient(SchnappsDevNetParams.get().defaultMasternodeList.toList())
+            params.id.contains("krupnik") -> {
+                apps["dpns"] = ClientAppDefinition("5cE6PjNoo1bpfa25LBnSWkMdW25egnhwZ5ThEwFkjSp7")
+                apps["dashpay"] = ClientAppDefinition("Hk8eGVbw4MezTShdmhtiV1My8egxoUUv7RRCcRyZcnd5")
+                apps["featureFlags"] = ClientAppDefinition("BEKQmvDRYDCUCXRQrnfxmyAS29Mu6ZXEjs59y2B33bjY")
+                client = DapiClient(KrupnikDevNetParams.get().defaultMasternodeList.toList())
             }
         }
     }
