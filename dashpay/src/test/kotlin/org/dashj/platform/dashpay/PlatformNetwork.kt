@@ -1,7 +1,7 @@
 package org.dashj.platform.dashpay
 
 import java.util.Date
-import org.bitcoinj.params.SchnappsDevNetParams
+import org.bitcoinj.params.KrupnikDevNetParams
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.DeterministicKeyChain
 import org.bitcoinj.wallet.DeterministicSeed
@@ -12,7 +12,7 @@ import org.junit.jupiter.api.AfterEach
 
 open class PlatformNetwork {
 
-    val platform = Platform(SchnappsDevNetParams.get())
+    val platform = Platform(KrupnikDevNetParams.get())
     val seed = "quantum alarm evoke estate siege play moon spoon later paddle rifle ancient"
     val wallet: Wallet = Wallet(
         platform.params,

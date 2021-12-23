@@ -6,7 +6,7 @@
  */
 package org.dashj.platform.sdk
 
-import org.bitcoinj.params.SchnappsDevNetParams
+import org.bitcoinj.params.KrupnikDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.DeterministicKeyChain

@@ -28,7 +28,7 @@ import org.bitcoinj.net.discovery.MasternodePeerDiscovery;
 import org.bitcoinj.params.DevNetParams;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
-import org.bitcoinj.params.SchnappsDevNetParams;
+import org.bitcoinj.params.KrupnikDevNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.quorums.InstantSendLock;
 import org.bitcoinj.utils.BriefLogFormatter;

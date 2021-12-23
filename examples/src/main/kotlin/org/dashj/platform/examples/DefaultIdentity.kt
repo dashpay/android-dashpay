@@ -4,7 +4,7 @@ import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.core.Utils
-import org.bitcoinj.params.SchnappsDevNetParams
+import org.bitcoinj.params.KrupnikDevNetParams
 import org.bitcoinj.params.TestNet3Params
 
 /*
@@ -49,17 +49,11 @@ class DefaultIdentity(val params: NetworkParameters) {
         val islock = Utils.HEX.decode("00") // not current valid
 
         val identityPrivateKey = ECKey.fromPrivateAndPrecalculatedPublic(privateKey, publicKey)
-
-//        var seed = "mango air virus pigeon crowd attract review lemon lion assume lab rain"
-
-//        init {
-//            seed = "lecture embody employ sad mouse arctic lemon knife provide hockey unaware comfort"
-//        }
     }
 
     constructor(network: String) : this (
         when (network) {
-            "schnapps" -> SchnappsDevNetParams.get()
+            "schnapps" -> KrupnikDevNetParams.get()
             "testnet" -> TestNet3Params.get()
             else -> throw IllegalArgumentException("network $network is not valid")
         }
@@ -72,8 +66,8 @@ class DefaultIdentity(val params: NetworkParameters) {
             params.id.contains("test") -> {
                 seed = "theory sort portion duck repair kick garbage oil morning ginger please snow"
             }
-            params.id.contains("schnapps") -> {
-                seed = "quantum alarm evoke estate siege play moon spoon later paddle rifle ancient"
+            params.id.contains("krupnik") -> {
+                seed = "resemble gas chief door owner fine sad bounce rely know tobacco float"
             }
             else -> {
                 seed = ""

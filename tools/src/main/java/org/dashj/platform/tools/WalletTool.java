@@ -80,9 +80,9 @@ import org.bitcoinj.evolution.CreditFundingTransaction;
 import org.bitcoinj.evolution.SimplifiedMasternodeList;
 import org.bitcoinj.evolution.SimplifiedMasternodeListEntry;
 import org.bitcoinj.net.discovery.ThreeMethodPeerDiscovery;
+import org.bitcoinj.params.KrupnikDevNetParams;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
-import org.bitcoinj.params.SchnappsDevNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.protocols.payments.PaymentProtocol;
 import org.bitcoinj.protocols.payments.PaymentProtocolException;
@@ -379,7 +379,7 @@ public class WalletTool {
                 chainFileName = new File("mainnet.spvchain");
                 break;
             case SCHNAPPS:
-                params = SchnappsDevNetParams.get();
+                params = KrupnikDevNetParams.get();
                 chainFileName = new File("schnapps-devnet.spvchain");
                 break;
             case TEST:
