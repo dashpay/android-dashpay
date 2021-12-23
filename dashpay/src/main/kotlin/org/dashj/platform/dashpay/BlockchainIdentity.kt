@@ -7,6 +7,7 @@
 package org.dashj.platform.dashpay
 
 import com.google.common.base.Preconditions
+import com.google.common.base.Preconditions.checkState
 import com.google.common.collect.ImmutableList
 import java.io.ByteArrayOutputStream
 import java.util.Date
@@ -355,16 +356,13 @@ class BlockchainIdentity {
     }
 
     private fun registerIdentityWithChainLock(keyParameter: KeyParameter?) {
-        Preconditions.checkState(
+        checkState(
             registrationStatus != RegistrationStatus.REGISTERED,
             "The identity must not be registered"
         )
-        Preconditions.checkState(creditFundingTransaction != null, "The credit funding transaction must exist")
+        checkState(creditFundingTransaction != null, "The credit funding transaction must exist")
 
-        var identityPrivateKey = privateKeyAtIndex(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1)
-        val identityPublicKey =
-            IdentityPublicKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, identityPrivateKey!!.pubKey)
-        val identityPublicKeys = listOf(identityPublicKey)
+        val identityPublicKeys = createIdentityPublicKeys()
 
         val signingKey = maybeDecryptKey(creditFundingTransaction!!.creditBurnPublicKey, keyParameter)
 
@@ -391,16 +389,13 @@ class BlockchainIdentity {
     }
 
     private fun registerIdentityWithISLock(keyParameter: KeyParameter?) {
-        Preconditions.checkState(
+        checkState(
             registrationStatus != RegistrationStatus.REGISTERED,
             "The identity must not be registered"
         )
-        Preconditions.checkState(creditFundingTransaction != null, "The credit funding transaction must exist")
+        checkState(creditFundingTransaction != null, "The credit funding transaction must exist")
 
-        var identityPrivateKey = privateKeyAtIndex(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1)
-        val identityPublicKey =
-            IdentityPublicKey(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1, identityPrivateKey!!.pubKey)
-        val identityPublicKeys = listOf(identityPublicKey)
+        val identityPublicKeys = createIdentityPublicKeys()
 
         val signingKey = maybeDecryptKey(creditFundingTransaction!!.creditBurnPublicKey, keyParameter)
 
@@ -448,6 +443,30 @@ class BlockchainIdentity {
         finalizeIdentityRegistration(creditFundingTransaction!!)
 
         registrationStatus = RegistrationStatus.REGISTERED
+    }
+
+    private fun createIdentityPublicKeys(): List<IdentityPublicKey> {
+        val identityPrivateKey = checkNotNull(
+            privateKeyAtIndex(0, IdentityPublicKey.TYPES.ECDSA_SECP256K1)
+        ) { "keys must exist" }
+
+        val masterKey = IdentityPublicKey(
+            0,
+            IdentityPublicKey.TYPES.ECDSA_SECP256K1,
+            IdentityPublicKey.Purpose.AUTHENTICATION,
+            IdentityPublicKey.SecurityLevel.MASTER,
+            identityPrivateKey.pubKey,
+            false
+        )
+        val encryptionKey = IdentityPublicKey(
+            1,
+            IdentityPublicKey.TYPES.ECDSA_SECP256K1,
+            IdentityPublicKey.Purpose.ENCRYPTION,
+            IdentityPublicKey.SecurityLevel.MEDIUM,
+            identityPrivateKey.pubKey,
+            false
+        )
+        return listOf(masterKey)
     }
 
     fun recoverIdentity(creditFundingTransaction: CreditFundingTransaction): Boolean {
