@@ -101,7 +101,7 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
         return identity
     }
 
-    override fun fetchLatestPlatformBlockHeader(): Block {
+    override fun fetchLatestPlatformBlockHeader(): ByteArray {
         TODO("Not yet implemented")
     }
 

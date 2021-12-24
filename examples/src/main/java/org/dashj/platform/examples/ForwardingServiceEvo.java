@@ -510,7 +510,7 @@ public class ForwardingServiceEvo {
 
         @NotNull
         @Override
-        public Block fetchLatestPlatformBlockHeader() {
+        public byte [] fetchLatestPlatformBlockHeader() {
             return null;
         }
 
