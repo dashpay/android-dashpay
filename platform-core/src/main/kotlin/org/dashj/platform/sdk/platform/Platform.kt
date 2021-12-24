@@ -43,7 +43,7 @@ class Platform(val params: NetworkParameters) {
 
     var stateRepository = PlatformStateRepository(this)
 
-    val dpp = DashPlatformProtocol(stateRepository)
+    val dpp = DashPlatformProtocol(stateRepository, params)
     val apps = HashMap<String, ClientAppDefinition>()
     val contracts = Contracts(this)
     val documents = Documents(this)
