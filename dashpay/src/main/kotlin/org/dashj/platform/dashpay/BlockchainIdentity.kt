@@ -49,7 +49,7 @@ import org.dashj.platform.dashpay.callback.UpdateProfileCallback
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.document.DocumentCreateTransition
 import org.dashj.platform.dpp.document.DocumentsBatchTransition
-import org.dashj.platform.dpp.errors.InvalidIdentityAssetLockProofError
+import org.dashj.platform.dpp.errors.concensus.basic.identity.InvalidInstantAssetLockProofException
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
 import org.dashj.platform.dpp.identity.IdentityPublicKey
@@ -347,7 +347,7 @@ class BlockchainIdentity {
         if (useISLock) {
             try {
                 registerIdentityWithISLock(keyParameter)
-            } catch (e: InvalidIdentityAssetLockProofError) {
+            } catch (e: InvalidInstantAssetLockProofException) {
                 registerIdentityWithChainLock(keyParameter)
             }
         } else {
@@ -427,7 +427,7 @@ class BlockchainIdentity {
                     signingKey!!,
                     identityPublicKeys
                 )
-            } else throw InvalidIdentityAssetLockProofError("instantLock == null")
+            } else throw InvalidInstantAssetLockProofException("instantLock == null")
         } else {
             identity = platform.identities.register(
                 creditFundingTransaction!!.outputIndex,

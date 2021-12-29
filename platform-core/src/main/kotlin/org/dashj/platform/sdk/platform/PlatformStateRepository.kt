@@ -6,7 +6,6 @@
  */
 package org.dashj.platform.sdk.platform
 
-import org.bitcoinj.core.Block
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.core.Transaction
 import org.bitcoinj.quorums.InstantSendLock
