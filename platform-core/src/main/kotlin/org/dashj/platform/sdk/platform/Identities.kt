@@ -136,7 +136,7 @@ class Identities(val platform: Platform) {
         try {
             val assetLock = InstantAssetLockProof(outputIndex, transaction, instantLock)
 
-            val identityTopupTransition = platform.dpp.identity.createIdentityTopupTransition(identityId, assetLock)
+            val identityTopupTransition = platform.dpp.identity.createIdentityTopUpTransition(identityId, assetLock)
 
             identityTopupTransition.signByPrivateKey(assetLockPrivateKey)
 
