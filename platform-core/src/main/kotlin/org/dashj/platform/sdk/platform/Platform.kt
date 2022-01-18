@@ -84,9 +84,9 @@ class Platform(val params: NetworkParameters) {
                 useWhiteList = true
             }
             params.id.contains("krupnik") -> {
-                apps["dpns"] = ClientAppDefinition("5cE6PjNoo1bpfa25LBnSWkMdW25egnhwZ5ThEwFkjSp7")
-                apps["dashpay"] = ClientAppDefinition("Hk8eGVbw4MezTShdmhtiV1My8egxoUUv7RRCcRyZcnd5")
-                apps["featureFlags"] = ClientAppDefinition("BEKQmvDRYDCUCXRQrnfxmyAS29Mu6ZXEjs59y2B33bjY")
+                apps["dpns"] = ClientAppDefinition("FBzwdxUzv1BLZCdpwdYRVCihTLtYe73UxviWsxJd7FYQ")
+                apps["dashpay"] = ClientAppDefinition("3Ftm5vrpH2sYRanYfNmzuYNPHw4tzAkZzrCDqz7dLf9Q")
+                apps["featureFlags"] = ClientAppDefinition("8Vsv2k9ScPmnGJPKUjyAQjRAwNqJryEVdiPAQ7Wr8PGa")
                 client = DapiClient(KrupnikDevNetParams.get().defaultMasternodeList.toList())
             }
         }
