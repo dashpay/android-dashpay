@@ -1,5 +1,6 @@
 package org.dashj.platform.sdk.platform
 
+import java.util.Date
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Transaction
 import org.bitcoinj.wallet.DerivationPathFactory
@@ -14,7 +15,6 @@ import org.dashj.platform.dpp.util.Converters
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
-import java.util.*
 
 class IdentitiesTest : PlatformNetwork() {
 
@@ -49,7 +49,6 @@ class IdentitiesTest : PlatformNetwork() {
     fun identityCreationTest() {
         val seed = "wave neck reduce unusual sick online suspect angry parade vintage valid magnet"
 
-
         val wallet = Wallet(
             platform.params,
             KeyChainGroup.builder(platform.params)
@@ -71,18 +70,17 @@ class IdentitiesTest : PlatformNetwork() {
         println(stateTransition)
 
         val verified = stateTransition.verifySignatureByPublicKey(wallet.blockchainIdentityKeyChain.watchingKey)
-        val key = wallet.blockchainIdentityFundingKeyChain.freshAuthenticationKey();
+        val key = wallet.blockchainIdentityFundingKeyChain.freshAuthenticationKey()
         val verified2 = stateTransition.verifySignatureByPublicKey(key)
 
         println("verification: $verified, $verified2")
         val oldSignature = stateTransition.signature
         stateTransition.signByPrivateKey(key)
 
-        println ("new sig - funding: ${stateTransition.signature!!.toHex()}")
-        println ("old sig - original: ${oldSignature!!.toHex()}")
+        println("new sig - funding: ${stateTransition.signature!!.toHex()}")
+        println("old sig - original: ${oldSignature!!.toHex()}")
 
         stateTransition.signByPrivateKey(wallet.blockchainIdentityKeyChain.watchingKey)
-        println ("new sig - identity: ${stateTransition.signature!!.toHex()}")
-
+        println("new sig - identity: ${stateTransition.signature!!.toHex()}")
     }
 }
