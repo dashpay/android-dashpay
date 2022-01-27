@@ -75,6 +75,8 @@ class Platform(val params: NetworkParameters) {
             get() = getAppList()
     }
 
+    val queriesSupportMultipleRanges = false // DPP 0.22 - GroveDB does not support multiple ranges in queries
+
     init {
         apps["dpns"] = ClientAppDefinition(SystemIds.dpnsDataContractId)
         apps["dashpay"] = ClientAppDefinition(SystemIds.dashpayDataContractId)
