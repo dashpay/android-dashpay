@@ -23,7 +23,7 @@ class Contracts(val platform: Platform) {
     }
 
     fun broadcast(dataContract: DataContract, identity: Identity, privateKey: ECKey, index: Int): DataContractCreateTransition {
-        val dataContractCreateTransition = platform.dpp.dataContract.createStateTransition(dataContract)
+        val dataContractCreateTransition = platform.dpp.dataContract.createDataContractCreateTransition(dataContract)
 
         platform.broadcastStateTransition(dataContractCreateTransition, identity, privateKey, index)
 
