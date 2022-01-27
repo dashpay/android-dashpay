@@ -160,7 +160,12 @@ class Documents(val platform: Platform) {
         return get(contractId, fieldType, opts, callType)
     }
 
-    fun get(dataContractId: Identifier, documentType: String, opts: DocumentQuery, callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.FIRST): List<Document> {
+    fun get(
+        dataContractId: Identifier,
+        documentType: String,
+        opts: DocumentQuery,
+        callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.FIRST
+    ): List<Document> {
         try {
             val documentResponse = platform.client.getDocuments(
                 dataContractId.toBuffer(),
