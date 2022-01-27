@@ -94,7 +94,10 @@ class ContactRequests(val platform: Platform) {
         } else {
             documentQuery.where(listOf("\$ownerId", "==", userId))
         }
-        if (afterTime > 0) {
+        // In v0.21, if afterTime == 0, $createdAt was not included in the where clauses
+        // With the dashpay contract in v0.22, $createdAt must be included along with
+        // toUserId or ownerId
+        if (afterTime >= 0) {
             documentQuery.where(listOf("\$createdAt", ">", afterTime))
         }
         if (retrieveAll) {
