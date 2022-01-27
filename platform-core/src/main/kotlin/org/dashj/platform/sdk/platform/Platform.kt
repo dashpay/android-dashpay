@@ -19,6 +19,7 @@ import org.bitcoinj.params.TestNet3Params
 import org.dashj.platform.dapiclient.DapiClient
 import org.dashj.platform.dapiclient.MaxRetriesReachedException
 import org.dashj.platform.dapiclient.NoAvailableAddressesForRetryException
+import org.dashj.platform.dapiclient.SystemIds
 import org.dashj.platform.dapiclient.grpc.BroadcastRetryCallback
 import org.dashj.platform.dapiclient.grpc.DefaultGetDataContractWithContractIdRetryCallback
 import org.dashj.platform.dapiclient.grpc.DefaultGetDocumentsWithContractIdRetryCallback
@@ -75,19 +76,16 @@ class Platform(val params: NetworkParameters) {
     }
 
     init {
+        apps["dpns"] = ClientAppDefinition(SystemIds.dpnsDataContractId)
+        apps["dashpay"] = ClientAppDefinition(SystemIds.dashpayDataContractId)
+        apps["featureFlags"] = ClientAppDefinition("7jr118TzVYZoA9XcwYBjUghVF1RT77vfeTzxJEgbaKEU")
         when {
             params.id.contains("test") -> {
-                apps["dpns"] = ClientAppDefinition("Bw9PUC3aSEGQ4j5qrvpNLrRNFPVMiUHZLr1atgfYJcmf")
-                apps["dashpay"] = ClientAppDefinition("2Vuou3EfbrtunwCZvQp1XS5PXZ5CgC1pGBz4VPT4ojmy")
-                apps["featureFlags"] = ClientAppDefinition("7jr118TzVYZoA9XcwYBjUghVF1RT77vfeTzxJEgbaKEU")
-                client = DapiClient(TestNet3Params.MASTERNODES.toList())
+                client = DapiClient(TestNet3Params.MASTERNODES.toList(), dpp)
                 useWhiteList = true
             }
             params.id.contains("krupnik") -> {
-                apps["dpns"] = ClientAppDefinition("FBzwdxUzv1BLZCdpwdYRVCihTLtYe73UxviWsxJd7FYQ")
-                apps["dashpay"] = ClientAppDefinition("3Ftm5vrpH2sYRanYfNmzuYNPHw4tzAkZzrCDqz7dLf9Q")
-                apps["featureFlags"] = ClientAppDefinition("8Vsv2k9ScPmnGJPKUjyAQjRAwNqJryEVdiPAQ7Wr8PGa")
-                client = DapiClient(KrupnikDevNetParams.get().defaultMasternodeList.toList())
+                client = DapiClient(KrupnikDevNetParams.get().defaultMasternodeList.toList(), dpp)
             }
         }
     }

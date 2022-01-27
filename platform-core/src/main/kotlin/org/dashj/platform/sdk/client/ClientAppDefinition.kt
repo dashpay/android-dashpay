@@ -12,7 +12,7 @@ import org.dashj.platform.dpp.identifier.Identifier
 
 data class ClientAppDefinition(
     val contractId: Identifier,
-    var contract: DataContract?
+    var contract: DataContract? = null
 ) {
     constructor(contractId: String, contract: DataContract? = null) :
     this(Identifier.from(contractId), contract)
