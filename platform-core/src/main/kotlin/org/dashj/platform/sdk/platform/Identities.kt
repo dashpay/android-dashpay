@@ -108,8 +108,8 @@ class Identities(val platform: Platform) {
     }
 
     fun getByPublicKeyHash(pubKeyHash: ByteArray): Identity? {
-        val identityBuffer = platform.client.getIdentityByFirstPublicKey(pubKeyHash) ?: return null
-        return platform.dpp.identity.createFromBuffer(identityBuffer.toByteArray())
+        val identityBuffer = platform.client.getIdentityByFirstPublicKey(pubKeyHash, true) ?: return null
+        return platform.dpp.identity.createFromBuffer(identityBuffer)
     }
 
     fun topUp(

@@ -47,7 +47,7 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
 
     override fun fetchTransaction(id: String): Transaction? {
         val txData = platform.client.getTransactionBytes(id) ?: return null
-        return Transaction(null, txData.toByteArray())
+        return Transaction(null, txData)
     }
 
     override fun isAssetLockTransactionOutPointAlreadyUsed(outPointBuffer: ByteArray): Boolean {
