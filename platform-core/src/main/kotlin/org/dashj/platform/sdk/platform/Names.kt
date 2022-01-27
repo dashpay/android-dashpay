@@ -192,9 +192,11 @@ class Names(val platform: Platform) {
     }
 
     private fun getDocumentQuery(name: String, parentDomain: String = DEFAULT_PARENT_DOMAIN): DocumentQuery {
+        // with DPP 0.22 and the dpns contract, normalizedParentDomainName must be
+        // before normalizedLabel in the where clauses
         return DocumentQuery.Builder()
-            .where(listOf("normalizedLabel", "==", name.toLowerCase()))
-            .where(listOf("normalizedParentDomainName", "==", parentDomain))
+            .where("normalizedParentDomainName", "==", parentDomain)
+            .where("normalizedLabel", "==", name.toLowerCase())
             .build()
     }
 
@@ -245,9 +247,9 @@ class Names(val platform: Platform) {
      */
     fun search(text: String, parentDomain: String, retrieveAll: Boolean, limit: Int = -1, startAtIndex: Int = 1): List<Document> {
         val documentQuery = DocumentQuery.Builder()
-            .where(listOf("normalizedParentDomainName", "==", parentDomain))
-            .orderBy(listOf("normalizedLabel", "asc"))
-            .where(listOf("normalizedLabel", "startsWith", text.toLowerCase()))
+            .where("normalizedParentDomainName", "==", parentDomain)
+            .where("normalizedLabel", "startsWith", text.toLowerCase())
+            .orderBy("normalizedLabel", true)
             .limit(if (retrieveAll) -1 else limit)
             .startAt(startAtIndex)
 
