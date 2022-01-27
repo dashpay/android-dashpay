@@ -72,7 +72,7 @@ class GetNetworkStatus {
             for (mn in validNodes) {
                 val service = (mn["service"] as String).split(":")[0]
 
-                val rpcClient = DapiClient(service)
+                val rpcClient = DapiClient(service, platform.dpp)
 
                 println(service)
                 var jsonRpcSuccess = true
