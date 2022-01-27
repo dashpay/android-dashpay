@@ -1,15 +1,9 @@
 package org.dashj.platform.sdk.platform.multicall
 
-import org.dashj.platform.dapiclient.model.DocumentQuery
-import org.dashj.platform.dpp.Factory
-import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.sdk.platform.PlatformNetwork
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Test
 
 class MultiCallTest : PlatformNetwork() {
-    val dataContractId = platform.apps["dpns"]!!.contractId
+   /* val dataContractId = platform.apps["dpns"]!!.contractId
     val documentType = "domain"
     val defaultQuery = DocumentQuery.builder().build()
     // .where("normalizedLabel", "==", "x-hash-eng-225793297")
@@ -138,5 +132,5 @@ class MultiCallTest : PlatformNetwork() {
         val results = multicall(MulticallQuery.Companion.CallType.MAJORITY, noResultsQuery)
         assertEquals(MulticallQuery.Companion.Status.NOT_FOUND, results.first)
         assertTrue(results.second.isEmpty())
-    }
+    }*/
 }
