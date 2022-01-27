@@ -9,8 +9,8 @@ class NamesTest : PlatformNetwork() {
 
     @Test
     fun getTest() {
-        val label = "x-hash-eng"
-        val ownerId = "CtbiVfTcKFpt5dhmWYHwK9yp1CKR5dci9WdHokYGqyjG"
+        val label = "hash"
+        val ownerId = "3wovPXW3iWrUjWDg6g1VWu1KQLuxFA6yx5xQS7VwpEho"
 
         val byLabel = DomainDocument(platform.names.get(label)!!)
         val byResolve = DomainDocument(platform.names.resolve("$label.${Names.DEFAULT_PARENT_DOMAIN}")!!)

@@ -77,8 +77,8 @@ class DocumentsTest : PlatformNetwork() {
         val results = platform.documents.get(
             Names.DPNS_DOMAIN_DOCUMENT,
             DocumentQuery.builder()
-                .where("normalizedLabel", "==", "39383838")
                 .where("normalizedParentDomainName", "==", "dash")
+                .where("normalizedLabel", "==", "39383838")
                 .build()
         )
         assertEquals(results, listOf<ByteArray>())
