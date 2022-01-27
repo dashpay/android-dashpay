@@ -80,7 +80,6 @@ class Platform(val params: NetworkParameters) {
     init {
         apps["dpns"] = ClientAppDefinition(SystemIds.dpnsDataContractId)
         apps["dashpay"] = ClientAppDefinition(SystemIds.dashpayDataContractId)
-        apps["featureFlags"] = ClientAppDefinition("7jr118TzVYZoA9XcwYBjUghVF1RT77vfeTzxJEgbaKEU")
         when {
             params.id.contains("test") -> {
                 client = DapiClient(TestNet3Params.MASTERNODES.toList(), dpp)
