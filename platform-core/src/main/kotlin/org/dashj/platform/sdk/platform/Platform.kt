@@ -164,7 +164,7 @@ class Platform(val params: NetworkParameters) {
         val validList = mnList.filter {
             it["isValid"] == true
         }
-        client = DapiClient(validList.map { (it["service"] as String).split(":")[0] })
+        client = DapiClient(validList.map { (it["service"] as String).split(":")[0] }, dpp)
     }
 
     private fun getMnList(): List<Map<String, Any>> {
