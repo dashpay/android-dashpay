@@ -6,10 +6,12 @@
  */
 package org.dashj.platform.sdk.platform
 
+import io.grpc.StatusRuntimeException
 import org.bitcoinj.core.ECKey
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dpp.Factory
 import org.dashj.platform.dpp.document.Document
+import org.dashj.platform.dpp.errors.DriveErrorMetadata
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
 import org.dashj.platform.sdk.platform.multicall.MulticallQuery
@@ -172,8 +174,15 @@ class Documents(val platform: Platform) {
                 document.metadata = documentResponse.metadata.getMetadata()
                 document
             }
+        } catch (e: StatusRuntimeException) {
+            log.error(
+                "Document query: unable to get documents of $dataContractId: " +
+                    "${DriveErrorMetadata(e.trailers.toString())}",
+                e
+            )
+            throw e
         } catch (e: Exception) {
-            log.error("Document query: unable to get documents of $dataContractId: $e")
+            log.error("Document query: unable to get documents of $dataContractId", e)
             throw e
         }
     }
