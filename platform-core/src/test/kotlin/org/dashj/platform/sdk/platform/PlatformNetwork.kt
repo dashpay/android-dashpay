@@ -1,6 +1,6 @@
 package org.dashj.platform.sdk.platform
 import java.util.Date
-import org.bitcoinj.params.SchnappsDevNetParams
+import org.bitcoinj.params.KrupnikDevNetParams
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.DeterministicKeyChain
 import org.bitcoinj.wallet.DeterministicSeed
@@ -10,7 +10,7 @@ import org.junit.jupiter.api.AfterEach
 
 open class PlatformNetwork {
 
-    val platform = Platform(SchnappsDevNetParams.get())
+    val platform = Platform(KrupnikDevNetParams.get())
 
     val assetLockTxId: String
     val seed: String
@@ -23,7 +23,7 @@ open class PlatformNetwork {
                 assetLockTxId = "1175bf329cf6d35839f67aa57da87636a76b4837ce76b46ababa2a415be8d866"
                 seed = "mango air virus pigeon crowd attract review lemon lion assume lab rain"
             }
-            platform.params.id.contains("schnapps") -> {
+            platform.params.id.contains("krupnik") -> {
                 assetLockTxId = "1175bf329cf6d35839f67aa57da87636a76b4837ce76b46ababa2a415be8d866"
                 seed = "quantum alarm evoke estate siege play moon spoon later paddle rifle ancient"
             }

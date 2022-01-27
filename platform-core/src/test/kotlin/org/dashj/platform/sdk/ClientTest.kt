@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 package org.dashj.platform.sdk
-import org.bitcoinj.params.SchnappsDevNetParams
+import org.bitcoinj.params.KrupnikDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.dashj.platform.sdk.client.ClientOptions
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -25,7 +25,7 @@ class ClientTest {
 
     @Test
     fun schnappsClientTest() {
-        val client = Client(ClientOptions(network = "schnapps"))
-        assertEquals(client.platform.params, SchnappsDevNetParams.get())
+        val client = Client(ClientOptions(network = "krupnik"))
+        assertEquals(client.platform.params, KrupnikDevNetParams.get())
     }
 }
