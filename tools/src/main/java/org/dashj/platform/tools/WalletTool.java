@@ -2019,7 +2019,7 @@ public class WalletTool {
 
     static void sendContactRequests(OptionSpec<WaitForEnum> waitForFlag) {
 
-        List<Document> names = platform.getNames().search("x-hash-eng-1-", Names.DEFAULT_PARENT_DOMAIN, false, 100, 0);
+        List<Document> names = platform.getNames().search("x-hash-eng-1-", Names.DEFAULT_PARENT_DOMAIN, false, 100, null);
 
         ContactRequests contacts = new ContactRequests(platform);
         for (Document name : names) {
@@ -2035,13 +2035,7 @@ public class WalletTool {
             }
         }
 
-        /*try {
-            sleep(10000);
-        } catch (InterruptedException x) {
-
-        }*/
-
-        List<Document> contactRequests = contacts.get(blockchainIdentity.getUniqueIdentifier(), false, 0, true, 0);
+        List<Document> contactRequests = contacts.get(blockchainIdentity.getUniqueIdentifier(), false, 0, true, null);
 
         double completion = (double)contactRequests.size() / names.size();
         System.out.println("success rate on sending contact requests: " + completion);

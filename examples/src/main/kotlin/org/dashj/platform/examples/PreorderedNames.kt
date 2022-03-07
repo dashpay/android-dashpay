@@ -32,7 +32,6 @@ class PreorderedNames {
             var queryOpts = DocumentQuery.Builder().build()
 
             do {
-
                 try {
                     documents = platform.documents.get("dpns.preorder", queryOpts)
 
