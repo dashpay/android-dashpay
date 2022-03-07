@@ -65,9 +65,9 @@ class ContactRequests(val platform: Platform) {
         toUserId: Boolean,
         afterTime: Long = 0,
         retrieveAll: Boolean = true,
-        startAt: Int = 1
+        startAfter: Identifier? = null
     ): List<Document> {
-        return get(Identifier.from(userId), toUserId, afterTime, retrieveAll, startAt)
+        return get(Identifier.from(userId), toUserId, afterTime, retrieveAll, startAfter)
     }
 
     /**
@@ -85,7 +85,7 @@ class ContactRequests(val platform: Platform) {
         toUserId: Boolean,
         afterTime: Long = 0,
         retrieveAll: Boolean = true,
-        startAt: Int = 1
+        startAfter: Identifier? = null
     ): List<Document> {
         val documentQuery = DocumentQuery.Builder()
 
@@ -98,7 +98,8 @@ class ContactRequests(val platform: Platform) {
         // With the dashpay contract in v0.22, $createdAt must be included along with
         // toUserId or ownerId
         if (afterTime >= 0) {
-            documentQuery.where(listOf("\$createdAt", ">", afterTime))
+            documentQuery.where("\$createdAt", ">", afterTime)
+            documentQuery.orderBy("\$createdAt", true)
         }
         if (retrieveAll) {
             documentQuery.limit(-1)
@@ -108,7 +109,7 @@ class ContactRequests(val platform: Platform) {
 
         return platform.documents.getAll(
             CONTACTREQUEST_DOCUMENT,
-            documentQuery.startAt(startAt).build()
+            documentQuery.startAfter(startAfter).build()
         )
     }
 

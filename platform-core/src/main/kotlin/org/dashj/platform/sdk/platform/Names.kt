@@ -245,13 +245,13 @@ class Names(val platform: Platform) {
      * @param startAtIndex Int (1 is the first item)
      * @return List<Documents>
      */
-    fun search(text: String, parentDomain: String, retrieveAll: Boolean, limit: Int = -1, startAtIndex: Int = 1): List<Document> {
+    fun search(text: String, parentDomain: String, retrieveAll: Boolean, limit: Int = -1, startAfter: Identifier? = null): List<Document> {
         val documentQuery = DocumentQuery.Builder()
             .where("normalizedParentDomainName", "==", parentDomain)
             .where("normalizedLabel", "startsWith", text.toLowerCase())
             .orderBy("normalizedLabel", true)
             .limit(if (retrieveAll) -1 else limit)
-            .startAt(startAtIndex)
+            .startAfter(startAfter)
 
         return platform.documents.getAll(DPNS_DOMAIN_DOCUMENT, documentQuery.build())
     }
@@ -338,6 +338,7 @@ class Names(val platform: Platform) {
     ): List<Document> {
         val documentQuery = DocumentQuery.Builder()
         documentQuery.whereIn("records.dashUniqueIdentityId", userIds)
+            .orderBy("records.dashUniqueIdentityId", true)
 
         val documents = platform.documents.get(DPNS_DOMAIN_DOCUMENT, documentQuery.build())
 

@@ -53,9 +53,10 @@ class SearchNames {
             val contactRequests = hashMapOf<Identifier, List<ContactRequest>>()
             var requests = 0
             var transitionCount = 3 // identity + preorder + domain
+            var results = platform.names.search(text, Names.DEFAULT_PARENT_DOMAIN, false)
+
             do {
                 try {
-                    val results = platform.names.search(text, Names.DEFAULT_PARENT_DOMAIN, false, startAtIndex = startAt)
                     val theseNames = hashMapOf<Identifier, DomainDocument>()
                     results.forEach {
                         val doc = DomainDocument(it)
@@ -72,14 +73,15 @@ class SearchNames {
                     }
 
                     theseNames.forEach {
-                        val requests = ContactRequests(platform).get(it.key, false, 0, true, 0)
-                        val list = requests.map { request -> ContactRequest(request) }
+                        val contactRequestsResult = ContactRequests(platform).get(it.key, false, 0, true)
+                        val list = contactRequestsResult.map { request -> ContactRequest(request) }
                         contactRequests[it.key] = list
                     }
 
                     requests += 1
 
                     startAt += Documents.DOCUMENT_LIMIT
+                    results = platform.names.search(text, Names.DEFAULT_PARENT_DOMAIN, false, limit = -1, results.last().id)
                 } catch (e: Exception) {
                     println("\nError retrieving results (startAt =  $startAt)")
                     println(e.message)

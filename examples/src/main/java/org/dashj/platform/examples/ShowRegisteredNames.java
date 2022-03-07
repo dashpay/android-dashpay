@@ -25,8 +25,9 @@ public class ShowRegisteredNames {
         int startAt = 0;
         List<Document> documents = new ArrayList<Document>(0);
         int requests = 0;
+        DocumentQuery queryOpts = new DocumentQuery.Builder().build();
+
         do {
-            DocumentQuery queryOpts = new DocumentQuery.Builder().startAt(startAt).build();
             System.out.println(queryOpts.toJSON());
 
             try {
@@ -43,6 +44,9 @@ public class ShowRegisteredNames {
                 }
 
                 startAt += Documents.DOCUMENT_LIMIT;
+                if (!documents.isEmpty()) {
+                    queryOpts = new DocumentQuery.Builder().startAt((documents.get(documents.size() - 1).getId())).build();
+                }
             } catch (Exception e) {
                 System.out.println("\nError retrieving results (startAt =  $startAt)");
                 System.out.println(e.getMessage());

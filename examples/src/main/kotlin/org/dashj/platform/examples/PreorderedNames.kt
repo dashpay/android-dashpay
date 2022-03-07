@@ -29,8 +29,9 @@ class PreorderedNames {
             var startAt = 0
             var documents: List<Document>? = null
             var requests = 0
+            var queryOpts = DocumentQuery.Builder().build()
+
             do {
-                val queryOpts = DocumentQuery.Builder().startAt(startAt).build()
 
                 try {
                     documents = platform.documents.get("dpns.preorder", queryOpts)
@@ -45,6 +46,9 @@ class PreorderedNames {
                     }
 
                     startAt += Documents.DOCUMENT_LIMIT
+                    if (documents.isNotEmpty()) {
+                        queryOpts = DocumentQuery.Builder().startAfter(documents.last().id).build()
+                    }
                 } catch (e: Exception) {
                     println("\nError retrieving results (startAt =  $startAt)")
                     println(e.message)

@@ -183,8 +183,9 @@ class Profiles(
     ): List<Document> {
         if (platform.queriesSupportMultipleRanges) {
             val documentQuery = DocumentQuery.builder()
-                .where(listOf("\$updatedAt", ">", timestamp))
                 .whereIn("\$ownerId", userIds)
+                .where("\$updatedAt", ">", timestamp)
+                .orderBy("\$updatedAt", true)
                 .build()
 
             return platform.documents.get(DOCUMENT, documentQuery)
@@ -196,6 +197,7 @@ class Profiles(
                 val documentQuery = DocumentQuery.builder()
                     .where("\$ownerId", "==", id)
                     .where("\$updatedAt", ">", timestamp)
+                    .orderBy("\$updatedAt", true)
                     .build()
                 val document = platform.documents.get(DOCUMENT, documentQuery)
                 documents.addAll(document)
