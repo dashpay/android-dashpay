@@ -33,10 +33,10 @@ class DashPayProfiles {
             var startAt = 0
             var documents: List<Document>? = null
             var requests = 0
-            do {
-                val queryOpts = DocumentQuery.Builder().startAt(startAt).build()
-                println(queryOpts.toJSON())
+            var queryOpts = DocumentQuery.Builder().build()
 
+            do {
+                println(queryOpts.toJSON())
                 try {
                     documents = platform.documents.get("dashpay.profile", queryOpts)
 
@@ -55,6 +55,9 @@ class DashPayProfiles {
                     }
 
                     startAt += Documents.DOCUMENT_LIMIT
+                    if (documents.isNotEmpty()) {
+                        queryOpts = DocumentQuery.Builder().startAfter(documents.last().id).build()
+                    }
                 } catch (e: Exception) {
                     println("\nError retrieving results (startAt =  $startAt)")
                     println(e.message)

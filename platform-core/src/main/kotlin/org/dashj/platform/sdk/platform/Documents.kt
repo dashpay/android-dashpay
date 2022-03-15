@@ -115,7 +115,6 @@ class Documents(val platform: Platform) {
                         callType
                     )
                 requests += 1
-                query.startAt += documentList.size
                 if (documentList.isNotEmpty()) {
                     when {
                         limit == -1 -> documents.addAll(documentList)
@@ -127,6 +126,7 @@ class Documents(val platform: Platform) {
                         }
                         else -> documents.addAll(documentList)
                     }
+                    query.startAt = documentList.last().id
                 }
                 total += documentList.size
             } catch (e: Exception) {

@@ -6,11 +6,12 @@
  */
 package org.dashj.platform.examples
 
+import org.bitcoinj.core.Sha256Hash
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dpp.document.Document
+import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.sdk.Client
 import org.dashj.platform.sdk.client.ClientOptions
-import org.dashj.platform.sdk.platform.Documents
 
 class RegisteredNames {
     companion object {
@@ -26,11 +27,13 @@ class RegisteredNames {
         fun getDocuments() {
             val platform = sdk.platform
 
-            var startAt = 0
+            var lastItem = Identifier.from(Sha256Hash.ZERO_HASH)
             var documents: List<Document>? = null
             var requests = 0
+            val limit = 100
+            var queryOpts = DocumentQuery.Builder().limit(limit).build()
+
             do {
-                val queryOpts = DocumentQuery.Builder().startAt(startAt).build()
                 println(queryOpts.toJSON())
 
                 try {
@@ -46,13 +49,16 @@ class RegisteredNames {
                         )
                     }
 
-                    startAt += Documents.DOCUMENT_LIMIT
+                    lastItem = documents.last().id
+                    if (documents.isNotEmpty()) {
+                        queryOpts = DocumentQuery.Builder().startAfter(lastItem).limit(100).build()
+                    }
                 } catch (e: Exception) {
-                    println("\nError retrieving results (startAt =  $startAt)")
+                    println("\nError retrieving results (startAt =  $lastItem)")
                     println(e.message)
                     return
                 }
-            } while (requests == 0 || documents!!.size >= 100)
+            } while (requests >= 0 || documents!!.size >= limit)
         }
     }
 }

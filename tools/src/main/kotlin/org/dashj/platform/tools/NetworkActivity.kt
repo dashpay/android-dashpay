@@ -15,7 +15,6 @@ import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.sdk.Client
 import org.dashj.platform.sdk.client.ClientOptions
-import org.dashj.platform.sdk.platform.Documents
 import org.dashj.platform.sdk.platform.DomainDocument
 import org.dashj.platform.sdk.platform.Names
 import org.dashj.platform.sdk.platform.Platform
@@ -85,27 +84,27 @@ class NetworkActivity {
 
         // TODO: This could use Documents.getAll
         private fun getAllDocuments(contractDocument: String): List<Document> {
-            var startAt = 0
+            var startAfter: Identifier? = null
             var documents: List<Document>? = null
             val allDocuments = arrayListOf<Document>()
             var requests = 0
+            var queryOpts = DocumentQuery.Builder().build()
             do {
-                val queryOpts = DocumentQuery.Builder()
-                    .startAt(startAt)
-                    .build()
-
                 try {
                     documents = platform.documents.get(contractDocument, queryOpts)
 
                     requests += 1
                     allDocuments.addAll(documents)
 
-                    startAt += Documents.DOCUMENT_LIMIT
+                    startAfter = documents.last().id
+                    queryOpts = DocumentQuery.Builder()
+                        .startAfter(startAfter)
+                        .build()
                 } catch (e: Exception) {
-                    println("\nError retrieving results (startAt =  $startAt)")
+                    println("\nError retrieving results (startAfter =  $startAfter)")
                     println(e.message)
                 }
-            } while (requests == 0 || documents!!.size >= 100)
+            } while (documents!!.size >= 100)
 
             return allDocuments
         }
