@@ -181,30 +181,14 @@ class Profiles(
         userIds: List<Identifier>,
         timestamp: Long = 0L
     ): List<Document> {
-        if (platform.queriesSupportMultipleRanges) {
-            val documentQuery = DocumentQuery.builder()
-                .whereIn("\$ownerId", userIds)
-                .where("\$updatedAt", ">", timestamp)
-                .orderBy("\$updatedAt", true)
-                .build()
+        val documentQuery = DocumentQuery.builder()
+            .whereIn("\$ownerId", userIds)
+            .where("\$updatedAt", ">", timestamp)
+            .orderBy("\$ownerId", true)
+            .orderBy("\$updatedAt", true)
+            .build()
 
-            return platform.documents.get(DOCUMENT, documentQuery)
-        } else {
-            // TODO: we want to remove this backup method when GroveDB is updated
-            val documents = arrayListOf<Document>()
-            // query each userId individually
-            for (id in userIds) {
-                val documentQuery = DocumentQuery.builder()
-                    .where("\$ownerId", "==", id)
-                    .where("\$updatedAt", ">", timestamp)
-                    .orderBy("\$updatedAt", true)
-                    .build()
-                val document = platform.documents.get(DOCUMENT, documentQuery)
-                documents.addAll(document)
-            }
-
-            return documents
-        }
+        return platform.documents.get(DOCUMENT, documentQuery)
     }
 
     suspend fun watchProfile(
