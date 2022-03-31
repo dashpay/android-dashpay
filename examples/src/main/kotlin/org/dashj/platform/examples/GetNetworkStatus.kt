@@ -165,7 +165,7 @@ class GetNetworkStatus {
 
             println("${badNodes.size} masternodes failed to respond to one or more requests")
             println("List of non-responsive nodes:\n $badNodes")
-            println("\nList of nodes with no errors:\n\t${goodNodes}\n")
+            println("\nList of nodes with no errors:\n\t${goodNodes.map { "\"$it\"" }}\n")
 
             println("${invalidNodes.size} masternodes were marked invalid in DML")
 
