@@ -240,7 +240,7 @@ class Names(val platform: Platform) {
      * on these criteria: starts with.  Contains is not supported
      * @param text String the text to search the start of normalized labels
      * @param parentDomain String
-     * @param retrieveAll Boolean whether or not to run many queries to obtain all results
+     * @param retrieveAll Boolean whether or not to obtain all match resutls, regardless of the number
      * @param limit Int the number of items to return (-1 is the default)
      * @param startAfter the last item in the previous query.  The first query should have a null value.  If retrieveAll
      *                   is true, then this value should be null.
