@@ -64,7 +64,7 @@ class DocumentsTest : PlatformNetwork() {
         println("Make a query for domain documents")
         val results = platform.documents.getAll(Names.DPNS_DOMAIN_DOCUMENT, DocumentQuery.builder().build())
 
-        val limitedResults = platform.documents.getAll(Names.DPNS_DOMAIN_DOCUMENT, DocumentQuery.builder().limit(301).startAt(2).build())
+        val limitedResults = platform.documents.getAll(Names.DPNS_DOMAIN_DOCUMENT, DocumentQuery.builder().limit(301).startAt(results[2].id).build())
 
         assertTrue(results.isNotEmpty())
         assertEquals(301, limitedResults.size)
