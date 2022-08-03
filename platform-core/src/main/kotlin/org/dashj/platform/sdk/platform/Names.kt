@@ -238,11 +238,12 @@ class Names(val platform: Platform) {
     /**
      * Searches for and returns a list of all name documents that match the given name based
      * on these criteria: starts with.  Contains is not supported
-     * @param text String
+     * @param text String the text to search the start of normalized labels
      * @param parentDomain String
-     * @param retrieveAll Boolean
+     * @param retrieveAll Boolean whether or not to obtain all match results, regardless of the number
      * @param limit Int the number of items to return (-1 is the default)
-     * @param startAtIndex Int (1 is the first item)
+     * @param startAfter the last item in the previous query.  The first query should have a null value.  If retrieveAll
+     *                   is true, then this value should be null.
      * @return List<Documents>
      */
     fun search(text: String, parentDomain: String, retrieveAll: Boolean, limit: Int = -1, startAfter: Identifier? = null): List<Document> {
