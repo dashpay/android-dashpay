@@ -28,6 +28,7 @@ class Identities(val platform: Platform) {
     fun register(
         signedLockTransaction: CreditFundingTransaction,
         instantLock: InstantSendLock,
+        privateKeys: List<ByteArray>,
         identityPublicKeys: List<IdentityPublicKey>
     ): Identity {
         return register(
@@ -35,6 +36,7 @@ class Identities(val platform: Platform) {
             signedLockTransaction,
             instantLock,
             signedLockTransaction.creditBurnPublicKey,
+            privateKeys,
             identityPublicKeys
         )
     }
@@ -44,6 +46,7 @@ class Identities(val platform: Platform) {
         transaction: CreditFundingTransaction,
         instantLock: InstantSendLock,
         assetLockPrivateKey: ECKey,
+        privateKeys: List<ByteArray>,
         identityPublicKeys: List<IdentityPublicKey>
     ): Identity {
         try {
@@ -51,8 +54,13 @@ class Identities(val platform: Platform) {
 
             val identityCreateTransition = platform.dpp.identity.createIdentityCreateTransition(assetLock, identityPublicKeys)
 
-            identityCreateTransition.signByPrivateKey(assetLockPrivateKey)
+            for (i in identityPublicKeys.indices) {
+                identityCreateTransition.signByPrivateKey(privateKeys[i], identityPublicKeys[i].type)
+                identityPublicKeys[i].signature = identityCreateTransition.signature
+                identityCreateTransition.signature = null
+            }
 
+            identityCreateTransition.signByPrivateKey(assetLockPrivateKey)
             platform.broadcastStateTransition(identityCreateTransition)
 
             // get the identity from Platform since it cannot be recreated from the transition with the balance, etc
@@ -70,12 +78,19 @@ class Identities(val platform: Platform) {
         transaction: CreditFundingTransaction,
         coreHeight: Long,
         assetLockPrivateKey: ECKey,
+        privateKeys: List<ByteArray>,
         identityPublicKeys: List<IdentityPublicKey>
     ): Identity {
         try {
             val assetLock = ChainAssetLockProof(coreHeight, transaction.getOutput(outputIndex).outPointFor)
 
             val identityCreateTransition = platform.dpp.identity.createIdentityCreateTransition(assetLock, identityPublicKeys)
+
+            for (i in identityPublicKeys.indices) {
+                identityCreateTransition.signByPrivateKey(privateKeys[i], identityPublicKeys[i].type)
+                identityPublicKeys[i].signature = identityCreateTransition.signature
+                identityCreateTransition.signature = null
+            }
 
             identityCreateTransition.signByPrivateKey(assetLockPrivateKey)
 

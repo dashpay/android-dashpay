@@ -1,5 +1,6 @@
 package org.dashj.platform.dashpay
 
+import java.util.Date
 import java.util.Timer
 import kotlin.concurrent.timerTask
 import org.bouncycastle.crypto.params.KeyParameter
@@ -8,6 +9,7 @@ import org.dashj.platform.dashpay.callback.SendContactRequestCallback
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
+import org.dashj.platform.dpp.identity.IdentityPublicKey
 import org.dashj.platform.sdk.platform.Documents
 import org.dashj.platform.sdk.platform.Platform
 
@@ -23,32 +25,45 @@ class ContactRequests(val platform: Platform) {
         val contactKey = contactKeyChain.watchingKey
         val contactPub = contactKey.serializeContactPub()
 
-        val (encryptedContactPubKey, encryptedAccountLabel) = fromUser.encryptExtendedPublicKey(
-            contactPub,
-            toUser,
-            0,
-            aesKey
-        )
-        val accountReference = fromUser.getAccountReference(aesKey, toUser)
+        val toUserPublicKey = toUser.publicKeys.find { publicKey ->
+            // is the publicKey disabled?
+            if (publicKey.disabledAt == null || publicKey.disabledAt!! > Date().time) {
+                // is the public key of type ECDSA with a high enough security level?
+                publicKey.type == IdentityPublicKey.Type.ECDSA_SECP256K1 && publicKey.securityLevel <= IdentityPublicKey.SecurityLevel.MEDIUM
+            } else {
+                false
+            }
+        }
 
-        val contactRequestDocument = ContactRequest.builder(platform)
-            .to(toUser.id)
-            .from(fromUser.uniqueIdentifier)
-            .encryptedPubKey(encryptedContactPubKey, toUser.publicKeys[0].id, fromUser.identity!!.publicKeys[0].id)
-            .accountReference(accountReference)
-            .encryptedAccountLabel(encryptedAccountLabel)
-            .build().document
+        if (toUserPublicKey != null) {
+            val (encryptedContactPubKey, encryptedAccountLabel) = fromUser.encryptExtendedPublicKey(
+                contactPub,
+                toUser,
+                toUserPublicKey.id,
+                aesKey
+            )
+            val accountReference = fromUser.getAccountReference(aesKey, toUser)
 
-        val transitionMap = hashMapOf(
-            "create" to listOf(contactRequestDocument)
-        )
+            val contactRequestDocument = ContactRequest.builder(platform)
+                .to(toUser.id)
+                .from(fromUser.uniqueIdentifier)
+                .encryptedPubKey(encryptedContactPubKey, fromUser.getIdentityPublicKeyByPurpose(BlockchainIdentity.KeyIndexPurpose.AUTHENTICATION).id, toUserPublicKey.id)
+                .accountReference(accountReference)
+                .encryptedAccountLabel(encryptedAccountLabel)
+                .build().document
 
-        val transition = platform.dpp.document.createStateTransition(transitionMap)
-        fromUser.signStateTransition(transition, aesKey)
+            val transitionMap = hashMapOf(
+                "create" to listOf(contactRequestDocument)
+            )
 
-        platform.broadcastStateTransition(transition)
+            val transition = platform.dpp.document.createStateTransition(transitionMap)
+            fromUser.signStateTransition(transition, aesKey)
 
-        return ContactRequest(contactRequestDocument)
+            platform.broadcastStateTransition(transition)
+
+            return ContactRequest(contactRequestDocument)
+        }
+        throw IllegalArgumentException("No valid keys to use in toUser's identity")
     }
 
     /**
