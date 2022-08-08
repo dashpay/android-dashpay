@@ -360,7 +360,7 @@ public class ForwardingServiceEvo {
                 return;
 
             AuthenticationKeyChain blockchainIdentityFunding = kit.wallet().getBlockchainIdentityFundingKeyChain();
-            DeterministicKey publicKey = blockchainIdentityFunding.freshAuthenticationKey();
+            DeterministicKey publicKey = blockchainIdentityFunding.freshAuthenticationKey(true);
             Coin fundingAmount = Coin.valueOf(40000);
             SendRequest sendRequest = SendRequest.creditFundingTransaction(kit.params(), publicKey, fundingAmount);
             ((CreditFundingTransaction)(sendRequest.tx)).setCreditBurnPublicKeyAndIndex(publicKey, publicKey.getChildNumber().num());
@@ -405,7 +405,7 @@ public class ForwardingServiceEvo {
             //    return;
 
             AuthenticationKeyChain blockchainIdentityFunding = kit.wallet().getBlockchainIdentityFundingKeyChain();
-            ECKey publicKey = blockchainIdentityFunding.currentAuthenticationKey();
+            ECKey publicKey = blockchainIdentityFunding.currentAuthenticationKey(true);
             //if(!Base64.decode(lastIdentity.getPublicKeys().get(0).getData()).equals(publicKey.getPubKey()))
             //    return;
 

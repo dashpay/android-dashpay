@@ -38,8 +38,11 @@ class CreateIdentity {
                     platform.identities.register(
                         cftx, islock,
                         listOf(
+                            DefaultIdentity.privateKey
+                        ),
+                        listOf(
                             IdentityPublicKey(
-                                0, IdentityPublicKey.TYPES.ECDSA_SECP256K1,
+                                0, IdentityPublicKey.Type.ECDSA_SECP256K1,
                                 DefaultIdentity.publicKey
                             )
                         )
