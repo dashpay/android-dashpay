@@ -26,9 +26,9 @@ import org.bitcoinj.evolution.CreditFundingTransaction;
 import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.net.discovery.MasternodePeerDiscovery;
 import org.bitcoinj.params.DevNetParams;
+import org.bitcoinj.params.JackDanielsDevNetParams;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
-import org.bitcoinj.params.KrupnikDevNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.quorums.InstantSendLock;
 import org.bitcoinj.utils.BriefLogFormatter;
@@ -89,7 +89,7 @@ public class ForwardingServiceEvo {
             params = RegTestParams.get();
             filePrefix = "forwarding-service-regtest";
         } else if (args.length > 1 && args[1].equals("schnapps")) {
-            params = KrupnikDevNetParams.get();
+            params = JackDanielsDevNetParams.get();
             filePrefix = "forwarding-service-schnapps";
         } else if( args.length > 6 && args[1].equals("devnet")) {
             String [] dnsSeeds = new String[args.length - 5];

@@ -1,6 +1,6 @@
 package org.dashj.platform.sdk.platform
 import java.util.Date
-import org.bitcoinj.params.KrupnikDevNetParams
+import org.bitcoinj.params.JackDanielsDevNetParams
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.DeterministicKeyChain
 import org.bitcoinj.wallet.DeterministicSeed
@@ -10,7 +10,7 @@ import org.junit.jupiter.api.AfterEach
 
 open class PlatformNetwork {
 
-    val platform = Platform(KrupnikDevNetParams.get())
+    val platform = Platform(JackDanielsDevNetParams.get())
 
     val assetLockTxId: String
     val seed: String

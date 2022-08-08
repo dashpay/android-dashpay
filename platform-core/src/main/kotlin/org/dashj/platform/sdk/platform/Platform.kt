@@ -14,7 +14,7 @@ import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.evolution.SimplifiedMasternodeListManager
-import org.bitcoinj.params.KrupnikDevNetParams
+import org.bitcoinj.params.JackDanielsDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.dashj.platform.dapiclient.DapiClient
 import org.dashj.platform.dapiclient.MaxRetriesReachedException
@@ -83,8 +83,8 @@ class Platform(val params: NetworkParameters) {
                 client = DapiClient(TestNet3Params.MASTERNODES.toList(), dpp)
                 useWhiteList = true
             }
-            params.id.contains("krupnik") -> {
-                client = DapiClient(KrupnikDevNetParams.get().defaultMasternodeList.toList(), dpp)
+            params.id.contains("jack-daniels") -> {
+                client = DapiClient(JackDanielsDevNetParams.get().defaultMasternodeList.toList(), dpp)
             }
         }
     }
