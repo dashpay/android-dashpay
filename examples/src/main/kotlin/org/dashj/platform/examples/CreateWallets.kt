@@ -210,7 +210,8 @@ class CreateWallets {
                     10, 5000, RetryDelayType.SLOW20,
                     object : RegisterIdentityCallback {
                         override fun onComplete(uniqueId: String) {
-                            val identityId = platform.client.getIdentityIdByFirstPublicKey(wallet.currentAuthenticationKey(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY).pubKeyHash)
+                            val identity = platform.client.getIdentityByFirstPublicKey(wallet.currentAuthenticationKey(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY).pubKeyHash)
+                            val identityId = platform.dpp.identity.createFromBuffer(identity!!)
                             println("identity found using getIdentityIdByFirstPublicKey: $identityId")
 
                             blockchainIdentity.addUsername(namesToCreate[i])
