@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2020-present, Dash Core Group
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 package org.dashj.platform.contracts.wallet
 
 import org.bitcoinj.crypto.ChildNumber
@@ -5,15 +12,14 @@ import org.bitcoinj.crypto.KeyCrypterAESCBC
 import org.bitcoinj.crypto.KeyCrypterException
 import org.dashj.platform.dashpay.BlockchainIdentity
 import org.dashj.platform.dashpay.PlatformNetwork
-import org.dashj.platform.dashpay.assertListEquals
-import org.dashj.platform.dashpay.assertMapEquals
+import org.dashj.platform.assertListEquals
+import org.dashj.platform.assertMapEquals
 import org.dashj.platform.dpp.identity.IdentityPublicKey
 import org.dashj.platform.dpp.util.Cbor
 import org.dashj.platform.dpp.util.Converters
 import org.dashj.platform.dpp.util.Entropy
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
