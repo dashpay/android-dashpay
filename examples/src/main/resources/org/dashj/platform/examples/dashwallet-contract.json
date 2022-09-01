@@ -1,0 +1,52 @@
+{
+  "tx_metadata": {
+    "type": "object",
+    "indices": [
+      {
+        "name": "ownerId",
+        "properties": [
+          {
+            "$ownerId": "asc"
+          }
+        ]
+      },
+      {
+        "name": "ownerIdAndCreatedAt",
+        "properties": [
+          {
+            "$ownerId": "asc"
+          },
+          {
+            "$createdAt": "asc"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "keyIndex": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "The index of the owners identity public key used to derive the encryption key."
+      },
+      "encryptionKeyIndex": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "The secondary index used to derive the encryption key that is used to encrypt and decrypt encryptedData."
+      },
+      "encryptedMetadata": {
+        "type": "array",
+        "byteArray": true,
+        "minItems": 32,
+        "maxItems": 4096,
+        "description": "encrypted metadata using AES-CBC-256"
+      }
+    },
+    "required": [
+      "keyIndex",
+      "encryptionKeyIndex",
+      "encryptedMetadata",
+      "$createdAt"
+    ],
+    "additionalProperties": false
+  }
+}
