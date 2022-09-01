@@ -10,10 +10,10 @@ package org.dashj.platform.contracts.wallet
 import org.bitcoinj.crypto.ChildNumber
 import org.bitcoinj.crypto.KeyCrypterAESCBC
 import org.bitcoinj.crypto.KeyCrypterException
-import org.dashj.platform.dashpay.BlockchainIdentity
-import org.dashj.platform.dashpay.PlatformNetwork
 import org.dashj.platform.assertListEquals
 import org.dashj.platform.assertMapEquals
+import org.dashj.platform.dashpay.BlockchainIdentity
+import org.dashj.platform.dashpay.PlatformNetwork
 import org.dashj.platform.dpp.identity.IdentityPublicKey
 import org.dashj.platform.dpp.util.Cbor
 import org.dashj.platform.dpp.util.Converters
