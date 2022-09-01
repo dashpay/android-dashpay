@@ -4,7 +4,7 @@ import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.core.Utils
-import org.bitcoinj.params.KrupnikDevNetParams
+import org.bitcoinj.params.JackDanielsDevNetParams
 import org.bitcoinj.params.TestNet3Params
 
 /*
@@ -53,7 +53,7 @@ class DefaultIdentity(val params: NetworkParameters) {
 
     constructor(network: String) : this (
         when (network) {
-            "schnapps" -> KrupnikDevNetParams.get()
+            "jack-daniels" -> JackDanielsDevNetParams.get()
             "testnet" -> TestNet3Params.get()
             else -> throw IllegalArgumentException("network $network is not valid")
         }
@@ -66,8 +66,8 @@ class DefaultIdentity(val params: NetworkParameters) {
             params.id.contains("test") -> {
                 seed = "horn welcome exact penalty beauty marble current leave arrest chunk emotion upset"
             }
-            params.id.contains("krupnik") -> {
-                seed = "type emerge utility also glass digital unfold position course lunar account upper"
+            params.id.contains("jack-daniels") -> {
+                seed = "print shuffle enlist object actress allow quality convince believe gauge tree laundry"
             }
             else -> {
                 seed = ""

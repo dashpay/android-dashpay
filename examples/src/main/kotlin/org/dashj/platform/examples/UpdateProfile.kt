@@ -58,10 +58,10 @@ class UpdateProfile {
             )
 
             wallet.initializeAuthenticationKeyChains(wallet.keyChainSeed, null)
-            println("pkh = ${wallet.blockchainIdentityKeyChain.watchingKey.pubKeyHash.toHex()}")
+            println("pkh = ${wallet.blockchainIdentityKeyChain.getKey(1).pubKeyHash.toHex()}")
 
             val blockchainIdentity = BlockchainIdentity(platform, 0, wallet)
-            blockchainIdentity.recoverIdentity(wallet.blockchainIdentityKeyChain.watchingKey.pubKeyHash)
+            blockchainIdentity.recoverIdentity(wallet.blockchainIdentityKeyChain.getKey(1).pubKeyHash)
 
             val currentProfile = blockchainIdentity.getProfileFromPlatform()!!
 
