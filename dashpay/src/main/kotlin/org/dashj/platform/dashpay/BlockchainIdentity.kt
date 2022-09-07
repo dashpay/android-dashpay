@@ -6,14 +6,13 @@
  */
 package org.dashj.platform.dashpay
 
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Preconditions
 import com.google.common.base.Preconditions.checkState
 import com.google.common.collect.ImmutableList
 import java.io.ByteArrayOutputStream
 import java.util.Date
 import java.util.Timer
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 import kotlin.concurrent.timerTask
 import kotlinx.coroutines.delay
 import org.bitcoinj.core.Address
@@ -28,7 +27,9 @@ import org.bitcoinj.crypto.ChildNumber
 import org.bitcoinj.crypto.DeterministicKey
 import org.bitcoinj.crypto.EncryptedData
 import org.bitcoinj.crypto.HDUtils
+import org.bitcoinj.crypto.KeyCrypterAESCBC
 import org.bitcoinj.crypto.KeyCrypterECDH
+import org.bitcoinj.crypto.KeyCrypterException
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.evolution.EvolutionContact
 import org.bitcoinj.quorums.InstantSendLock
@@ -40,6 +41,9 @@ import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
 import org.bitcoinj.wallet.ZeroConfCoinSelector
 import org.bouncycastle.crypto.params.KeyParameter
+import org.dashj.platform.contracts.wallet.TxMetadata
+import org.dashj.platform.contracts.wallet.TxMetadataDocument
+import org.dashj.platform.contracts.wallet.TxMetadataItem
 import org.dashj.platform.dapiclient.MaxRetriesReachedException
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dashpay.callback.RegisterIdentityCallback
@@ -513,6 +517,11 @@ class BlockchainIdentity {
         return true
     }
 
+    fun recoverIdentity(keyParameter: KeyParameter? = null): Boolean {
+        val (key1, key2) = createIdentityPublicKeys(keyParameter)
+        return recoverIdentity(key1[0].pubKeyHash)
+    }
+
     fun recoverIdentity(pubKeyId: ByteArray): Boolean {
         Preconditions.checkState(
             registrationStatus == RegistrationStatus.UNKNOWN,
@@ -867,6 +876,9 @@ class BlockchainIdentity {
         return privateKey
     }
 
+    fun getPrivateKeyByPurpose(purpose: KeyIndexPurpose, keyParameter: KeyParameter?): ECKey {
+        return maybeDecryptKey(purpose.ordinal, identity!!.getPublicKeyById(purpose.ordinal)!!.type, keyParameter)!!
+    }
     fun getIdentityPublicKeyByPurpose(purpose: KeyIndexPurpose): IdentityPublicKey {
         return identity!!.getPublicKeyById(purpose.ordinal)!!
     }
@@ -914,6 +926,38 @@ class BlockchainIdentity {
                     authenticationChain
                 }
                 val key = decryptedChain.getKey(index) // watchingKey
+                checkState(key.path.last().isHardened)
+                return key
+            }
+            else -> throw IllegalArgumentException("$type is not supported")
+        }
+    }
+
+    @VisibleForTesting
+    fun privateKeyAtPath(
+        rootIndex: Int,
+        childNumber: ChildNumber,
+        subIndex: Int,
+        type: IdentityPublicKey.Type,
+        keyParameter: KeyParameter?
+    ): ECKey? {
+        checkState(isLocal, "this must own a wallet")
+
+        when (type) {
+            IdentityPublicKey.Type.ECDSA_SECP256K1 -> {
+                val authenticationChain = wallet!!.blockchainIdentityKeyChain
+                // decrypt keychain
+                val decryptedChain = if (wallet!!.isEncrypted) {
+                    authenticationChain.toDecrypted(keyParameter)
+                } else {
+                    authenticationChain
+                }
+                val fullPath = ImmutableList.builder<ChildNumber>().addAll(authenticationChain.accountPath)
+                    .add(ChildNumber(rootIndex, true))
+                    .add(childNumber) // this should be hardened
+                    .add(ChildNumber(subIndex, true))
+                    .build()
+                val key = decryptedChain.getKeyByPath(fullPath, true) // watchingKey
                 checkState(key.path.last().isHardened)
                 return key
             }
@@ -1151,6 +1195,7 @@ class BlockchainIdentity {
             }
         }
     }
+
     @Deprecated("v18 makes this function obsolete")
     suspend fun watchPreorder(
         saltedDomainHashes: Map<String, ByteArray>,
@@ -1840,5 +1885,53 @@ class BlockchainIdentity {
         val privateKey = maybeDecryptKey(cftx.creditBurnPublicKey, encryptionKey)
         val wif = privateKey?.getPrivateKeyEncoded(wallet!!.params)
         return "assetlocktx=$txid&pk=$wif&du=${currentUsername!!}&islock=${cftx.confidence.instantSendlock.toStringHex()}"
+    }
+
+    // Transaction Metadata Methods
+    @Throws(KeyCrypterException::class)
+    fun publishTxMetaData(txMetadataItems: List<TxMetadataItem>, keyParameter: KeyParameter?) {
+        val keyIndex = 1
+        val encryptionKeyIndex = 0
+        val encryptionKey = privateKeyAtPath(keyIndex, TxMetadataDocument.childNumber, encryptionKeyIndex, IdentityPublicKey.Type.ECDSA_SECP256K1, null)
+        val metadataBytes = Cbor.encode(txMetadataItems.map { it.toObject() })
+
+        // encrypt data
+        val cipher = KeyCrypterAESCBC()
+        val aesKey = cipher.deriveKey(encryptionKey)
+        val encryptedData = cipher.encrypt(metadataBytes, aesKey)
+
+        val signingKey = maybeDecryptKey(KeyIndexPurpose.AUTHENTICATION.ordinal, IdentityPublicKey.Type.ECDSA_SECP256K1, keyParameter)!!
+        TxMetadata(platform).create(
+            keyIndex,
+            encryptionKeyIndex,
+            encryptedData.initialisationVector.plus(encryptedData.encryptedBytes),
+            identity!!,
+            KeyIndexPurpose.AUTHENTICATION.ordinal,
+            signingKey
+        )
+    }
+
+    @Throws(KeyCrypterException::class)
+    fun decryptTxMetadata(txMetadataDocument: TxMetadataDocument, keyParameter: KeyParameter?): List<TxMetadataItem> {
+        val cipher = KeyCrypterAESCBC()
+        val encryptionKey = privateKeyAtPath(
+            txMetadataDocument.keyIndex,
+            TxMetadataDocument.childNumber,
+            txMetadataDocument.encryptionKeyIndex,
+            IdentityPublicKey.Type.ECDSA_SECP256K1,
+            keyParameter
+        )
+        val aesKeyParameter = cipher.deriveKey(encryptionKey)
+
+        // now decrypt
+        val encryptedData = EncryptedData(
+            txMetadataDocument.encryptedMetadata.copyOfRange(0, 16),
+            txMetadataDocument.encryptedMetadata.copyOfRange(16, txMetadataDocument.encryptedMetadata.size)
+        )
+
+        val decryptedData = cipher.decrypt(encryptedData, aesKeyParameter)
+        val decryptedList = Cbor.decodeList(decryptedData)
+
+        return decryptedList.map { TxMetadataItem(it as Map<String, Any?>) }
     }
 }

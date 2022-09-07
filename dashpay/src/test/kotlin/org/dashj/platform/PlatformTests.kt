@@ -1,3 +1,5 @@
+package org.dashj.platform
+
 /**
  * Copyright (c) 2020-present, Dash Core Group
  *

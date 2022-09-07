@@ -7,6 +7,8 @@
 package org.dashj.platform.examples
 
 import java.lang.Thread.sleep
+import org.dashj.platform.dashpay.BlockchainIdentity
+import org.dashj.platform.dpp.toHex
 import org.dashj.platform.sdk.Client
 import org.dashj.platform.sdk.client.ClientOptions
 import org.dashj.platform.sdk.client.WalletOptions
@@ -18,24 +20,29 @@ class CreateContract {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            if (args.isEmpty()) {
-                println("Usage: CreateContract network")
+            if (args.size < 2) {
+                println("Usage: CreateContract network contract")
+                println("  contract is \"dashpay\" or \"dashwallet\"")
                 return
             }
             client = Client(ClientOptions(network = args[0], walletOptions = WalletOptions(DefaultIdentity(args[0]).seed)))
-            createContract()
+            createContract(args[1])
         }
 
-        private fun createContract() {
-            val identity = client.platform.identities.getByPublicKeyHash(client.wallet!!.blockchainIdentityKeyChain.watchingKey.pubKeyHash)!!
+        private fun createContract(contractToCreate: String) {
+            val blockchainIdentity = BlockchainIdentity(client.platform, 0, client.wallet!!)
+            blockchainIdentity.recoverIdentity()
+            val identity = blockchainIdentity.identity!! // client.platform.identities.getByPublicKeyHash(client.wallet!!.blockchainIdentityKeyChain.getKey(0, true).pubKeyHash)!!
 
-            val contractText = javaClass.getResource("dashpay-contract.json").readText()
+            val contractText = this::class.java.getResource("$contractToCreate-contract.json")?.readText()
             val jsonObject = JSONObject(contractText)
             val rawContract = jsonObject.toMap()
 
             val dataContract = client.platform.contracts.create(rawContract, identity)
 
-            val transition = client.platform.contracts.broadcast(dataContract, identity, client.wallet!!.blockchainIdentityKeyChain.watchingKey, 0)
+            val signingKey = blockchainIdentity.getPrivateKeyByPurpose(BlockchainIdentity.KeyIndexPurpose.AUTHENTICATION, null)
+            println("public key hash: ${signingKey.pubKeyHash.toHex()}")
+            val transition = client.platform.contracts.broadcast(dataContract, identity, signingKey, BlockchainIdentity.KeyIndexPurpose.AUTHENTICATION.ordinal)
 
             println("DataContractCreateTransition: ----------------------")
             println(JSONObject(transition.toJSON()).toString(2))

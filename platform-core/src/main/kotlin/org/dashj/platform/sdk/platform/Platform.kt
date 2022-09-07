@@ -78,6 +78,7 @@ class Platform(val params: NetworkParameters) {
     init {
         apps["dpns"] = ClientAppDefinition(SystemIds.dpnsDataContractId)
         apps["dashpay"] = ClientAppDefinition(SystemIds.dashpayDataContractId)
+        apps["dashwallet"] = ClientAppDefinition("HdhV2nFY6JYLaz1tzpUDx2YP911zEXSgywuHNxNwQQRe")
         when {
             params.id.contains("test") -> {
                 client = DapiClient(TestNet3Params.MASTERNODES.toList(), dpp)
@@ -85,6 +86,7 @@ class Platform(val params: NetworkParameters) {
             }
             params.id.contains("jack-daniels") -> {
                 client = DapiClient(JackDanielsDevNetParams.get().defaultMasternodeList.toList(), dpp)
+                apps["dashwallet"] = ClientAppDefinition("HdhV2nFY6JYLaz1tzpUDx2YP911zEXSgywuHNxNwQQRe")
             }
         }
     }
@@ -97,7 +99,7 @@ class Platform(val params: NetworkParameters) {
         stateTransition: StateTransitionIdentitySigned,
         identity: Identity,
         privateKey: ECKey,
-        keyIndex: Int = 0
+        keyIndex: Int = 1
     ) {
         stateTransition.sign(identity.getPublicKeyById(keyIndex)!!, privateKey.privateKeyAsHex)
 
