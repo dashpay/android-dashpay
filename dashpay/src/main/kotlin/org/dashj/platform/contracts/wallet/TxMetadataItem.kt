@@ -9,7 +9,7 @@ package org.dashj.platform.contracts.wallet
 
 import com.google.common.primitives.Ints
 import org.dashj.platform.dpp.toHex
-
+import org.dashj.platform.dpp.util.Cbor
 /**
  * Transaction metadata item
  *
@@ -51,6 +51,7 @@ class TxMetadataItem(
     fun toObject(): Map<String, Any?> {
         val map = hashMapOf<String, Any?>(
             "txId" to txId,
+            "timestamp" to timestamp,
             "version" to version
         )
 
@@ -75,6 +76,9 @@ class TxMetadataItem(
         }
 
         return map
+    }
+    fun getSize(): Int {
+        return Cbor.encode(toObject()).size
     }
 
     override fun equals(other: Any?): Boolean {

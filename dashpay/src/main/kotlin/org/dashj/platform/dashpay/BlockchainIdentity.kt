@@ -1892,23 +1892,63 @@ class BlockchainIdentity {
     fun publishTxMetaData(txMetadataItems: List<TxMetadataItem>, keyParameter: KeyParameter?) {
         val keyIndex = 1
         val encryptionKeyIndex = 0
-        val encryptionKey = privateKeyAtPath(keyIndex, TxMetadataDocument.childNumber, encryptionKeyIndex, IdentityPublicKey.Type.ECDSA_SECP256K1, null)
-        val metadataBytes = Cbor.encode(txMetadataItems.map { it.toObject() })
+        val encryptionKey = privateKeyAtPath(keyIndex, TxMetadataDocument.childNumber, encryptionKeyIndex, IdentityPublicKey.Type.ECDSA_SECP256K1, keyParameter)
 
-        // encrypt data
-        val cipher = KeyCrypterAESCBC()
-        val aesKey = cipher.deriveKey(encryptionKey)
-        val encryptedData = cipher.encrypt(metadataBytes, aesKey)
+        var lastItem: TxMetadataItem? = null
+        var currentIndex = 0
+        log.info("publish ${txMetadataItems.size} by breaking it up into pieces")
+        while (currentIndex < txMetadataItems.size) {
+            var estimatedDocSize = 0
+            val currentMetadataItems = arrayListOf<TxMetadataItem>()
 
-        val signingKey = maybeDecryptKey(KeyIndexPurpose.AUTHENTICATION.ordinal, IdentityPublicKey.Type.ECDSA_SECP256K1, keyParameter)!!
-        TxMetadata(platform).create(
-            keyIndex,
-            encryptionKeyIndex,
-            encryptedData.initialisationVector.plus(encryptedData.encryptedBytes),
-            identity!!,
-            KeyIndexPurpose.AUTHENTICATION.ordinal,
-            signingKey
-        )
+            log.info("publish: determine how items can go in the next txmetadata document: $currentIndex")
+            while (currentIndex < txMetadataItems.size) {
+                lastItem = txMetadataItems[currentIndex]
+                val estimatedItemSize = lastItem.getSize() + 4
+                if ((estimatedDocSize + estimatedItemSize) < TxMetadataDocument.MAX_ENCRYPTED_SIZE) {
+                    estimatedDocSize += estimatedItemSize
+                    currentMetadataItems.add(lastItem)
+                    currentIndex++
+                    log.info("publish: we can add another document for a total of ${currentMetadataItems.size}")
+                } else {
+                    break // leave this loop
+                }
+            }
+
+            log.info("publishing ${currentMetadataItems.size} items of ${txMetadataItems.size}")
+            val metadataBytes = Cbor.encode(currentMetadataItems.map { it.toObject() })
+
+            // encrypt data
+            val cipher = KeyCrypterAESCBC()
+            val aesKey = cipher.deriveKey(encryptionKey)
+            val encryptedData = cipher.encrypt(metadataBytes, aesKey)
+
+            val signingKey = maybeDecryptKey(
+                KeyIndexPurpose.AUTHENTICATION.ordinal,
+                IdentityPublicKey.Type.ECDSA_SECP256K1,
+                keyParameter
+            )!!
+            TxMetadata(platform).create(
+                keyIndex,
+                encryptionKeyIndex,
+                encryptedData.initialisationVector.plus(encryptedData.encryptedBytes),
+                identity!!,
+                KeyIndexPurpose.AUTHENTICATION.ordinal,
+                signingKey
+            )
+            currentMetadataItems.clear()
+        }
+    }
+
+    fun getTxMetaData(createdAfter: Long = -1, keyParameter: KeyParameter?): Map<TxMetadataDocument, List<TxMetadataItem>> {
+        val documents = TxMetadata(platform).get(uniqueIdentifier, createdAfter)
+
+        val results = LinkedHashMap<TxMetadataDocument, List<TxMetadataItem>>()
+        documents.forEach {
+            val doc = TxMetadataDocument(it)
+            results[doc] = decryptTxMetadata(TxMetadataDocument(it), keyParameter)
+        }
+        return results
     }
 
     @Throws(KeyCrypterException::class)
@@ -1933,5 +1973,23 @@ class BlockchainIdentity {
         val decryptedList = Cbor.decodeList(decryptedData)
 
         return decryptedList.map { TxMetadataItem(it as Map<String, Any?>) }
+    }
+
+    fun deleteDocument(typeLocator: String, documentId: Identifier, keyParameter: KeyParameter?): Boolean {
+        val documentsToDelete = platform.documents.get(typeLocator, DocumentQuery.builder().where("\$id", "==", documentId).build())
+        return if (documentsToDelete.isNotEmpty()) {
+            val transition = platform.dpp.document.createStateTransition(
+                mapOf(
+                    "delete" to listOf(
+                        documentsToDelete.first()
+                    )
+                )
+            )
+            signStateTransition(transition, keyParameter)
+            platform.client.broadcastStateTransition(transition)
+            true
+        } else {
+            false
+        }
     }
 }
