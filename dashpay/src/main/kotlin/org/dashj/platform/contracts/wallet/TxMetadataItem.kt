@@ -24,6 +24,7 @@ import org.dashj.platform.dpp.toHex
 
 class TxMetadataItem(
     val txId: ByteArray,
+    val timestamp: Long? = 0,
     val memo: String? = null,
     val exchangeRate: Double? = null,
     val currencyCode: String? = null,
@@ -36,6 +37,7 @@ class TxMetadataItem(
     constructor(rawObject: Map<String, Any?>) :
     this(
         rawObject["txId"] as ByteArray,
+        rawObject["timestamp"] as? Long,
         rawObject["memo"] as? String,
         rawObject["exchangeRate"] as? Double,
         rawObject["currencyCode"] as? String,
@@ -80,8 +82,8 @@ class TxMetadataItem(
             return true
         } else if (other is TxMetadataItem) {
             return txId.contentEquals(other.txId) &&
-                version == other.version
-            memo == other.memo &&
+                version == other.version &&
+                memo == other.memo &&
                 exchangeRate == other.exchangeRate &&
                 currencyCode == other.currencyCode &&
                 taxCategory == other.taxCategory &&
@@ -101,5 +103,9 @@ class TxMetadataItem(
 
     override fun toString(): String {
         return "TxMetadataItem(ver=$version, ${txId.toHex()}, memo=$memo, rate=$exchangeRate, code=$currencyCode, taxCategory=$taxCategory, service=$service}"
+    }
+
+    fun isNotEmpty(): Boolean {
+        return (timestamp != null && timestamp != 0L) || taxCategory != null || memo != null || currencyCode != null || exchangeRate != null || service != null
     }
 }
