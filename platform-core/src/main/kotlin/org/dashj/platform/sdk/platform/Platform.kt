@@ -15,6 +15,7 @@ import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.evolution.SimplifiedMasternodeListManager
 import org.bitcoinj.params.JackDanielsDevNetParams
+import org.bitcoinj.params.OuzoDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.dashj.platform.dapiclient.DapiClient
 import org.dashj.platform.dapiclient.MaxRetriesReachedException
@@ -86,6 +87,10 @@ class Platform(val params: NetworkParameters) {
             params.id.contains("jack-daniels") -> {
                 client = DapiClient(JackDanielsDevNetParams.get().defaultMasternodeList.toList(), dpp)
                 apps["dashwallet"] = ClientAppDefinition("GbJzjKDe64qbSBn9vCpCSAdaAdZgQZAv3C3P7zaMywTL")
+            }
+            params.id.contains("ouzo") -> {
+                client = DapiClient(OuzoDevNetParams.get().defaultMasternodeList.toList(), dpp)
+                apps["dashwallet"] = ClientAppDefinition("6jMXAcaB66jdanaVCSnfZV5CUiE998d1C5YQ9TEDBGSS")
             }
         }
     }

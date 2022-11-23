@@ -33,10 +33,10 @@ class IdentitiesTest : PlatformNetwork() {
 
     @Test
     fun getIdentitiesTest() {
-        val pubKeyHash = ECKey().pubKeyHash
+        val pubKeyHash = wallet.blockchainIdentityKeyChain.getKey(0, true).pubKeyHash
         val results = platform.identities.getByPublicKeyHash(pubKeyHash)
 
-        assertNull(results)
+        println(results!!.toJSON())
     }
 
     @Test
@@ -70,7 +70,7 @@ class IdentitiesTest : PlatformNetwork() {
         println(stateTransition)
 
         val verified = stateTransition.verifySignatureByPublicKey(wallet.blockchainIdentityKeyChain.watchingKey)
-        val key = wallet.blockchainIdentityFundingKeyChain.freshAuthenticationKey()
+        val key = wallet.blockchainIdentityFundingKeyChain.freshAuthenticationKey(false)
         val verified2 = stateTransition.verifySignatureByPublicKey(key)
 
         println("verification: $verified, $verified2")

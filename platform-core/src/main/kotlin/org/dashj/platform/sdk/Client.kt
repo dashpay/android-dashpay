@@ -7,6 +7,7 @@
 package org.dashj.platform.sdk
 
 import org.bitcoinj.params.JackDanielsDevNetParams
+import org.bitcoinj.params.OuzoDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.DeterministicKeyChain
@@ -22,6 +23,7 @@ class Client(private val clientOptions: ClientOptions) {
     val params = when (clientOptions.network) {
         "testnet" -> TestNet3Params.get()
         "jack-daniels" -> JackDanielsDevNetParams.get()
+        "ouzo" -> OuzoDevNetParams.get()
         else -> throw IllegalArgumentException("network ${clientOptions.network} is not valid")
     }
     val platform = Platform(params)

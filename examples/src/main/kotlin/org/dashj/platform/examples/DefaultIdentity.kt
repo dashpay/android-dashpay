@@ -5,6 +5,7 @@ import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.core.Utils
 import org.bitcoinj.params.JackDanielsDevNetParams
+import org.bitcoinj.params.OuzoDevNetParams
 import org.bitcoinj.params.TestNet3Params
 
 /*
@@ -55,6 +56,7 @@ class DefaultIdentity(val params: NetworkParameters) {
         when (network) {
             "jack-daniels" -> JackDanielsDevNetParams.get()
             "testnet" -> TestNet3Params.get()
+            "ouzo" -> OuzoDevNetParams.get()
             else -> throw IllegalArgumentException("network $network is not valid")
         }
     )
@@ -68,6 +70,9 @@ class DefaultIdentity(val params: NetworkParameters) {
             }
             params.id.contains("jack-daniels") -> {
                 seed = "print shuffle enlist object actress allow quality convince believe gauge tree laundry"
+            }
+            params.id.contains("ouzo") -> {
+                seed = "city recycle story comfort weapon mammal improve fancy sunset bounce badge reunion"
             }
             else -> {
                 seed = ""
