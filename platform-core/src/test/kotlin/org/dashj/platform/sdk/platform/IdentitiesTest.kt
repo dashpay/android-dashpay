@@ -1,7 +1,6 @@
 package org.dashj.platform.sdk.platform
 
 import java.util.Date
-import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Transaction
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.DeterministicKeyChain
@@ -13,7 +12,6 @@ import org.dashj.platform.dpp.statetransition.StateTransitionFactory
 import org.dashj.platform.dpp.toHex
 import org.dashj.platform.dpp.util.Converters
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 class IdentitiesTest : PlatformNetwork() {

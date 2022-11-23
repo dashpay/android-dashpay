@@ -1,6 +1,5 @@
 package org.dashj.platform.sdk.platform
 import java.util.Date
-import org.bitcoinj.params.JackDanielsDevNetParams
 import org.bitcoinj.params.OuzoDevNetParams
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.DeterministicKeyChain
