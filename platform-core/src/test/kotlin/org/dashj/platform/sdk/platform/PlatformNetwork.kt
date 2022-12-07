@@ -1,6 +1,6 @@
 package org.dashj.platform.sdk.platform
 import java.util.Date
-import org.bitcoinj.params.JackDanielsDevNetParams
+import org.bitcoinj.params.OuzoDevNetParams
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.DeterministicKeyChain
 import org.bitcoinj.wallet.DeterministicSeed
@@ -10,7 +10,7 @@ import org.junit.jupiter.api.AfterEach
 
 open class PlatformNetwork {
 
-    val platform = Platform(JackDanielsDevNetParams.get())
+    val platform = Platform(OuzoDevNetParams.get())
 
     val assetLockTxId: String
     val seed: String
@@ -26,6 +26,10 @@ open class PlatformNetwork {
             platform.params.id.contains("krupnik") -> {
                 assetLockTxId = "33d94c52dc54b9f94ab73308eee8bf708da06eb9b587e5c2a2d54c031337564d"
                 seed = "draw hole box island loan mom rookie park page sword curve illegal"
+            }
+            platform.params.id.contains("ouzo") -> {
+                seed = "city recycle story comfort weapon mammal improve fancy sunset bounce badge reunion"
+                assetLockTxId = ""
             }
             else -> {
                 assetLockTxId = ""

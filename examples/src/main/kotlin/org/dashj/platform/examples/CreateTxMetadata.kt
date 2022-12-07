@@ -45,8 +45,8 @@ class CreateTxMetadata {
             // println("public key hash: ${signingKey.pubKeyHash.toHex()}")
 
             val txMetadataItems = listOf(
-                TxMetadataItem(Entropy.generateRandomBytes(32), "Pizza Party"),
-                TxMetadataItem(Entropy.generateRandomBytes(32), "Book Store")
+                TxMetadataItem(Entropy.generateRandomBytes(32), 1, "Pizza Party"),
+                TxMetadataItem(Entropy.generateRandomBytes(32), 2, "Book Store")
             )
 
             blockchainIdentity.publishTxMetaData(txMetadataItems, null)

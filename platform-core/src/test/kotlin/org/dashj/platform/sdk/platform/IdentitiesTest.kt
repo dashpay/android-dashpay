@@ -1,7 +1,6 @@
 package org.dashj.platform.sdk.platform
 
 import java.util.Date
-import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Transaction
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.DeterministicKeyChain
@@ -13,7 +12,6 @@ import org.dashj.platform.dpp.statetransition.StateTransitionFactory
 import org.dashj.platform.dpp.toHex
 import org.dashj.platform.dpp.util.Converters
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 class IdentitiesTest : PlatformNetwork() {
@@ -33,10 +31,10 @@ class IdentitiesTest : PlatformNetwork() {
 
     @Test
     fun getIdentitiesTest() {
-        val pubKeyHash = ECKey().pubKeyHash
+        val pubKeyHash = wallet.blockchainIdentityKeyChain.getKey(0, true).pubKeyHash
         val results = platform.identities.getByPublicKeyHash(pubKeyHash)
 
-        assertNull(results)
+        println(results!!.toJSON())
     }
 
     @Test
@@ -70,7 +68,7 @@ class IdentitiesTest : PlatformNetwork() {
         println(stateTransition)
 
         val verified = stateTransition.verifySignatureByPublicKey(wallet.blockchainIdentityKeyChain.watchingKey)
-        val key = wallet.blockchainIdentityFundingKeyChain.freshAuthenticationKey()
+        val key = wallet.blockchainIdentityFundingKeyChain.freshAuthenticationKey(false)
         val verified2 = stateTransition.verifySignatureByPublicKey(key)
 
         println("verification: $verified, $verified2")
