@@ -14,6 +14,7 @@ import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.evolution.SimplifiedMasternodeListManager
+import org.bitcoinj.params.BinTangDevNetParams
 import org.bitcoinj.params.JackDanielsDevNetParams
 import org.bitcoinj.params.OuzoDevNetParams
 import org.bitcoinj.params.TestNet3Params
@@ -91,6 +92,10 @@ class Platform(val params: NetworkParameters) {
             params.id.contains("ouzo") -> {
                 client = DapiClient(OuzoDevNetParams.get().defaultMasternodeList.toList(), dpp)
                 apps["dashwallet"] = ClientAppDefinition("6jMXAcaB66jdanaVCSnfZV5CUiE998d1C5YQ9TEDBGSS")
+            }
+            params.id.contains("bintang") -> {
+                client = DapiClient(BinTangDevNetParams.get().defaultMasternodeList.toList(), dpp)
+                apps["dashwallet"] = ClientAppDefinition("2Yf43cVQ6bwxzFMTmmsuD6RM4c5XBzdB21tMbyQWg1gv")
             }
         }
     }

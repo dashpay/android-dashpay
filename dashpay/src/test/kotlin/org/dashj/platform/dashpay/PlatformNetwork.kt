@@ -8,18 +8,18 @@
 package org.dashj.platform.dashpay
 
 import java.util.Date
-import org.bitcoinj.params.JackDanielsDevNetParams
+import org.bitcoinj.params.BinTangDevNetParams
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.DeterministicKeyChain
 import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.KeyChainGroup
-import org.bitcoinj.wallet.Wallet
+import org.bitcoinj.wallet.WalletEx
 import org.dashj.platform.sdk.platform.Platform
 import org.junit.jupiter.api.AfterEach
 
 open class PlatformNetwork {
 
-    val platform = Platform(JackDanielsDevNetParams.get())
+    val platform = Platform(BinTangDevNetParams.get())
     val seed = "quantum alarm evoke estate siege play moon spoon later paddle rifle ancient"
     val wallet: Wallet = Wallet(
         platform.params,
