@@ -68,7 +68,6 @@ class DashPayWalletExtension(
                 blockchainIdentity?.usernameSalts?.put(dashpay.username, dashpay.salt.toByteArray())
             }
         }
-
     }
 
     fun validate(containingWallet: Wallet): Boolean {

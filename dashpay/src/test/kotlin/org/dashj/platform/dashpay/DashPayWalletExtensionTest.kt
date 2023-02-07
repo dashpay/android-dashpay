@@ -56,6 +56,5 @@ class DashPayWalletExtensionTest : PlatformNetwork() {
         val extensionTwo = DashPayWalletExtension(platform)
         extensionTwo.blockchainIdentity = BlockchainIdentity(platform, 0, wallet)
         extensionTwo.deserializeWalletExtension(wallet, bytes)
-
     }
 }
