@@ -40,6 +40,12 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import joptsimple.util.DateConverter;
+import org.bitcoinj.coinjoin.CoinJoinClientManager;
+import org.bitcoinj.coinjoin.CoinJoinClientOptions;
+import org.bitcoinj.coinjoin.CoinJoinSendRequest;
+import org.bitcoinj.coinjoin.UnmixedZeroConfCoinSelector;
+import org.bitcoinj.coinjoin.utils.CoinJoinReporter;
+import org.bitcoinj.coinjoin.utils.ProTxToOutpoint;
 import org.bitcoinj.core.AbstractBlockChain;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -80,7 +86,7 @@ import org.bitcoinj.evolution.CreditFundingTransaction;
 import org.bitcoinj.evolution.SimplifiedMasternodeList;
 import org.bitcoinj.evolution.SimplifiedMasternodeListEntry;
 import org.bitcoinj.net.discovery.ThreeMethodPeerDiscovery;
-import org.bitcoinj.params.JackDanielsDevNetParams;
+import org.bitcoinj.params.BinTangDevNetParams;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
@@ -108,6 +114,7 @@ import org.bitcoinj.wallet.MarriedKeyChain;
 import org.bitcoinj.wallet.Protos;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
+import org.bitcoinj.wallet.WalletEx;
 import org.bitcoinj.wallet.Wallet.BalanceType;
 import org.bitcoinj.wallet.WalletExtension;
 import org.bitcoinj.wallet.WalletProtobufSerializer;
@@ -187,6 +194,10 @@ public class WalletTool {
     private static OptionSpec<String> seedFlag, watchFlag;
     private static OptionSpec<ScriptType> outputScriptTypeFlag;
     private static OptionSpec<String> xpubkeysFlag;
+    private static OptionSpec<String> mixAmountFlag;
+    private static OptionSpec<Integer> sessionsFlag;
+    private static OptionSpec<Integer> roundsFlag;
+    private static OptionSpec<Boolean> multiSessionFlag;
 
     private static Context context;
     private static NetworkParameters params;
@@ -194,7 +205,7 @@ public class WalletTool {
     private static BlockStore store;
     private static AbstractBlockChain chain;
     private static PeerGroup peerGroup;
-    private static Wallet wallet;
+    private static WalletEx wallet;
     private static File chainFileName;
     private static ValidationMode mode;
     private static String password;
@@ -288,6 +299,7 @@ public class WalletTool {
         DUMP_DASHPAY,
         CREATE_USERNAME,
         STATUS,
+	    MIX,
     }
 
     public enum WaitForEnum {
@@ -336,6 +348,7 @@ public class WalletTool {
         OptionSpec<String> conditionFlag = parser.accepts("condition").withRequiredArg();
         parser.accepts("locktime").withRequiredArg();
         parser.accepts("allow-unconfirmed");
+        parser.accepts("coinjoin");
         parser.accepts("offline");
         parser.accepts("ignore-mandatory-extensions");
         OptionSpec<String> passwordFlag = parser.accepts("password").withRequiredArg();
@@ -345,6 +358,16 @@ public class WalletTool {
         parser.accepts("dump-lookahead");
         OptionSpec<String> refundFlag = parser.accepts("refund-to").withRequiredArg();
         OptionSpec<String> txHashFlag = parser.accepts("txhash").withRequiredArg();
+
+        // username
+        OptionSpec<String> usernameFlag = parser.accepts("username").withRequiredArg();
+
+        // coinjoin
+        mixAmountFlag = parser.accepts("amount").withRequiredArg();
+        sessionsFlag = parser.accepts("sessions").withRequiredArg().ofType(Integer.class);
+        roundsFlag = parser.accepts("rounds").withRequiredArg().ofType(Integer.class);
+        multiSessionFlag = parser.accepts("multi-session").withOptionalArg().ofType(Boolean.class);
+
         options = parser.parse(args);
 
         if (args.length == 0 || options.has("help") ||
@@ -378,9 +401,9 @@ public class WalletTool {
                 params = MainNetParams.get();
                 chainFileName = new File("mainnet.spvchain");
                 break;
-            case SCHNAPPS:
-                params = JackDanielsDevNetParams.get();
-                chainFileName = new File("schnapps-devnet.spvchain");
+            case DEVNET:
+                params = BinTangDevNetParams.get();
+                chainFileName = new File("bintang-devnet.spvchain");
                 break;
             case TEST:
                 params = TestNet3Params.get();
@@ -464,7 +487,7 @@ public class WalletTool {
             walletInputStream = new BufferedInputStream(new FileInputStream(walletFile));
             WalletExtension [] extensions = new WalletExtension[1];
             extensions[0] = dashPayWalletExtension;
-            wallet = loader.readWallet(walletInputStream, forceReset, extensions);
+            wallet = (WalletEx) loader.readWallet(walletInputStream, forceReset, extensions);
             if (!wallet.getParams().equals(params)) {
                 System.err.println("Wallet does not match requested network parameters: " +
                         wallet.getParams().getId() + " vs " + params.getId());
@@ -514,7 +537,8 @@ public class WalletTool {
                         lockTime = (String) options.valueOf("locktime");
                     }
                     boolean allowUnconfirmed = options.has("allow-unconfirmed");
-                    send(outputFlag.values(options), feePerKb, lockTime, allowUnconfirmed);
+                    boolean isCoinJoin = options.has("coinjoin");
+                    send(outputFlag.values(options), feePerKb, lockTime, allowUnconfirmed, isCoinJoin);
                 } else if (options.has(paymentRequestLocation)) {
                     sendPaymentRequest(paymentRequestLocation.value(options), !options.has("no-pki"));
                 } else {
@@ -597,7 +621,19 @@ public class WalletTool {
             case ROTATE: rotate(); break;
             case SET_CREATION_TIME: setCreationTime(); break;
             // dashpay related commands
-            case CREATE_USERNAME: createUsername(waitForFlag); break;
+            case CREATE_USERNAME: {
+                boolean isCoinJoin = options.has("coinjoin");
+                if (!options.hasArgument("username")) {
+                    System.err.println("You must specify the username to create: --username=name");
+                    break;
+                }
+                Coin credits = Coin.valueOf(15000000);
+                if (options.hasArgument("amount")) {
+                    credits = parseCoin(options.valueOf(mixAmountFlag));
+                }
+                createUsername(waitForFlag, usernameFlag.value(options), credits, isCoinJoin);
+            } break;
+            case MIX: mix(waitForFlag); break;
         }
 
         if (!wallet.isConsistent()) {
@@ -767,13 +803,13 @@ public class WalletTool {
         }
     }
 
-    private static void send(List<String> outputs, Coin feePerKb, String lockTimeStr, boolean allowUnconfirmed) throws VerificationException {
+    private static void send(List<String> outputs, Coin feePerKb, String lockTimeStr, boolean allowUnconfirmed, boolean isCoinJoin) throws VerificationException {
         try {
             // Convert the input strings to outputs.
             Transaction t = new Transaction(params);
             for (String spec : outputs) {
                 try {
-                    OutputSpec outputSpec = new OutputSpec(spec);
+                    OutputSpec outputSpec = new OutputSpec(spec, isCoinJoin);
                     if (outputSpec.isAddress()) {
                         t.addOutput(outputSpec.value, outputSpec.addr);
                     } else {
@@ -793,8 +829,10 @@ public class WalletTool {
                     return;
                 }
             }
-            SendRequest req = SendRequest.forTx(t);
-            if (t.getOutputs().size() == 1 && t.getOutput(0).getValue().equals(wallet.getBalance())) {
+            SendRequest req = isCoinJoin ? CoinJoinSendRequest.forTx(wallet, t) : SendRequest.forTx(t);
+            if (isCoinJoin)
+                req.coinSelector = UnmixedZeroConfCoinSelector.get();
+            if (t.getOutputs().size() == 1 && t.getOutput(0).getValue().equals(isCoinJoin ? wallet.getBalance(BalanceType.COINJOIN) :wallet.getBalance())) {
                 log.info("Emptying out wallet, recipient may get less than what you expect");
                 req.emptyWallet = true;
             }
@@ -850,7 +888,8 @@ public class WalletTool {
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         } catch (InsufficientMoneyException e) {
-            System.err.println("Insufficient funds: have " + wallet.getBalance().toFriendlyString());
+            BalanceType type = isCoinJoin ? BalanceType.COINJOIN_SPENDABLE : BalanceType.AVAILABLE_SPENDABLE;
+            System.err.println("Insufficient funds: have " + wallet.getBalance(type).toFriendlyString());
         }
     }
 
@@ -859,14 +898,18 @@ public class WalletTool {
         public final Address addr;
         public final ECKey key;
 
-        public OutputSpec(String spec) throws IllegalArgumentException {
+        public OutputSpec(String spec) {
+            this(spec, false);
+        }
+
+        public OutputSpec(String spec, boolean isCoinJoin) throws IllegalArgumentException {
             String[] parts = spec.split(":");
             if (parts.length != 2) {
                 throw new IllegalArgumentException("Malformed output specification, must have two parts separated by :");
             }
             String destination = parts[0];
             if ("ALL".equalsIgnoreCase(parts[1]))
-                value = wallet.getBalance(BalanceType.ESTIMATED);
+                value = isCoinJoin ? wallet.getBalance(BalanceType.COINJOIN) : wallet.getBalance(BalanceType.ESTIMATED);
             else
                 value = parseCoin(parts[1]);
             if (destination.startsWith("0")) {
@@ -1485,7 +1528,8 @@ public class WalletTool {
             dashPayWallet = new DashPayWallet(blockchainIdentity, peerGroup, null);
             dashPayWallet.updateContactRequests();
         } else {
-            throw new RuntimeException("blockchainIdentity is null");
+            //throw new RuntimeException("blockchainIdentity is null");
+            // there is no identity
         }
     }
 
@@ -1496,6 +1540,7 @@ public class WalletTool {
                 peerGroup.stop();
             saveWallet(walletFile);
             store.close();
+            wallet.getContext().close();
             wallet = null;
             System.exit(0);
         } catch (BlockStoreException e) {
@@ -1535,12 +1580,14 @@ public class WalletTool {
                 // not reached - all subclasses handled above
                 throw new RuntimeException(e);
             }
-            wallet = Wallet.fromSeed(params, seed, outputScriptType);
+            wallet = WalletEx.fromSeed(params, seed, outputScriptType);
         } else if (options.has(watchFlag)) {
-            wallet = Wallet.fromWatchingKeyB58(params, options.valueOf(watchFlag), creationTimeSecs);
+            wallet = WalletEx.fromWatchingKeyB58(params, options.valueOf(watchFlag), creationTimeSecs);
         } else {
-            wallet = Wallet.createDeterministic(params, outputScriptType);
+            wallet = WalletEx.createDeterministic(params, outputScriptType);
         }
+        // add BIP44 key chain
+        // BIP44 Chain
         DeterministicKeyChain bip44 = DeterministicKeyChain.builder()
                 .seed(wallet.getKeyChainSeed())
                 .accountPath(DerivationPathFactory.get(params).bip44DerivationPath(0))
@@ -1698,6 +1745,7 @@ public class WalletTool {
 
         final boolean dumpPrivkeys = options.has("dump-privkeys");
         final boolean dumpLookahead = options.has("dump-lookahead");
+
         if (dumpPrivkeys && wallet.isEncrypted()) {
             if (password != null) {
                 final KeyParameter aesKey = passwordToKey(true);
@@ -1712,6 +1760,94 @@ public class WalletTool {
             System.out.println(wallet.toString(dumpLookahead, dumpPrivkeys, null, true, true, chain));
         }
     }
+
+    private static void setCreationTime() {
+        long creationTime = getCreationTimeSeconds();
+        for (DeterministicKeyChain chain : wallet.getActiveKeyChains()) {
+            DeterministicSeed seed = chain.getSeed();
+            if (seed == null)
+                System.out.println("Active chain does not have a seed: " + chain);
+            else
+                seed.setCreationTimeSeconds(creationTime);
+        }
+        if (creationTime > 0)
+            System.out.println("Setting creation time to: " + Utils.dateTimeFormat(creationTime * 1000));
+        else
+            System.out.println("Clearing creation time.");
+    }
+
+    private static void mix(OptionSpec<WaitForEnum> waitForFlag) {
+        wallet.getCoinJoin().addKeyChain(wallet.getKeyChainSeed(), DerivationPathFactory.get(wallet.getParams()).coinJoinDerivationPath());
+        syncChain(waitForFlag);
+        // set defaults
+        CoinJoinReporter reporter = new CoinJoinReporter();
+        CoinJoinClientOptions.setEnabled(true);
+        CoinJoinClientOptions.setRounds(4);
+        CoinJoinClientOptions.setSessions(1);
+        Coin amountToMix = wallet.getBalance();
+
+        // set command line arguments
+        if (options.has(mixAmountFlag)) {
+            amountToMix = Coin.parseCoin(options.valueOf(mixAmountFlag));
+        }
+        CoinJoinClientOptions.setAmount(amountToMix);
+
+        if (options.has(sessionsFlag)) {
+            CoinJoinClientOptions.setSessions(options.valueOf(sessionsFlag));
+        }
+
+        if (options.has(roundsFlag)) {
+            CoinJoinClientOptions.setRounds(options.valueOf(roundsFlag));
+        }
+        wallet.getCoinJoin().setRounds(CoinJoinClientOptions.getRounds());
+
+        if (options.has(multiSessionFlag)) {
+            CoinJoinClientOptions.setMultiSessionEnabled(options.valueOf(multiSessionFlag));
+        }
+
+        ProTxToOutpoint.initialize(params);
+        wallet.getContext().coinJoinManager.coinJoinClientManagers.put(wallet.getDescription(), new CoinJoinClientManager(wallet));
+        wallet.getContext().coinJoinManager.addSessionStartedListener(Threading.SAME_THREAD, reporter);
+        wallet.getContext().coinJoinManager.addSessionCompleteListener(Threading.SAME_THREAD, reporter);
+        wallet.getContext().coinJoinManager.addMixingCompleteListener(Threading.SAME_THREAD, reporter);
+
+        // mix coins
+        try {
+            CoinJoinClientManager it = wallet.getContext().coinJoinManager.coinJoinClientManagers.get(wallet.getDescription());
+            it.setStopOnNothingToDo(true);
+            it.setBlockChain(wallet.getContext().blockChain);
+
+            {
+                if (wallet.isEncrypted()) {
+                    // we need to handle encrypted wallets
+                    System.out.print("Error: Please unlock wallet for mixing with walletpassphrase first.");
+                    return;
+                }
+            }
+
+            if (!it.startMixing()) {
+                System.out.println("Mixing has been started already.");
+                return;
+            }
+
+            boolean result = it.doAutomaticDenominating();
+            System.out.println("Mixing " + (result ? "started successfully" : ("start failed: " + it.getStatuses() + ", will retry")));
+
+            // wait until finished mixing
+            SettableFuture<Boolean> mixingFinished = wallet.getContext().coinJoinManager.getMixingFinishedFuture(wallet);
+            mixingFinished.addListener(() -> System.out.println("Mixing complete."), Threading.SAME_THREAD);
+            mixingFinished.get();
+            wallet.getContext().coinJoinManager.removeSessionCompleteListener(reporter);
+            wallet.getContext().coinJoinManager.removeMixingCompleteListener(reporter);
+            wallet.getContext().coinJoinManager.removeSessionStartedListener(reporter);
+            wallet.getContext().coinJoinManager.stop();
+        } catch (ExecutionException | InterruptedException x) {
+            throw new RuntimeException(x);
+        }
+    }
+
+
+
 
     private static void outputToCSV(String value, @Nullable FileOutputStream stream) {
         if (stream != null) {
@@ -1861,7 +1997,7 @@ public class WalletTool {
         }
     }
 
-    private static void createUsername(OptionSpec<WaitForEnum> waitForFlag) {
+    private static void createUsername(OptionSpec<WaitForEnum> waitForFlag, String username, Coin credits, boolean useCoinJoin) {
         initializeIdentity();
 
         if (blockchainIdentity == null) {
@@ -1922,7 +2058,8 @@ public class WalletTool {
                     }
                 });
                 setup();
-                peerGroup.start();
+                if (!peerGroup.isRunning())
+                    peerGroup.start();
                 // Wait for peers to connect, the tx to be sent to one of them and for it to be propagated across the
                 // network. Once propagation is complete and we heard the transaction back from all our peers, it will
                 // be committed to the wallet.
@@ -2056,22 +2193,6 @@ public class WalletTool {
         System.out.println(platform.client.reportNetworkStatus());
 
         waitAndShutdownFuture.set(waitForFlag);
-    }
-
-
-    private static void setCreationTime() {
-        long creationTime = getCreationTimeSeconds();
-        for (DeterministicKeyChain chain : wallet.getActiveKeyChains()) {
-            DeterministicSeed seed = chain.getSeed();
-            if (seed == null)
-                System.out.println("Active chain does not have a seed: " + chain);
-            else
-                seed.setCreationTimeSeconds(creationTime);
-        }
-        if (creationTime > 0)
-            System.out.println("Setting creation time to: " + Utils.dateTimeFormat(creationTime * 1000));
-        else
-            System.out.println("Clearing creation time.");
     }
 
     static synchronized void onChange(final CountDownLatch latch) {
