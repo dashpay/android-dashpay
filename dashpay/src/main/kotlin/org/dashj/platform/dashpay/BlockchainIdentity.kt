@@ -500,11 +500,10 @@ class BlockchainIdentity {
     }
 
     fun recoverIdentity(creditFundingTransaction: CreditFundingTransaction): Boolean {
-        Preconditions.checkState(
+        checkState(
             registrationStatus == RegistrationStatus.UNKNOWN,
             "The identity must not be registered"
         )
-        Preconditions.checkState(creditFundingTransaction != null, "The credit funding transaction must exist")
 
         identity =
             platform.identities.get(creditFundingTransaction.creditBurnIdentityIdentifier.toStringBase58())
@@ -523,7 +522,7 @@ class BlockchainIdentity {
     }
 
     fun recoverIdentity(pubKeyId: ByteArray): Boolean {
-        Preconditions.checkState(
+        checkState(
             registrationStatus == RegistrationStatus.UNKNOWN,
             "The identity must not be registered"
         )
@@ -676,7 +675,7 @@ class BlockchainIdentity {
      * Recover all usernames and preorder data associated with the identity
      */
     fun recoverUsernames() {
-        Preconditions.checkState(
+        checkState(
             registrationStatus == RegistrationStatus.REGISTERED,
             "Identity must be registered before recovering usernames"
         )
