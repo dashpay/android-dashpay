@@ -35,6 +35,7 @@ class TxMetaDataTests : PlatformNetwork() {
         txId = Entropy.generateRandomBytes(32)
         txMetadataItem = TxMetadataItem(
             txId,
+            System.currentTimeMillis() / 1000,
             "Alice's Pizza Party",
             51.00,
             "USD",
@@ -45,6 +46,7 @@ class TxMetaDataTests : PlatformNetwork() {
 
         txMetadataItemTwo = TxMetadataItem(
             Converters.fromHex("c44d1077cd4628d0ac06e22032a4e8458f9d01be6342453de3eef88657b193ce"),
+            System.currentTimeMillis() / 1000,
             "Bob's Burger Joint",
             52.23,
             "USD",

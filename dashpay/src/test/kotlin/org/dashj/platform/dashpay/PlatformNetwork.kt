@@ -21,7 +21,7 @@ open class PlatformNetwork {
 
     val platform = Platform(BinTangDevNetParams.get())
     val seed = "quantum alarm evoke estate siege play moon spoon later paddle rifle ancient"
-    val wallet: Wallet = Wallet(
+    val wallet: WalletEx = WalletEx(
         platform.params,
         KeyChainGroup.builder(platform.params)
             .addChain(

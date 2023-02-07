@@ -129,6 +129,7 @@ import org.dashj.platform.dashpay.BlockchainIdentity;
 import org.dashj.platform.dashpay.Contact;
 import org.dashj.platform.dashpay.ContactRequest;
 import org.dashj.platform.dashpay.ContactRequests;
+import org.dashj.platform.dashpay.DashPayWalletExtension;
 import org.dashj.platform.dashpay.Profile;
 import org.dashj.platform.dashpay.RetryDelayType;
 import org.dashj.platform.dashpay.callback.RegisterIdentityCallback;
@@ -213,7 +214,7 @@ public class WalletTool {
     private static boolean isFormatCSV;
     private static File outputFile;
 
-    private static DashPayWalletExtension dashPayWalletExtension = new DashPayWalletExtension();
+    private static DashPayWalletExtension dashPayWalletExtension;
     private static Platform platform;
     private static BlockchainIdentity blockchainIdentity = null;
     private static DashPayWallet dashPayWallet = null;
@@ -426,6 +427,7 @@ public class WalletTool {
         Context.propagate(context);
 
         platform = new Platform(params);
+        dashPayWalletExtension = new DashPayWalletExtension(platform);
 
         platform.setMasternodeListManager(context.masternodeListManager);
 
@@ -495,6 +497,7 @@ public class WalletTool {
             }
 
             if (!wallet.getExtensions().containsKey(DashPayWalletExtension.NAME)) {
+                wallet.addExtension(dashPayWalletExtension);
                 dashPayWalletExtension = (DashPayWalletExtension)wallet.getExtensions().get(DashPayWalletExtension.NAME);
                 //TODO: load the info
             }
@@ -1505,31 +1508,49 @@ public class WalletTool {
 
     private static void initializeIdentity() {
         // Determine our blockchain identity
+        blockchainIdentity = dashPayWalletExtension.getBlockchainIdentity();
         if (blockchainIdentity == null) {
             List<CreditFundingTransaction> cftxs = wallet.getIdentityFundingTransactions();
             if (!cftxs.isEmpty()) {
                 CreditFundingTransaction cftx = cftxs.get(0);
                 blockchainIdentity = new BlockchainIdentity(platform, 0, wallet);
-                blockchainIdentity.recoverIdentity(cftx);
+                dashPayWalletExtension.setBlockchainIdentity(blockchainIdentity);
+                if (!blockchainIdentity.recoverIdentity(cftx)) {
+                    blockchainIdentity.initializeCreditFundingTransaction(cftxs.get(0));
+                }
             } else {
                 byte [] pubKeyHash = wallet.getBlockchainIdentityKeyChain().getWatchingKey().getPubKeyHash();
                 Identity identity = platform.getIdentities().getByPublicKeyHash(pubKeyHash);
                 if (identity != null) {
                     blockchainIdentity = new BlockchainIdentity(platform, 0, wallet);
+                    dashPayWalletExtension.setBlockchainIdentity(blockchainIdentity);
                     blockchainIdentity.recoverIdentity(pubKeyHash);
+
                 }
             }
-            if (blockchainIdentity != null)
-                blockchainIdentity.recoverUsernames();
+            //if (blockchainIdentity != null && blockchainIdentity.registrationStatus == BlockchainIdentity.RegistrationStatus.REGISTERED) {
+            //    blockchainIdentity.recoverUsernames();
+            //}
+        }
+        //dashPayWalletExtension.validate(wallet);
+
+        if (blockchainIdentity != null && blockchainIdentity.getCurrentUsername() == null && blockchainIdentity.registrationStatus == BlockchainIdentity.RegistrationStatus.REGISTERED) {
+            blockchainIdentity.recoverUsernames();
         }
 
-        if (blockchainIdentity != null) {
+        if (blockchainIdentity != null && blockchainIdentity.getCurrentUsername() != null) {
             // synchronize the Platform data here
             dashPayWallet = new DashPayWallet(blockchainIdentity, peerGroup, null);
-            dashPayWallet.updateContactRequests();
+            //dashPayWallet.updateContactRequests();
         } else {
             //throw new RuntimeException("blockchainIdentity is null");
             // there is no identity
+        }
+
+        try {
+            wallet.saveToFile(walletFile);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -1922,6 +1943,7 @@ public class WalletTool {
 
             String balance = BtcAutoFormat.getCoinInstance().format(wallet.getBalance(BalanceType.ESTIMATED), 8, 4);
             outputStream.println("Balance:                          " + balance);
+            outputStream.println("Balance (Credits):                " + Coin.valueOf(blockchainIdentity.getIdentity().getBalance()/1000).toFriendlyString());
             outputToCSV(balance, csvFile);
 
             Set<Identifier> ids = dashPayWallet.getContactIdentities();
@@ -2002,10 +2024,15 @@ public class WalletTool {
 
         if (blockchainIdentity == null) {
             try {
+
+                //need to mix
+                if (useCoinJoin &&wallet.getCoinJoinBalance().isLessThan(credits)) {
+                    mix(waitForFlag);
+                }
+
                 blockchainIdentity = new BlockchainIdentity(platform, 0, wallet);
 
-
-                CreditFundingTransaction cftx = blockchainIdentity.createCreditFundingTransaction(Coin.valueOf(100000), null);
+                CreditFundingTransaction cftx = blockchainIdentity.createCreditFundingTransaction(credits, null, useCoinJoin);
                 boolean wait = true;
                 cftx.getConfidence().addEventListener(new TransactionConfidence.Listener() {
                     @Override
@@ -2018,7 +2045,8 @@ public class WalletTool {
                                 if (confidence.isTransactionLocked() || confidence.getIXType() == TransactionConfidence.IXType.IX_REQUEST) {
                                     confidence.removeEventListener(this);
                                     blockchainIdentity.setCreditFundingTransaction(cftx);
-                                    createIdentity(waitForFlag);
+                                    System.out.println("Asset Lock Transaction has been sent: " + cftx.getTxId());
+                                    createIdentity(waitForFlag, username);
                                 }
                                 break;
                             case DEPTH:
@@ -2077,33 +2105,46 @@ public class WalletTool {
             } catch (InterruptedException | ExecutionException x) {
                 throw new RuntimeException(x);
             } catch (Exception x) {
-                if (x instanceof InsufficientMoneyException)
-                    System.out.println("There is not enough money in the wallet: " + wallet.getBalance() +" of "+wallet.getBalance(BalanceType.ESTIMATED_SPENDABLE));
+                if (x instanceof InsufficientMoneyException) {
+                    if (useCoinJoin)
+                        System.out.println("There is not enough coinjoin money in the wallet: " + wallet.getBalance(BalanceType.COINJOIN));
+                    else
+                        System.out.println("There is not enough money in the wallet: " + wallet.getBalance() + " of " + wallet.getBalance(BalanceType.ESTIMATED_SPENDABLE));
+                } else {
+                    System.out.println("There was an exception while attempting to create a username: " + x.getMessage());
+                    x.printStackTrace();
+                }
             }
         } else {
             System.out.println("This wallet already has an identity");
 
             // check for username
 
-            //if (blockchainIdentity.getRegistered()) {
-                System.out.println("This wallet already has registered an identity");
+            if (!blockchainIdentity.isRegistered()) {
+                createIdentity(waitForFlag, username);
+            } else {
+                if (platform.getNames().get(username, Names.DEFAULT_PARENT_DOMAIN) == null) {
+                    System.out.println("This wallet already has registered an identity");
 
-                if (blockchainIdentity.getCurrentUsername() == null) {
-                    createPreorder("x-hash-eng-1-" + new Random().nextInt(999999999), waitForFlag);
+                    if (blockchainIdentity.getCurrentUsername() == null) {
+                        createPreorder(username, waitForFlag);
+                    } else {
+                        System.out.println("This wallet already has a username");
+                    }
                 } else {
-                    System.out.println("This wallet already has a username");
+                    System.out.println("This username $username already exists");
                 }
-            //}
+            }
         }
     }
 
-    private static void createIdentity(OptionSpec<WaitForEnum> waitForFlag) {
+    private static void createIdentity(OptionSpec<WaitForEnum> waitForFlag, String username) {
         blockchainIdentity.registerIdentity(null, true);
         blockchainIdentity.watchIdentity(10, 2000, RetryDelayType.SLOW20, new RegisterIdentityCallback() {
             @Override
             public void onComplete(@NotNull String uniqueId) {
                 System.out.println("Identity " + uniqueId + " has successfully been created");
-                createPreorder("x-hash-eng-1-" + new Random().nextInt(999999999), waitForFlag);
+                createPreorder(username, waitForFlag);
             }
 
             @Override
@@ -2114,8 +2155,8 @@ public class WalletTool {
         });
     }
 
-    private static void createPreorder(String name, final OptionSpec<WaitForEnum> waitForFlag) {
-        blockchainIdentity.addUsername(name, false);
+    private static void createPreorder(String username, final OptionSpec<WaitForEnum> waitForFlag) {
+        blockchainIdentity.addUsername(username, false);
         List<String> names = blockchainIdentity.getUnregisteredUsernames();
         blockchainIdentity.registerPreorderedSaltedDomainHashesForUsernames(names, null);
 
@@ -2131,6 +2172,11 @@ public class WalletTool {
             @Override
             public void onComplete(@NotNull List<String> names) {
                 System.out.println("These usernames were preordered: " + names);
+                try {
+                    wallet.saveToFile(walletFile);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 createDomain(waitForFlag);
             }
         });
@@ -2149,6 +2195,11 @@ public class WalletTool {
             @Override
             public void onComplete(@NotNull List<String> names) {
                 System.out.println("These usernames were registered: " + names);
+                try {
+                    wallet.saveToFile(walletFile);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 sendContactRequests(waitForFlag);
             }
         });
