@@ -288,7 +288,7 @@ class BlockchainIdentity {
             val usernameSalts = HashMap<String, ByteArray>()
             for (username in usernameStatus.keys) {
                 val data = usernameStatus[username] as MutableMap<String, Any?>
-                var salt = data[BLOCKCHAIN_USERNAME_SALT]
+                val salt = data[BLOCKCHAIN_USERNAME_SALT]
                 if (salt != null) {
                     usernameSalts[username] = salt as ByteArray
                 }
@@ -646,7 +646,36 @@ class BlockchainIdentity {
                     saveUsername(username, UsernameStatus.CONFIRMED, null, true)
                     usernamesLeft.remove(username)
                     platform.stateRepository.addValidDocument(nameDocumentTransition.id)
+
+                    val salt = saltForUsername(username, false)
+                    val saltedDomainHash = platform.names.getSaltedDomainHashBytes(salt, "${Names.DEFAULT_PARENT_DOMAIN}.$username")
+
+                    val preorderDocuments = platform.documents.get(
+                        Names.DPNS_PREORDER_DOCUMENT,
+                        DocumentQuery.builder()
+                            .where("saltedDomainHash", "==", saltedDomainHash)
+                            .build()
+                    )
+                    if (preorderDocuments.isNotEmpty()) {
+                        deleteDocument(Names.DPNS_PREORDER_DOCUMENT, preorderDocuments.first().id, keyParameter)
+                    }
                 }
+            }
+        }
+    }
+
+    fun removePreorders(keyParameter: KeyParameter? = null) {
+        for (usernameSalt in usernameSalts.values) {
+            val preorderDocuments = platform.documents.get(
+                Names.DPNS_DOMAIN_DOCUMENT,
+                DocumentQuery.builder()
+                    .where("saltedDomainHash", "==", usernameSalt)
+                    .build()
+            )
+
+            // TODO: optimize by deleting all documents in a single state transition
+            for (preorder in preorderDocuments) {
+                deleteDocument(Names.DPNS_PREORDER_DOCUMENT, preorder.id, keyParameter)
             }
         }
     }
@@ -1059,7 +1088,6 @@ class BlockchainIdentity {
                 )
             } else callback.onTimeout()
         }
-        // throw exception or return false
     }
 
     @Deprecated("v18 makes this function obsolete")
