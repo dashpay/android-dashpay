@@ -171,8 +171,6 @@ class BlockchainIdentity {
 
     lateinit var usernameSalts: MutableMap<String, ByteArray>
 
-    var registered: Boolean = false
-
     var creditBalance: Coin = Coin.ZERO
 
     var activeKeyCount: Int = 0
@@ -270,6 +268,10 @@ class BlockchainIdentity {
                 throw IllegalStateException("unable to obtain identity from Platform: Reason unknown", e)
             }
         }
+    }
+
+    fun isRegistered(): Boolean {
+        return registrationStatus == RegistrationStatus.REGISTERED
     }
 
     fun checkIdentity() {
@@ -457,8 +459,6 @@ class BlockchainIdentity {
         registrationStatus = RegistrationStatus.REGISTERED
 
         finalizeIdentityRegistration(creditFundingTransaction!!)
-
-        registrationStatus = RegistrationStatus.REGISTERED
     }
 
     private fun createIdentityPublicKeys(keyParameter: KeyParameter?): Pair<List<ECKey>, List<IdentityPublicKey>> {
@@ -560,14 +560,6 @@ class BlockchainIdentity {
         if (isLocal) {
             saveInitial()
         }
-    }
-
-    fun unregisterLocally(): Boolean {
-        return if (isLocal && !registered) {
-            // [self.wallet unregisterBlockchainIdentity : self];
-            // deletePersistentObjectAndSave(true)
-            true
-        } else false
     }
 
     // MARK: Registering
@@ -798,7 +790,7 @@ class BlockchainIdentity {
         if (save) {
             saveNewUsername(username, UsernameStatus.INITIAL)
         }
-        if (registered && status != UsernameStatus.CONFIRMED) {
+        if (registrationStatus == RegistrationStatus.REGISTERED && status != UsernameStatus.CONFIRMED) {
             // do we trigger a listener here?
         }
     }
@@ -1153,7 +1145,7 @@ class BlockchainIdentity {
                         it.value
                     }
                 )
-            ).build()
+            ).orderBy("saltedDomainHash").build()
         val preorderDocuments = platform.documents.get(Names.DPNS_PREORDER_DOCUMENT, query)
 
         if (preorderDocuments.isNotEmpty()) {
@@ -1324,7 +1316,10 @@ class BlockchainIdentity {
     ) {
         val query = DocumentQuery.Builder()
             .where("normalizedParentDomainName", "==", Names.DEFAULT_PARENT_DOMAIN)
-            .where(listOf("normalizedLabel", "in", usernames.map { "${it.toLowerCase()}" })).build()
+            .where(listOf("normalizedLabel", "in", usernames.map { it.toLowerCase() }))
+            .orderBy("normalizedParentDomainName")
+            .orderBy("normalizedLabel")
+            .build()
         val nameDocuments = platform.documents.get(Names.DPNS_DOMAIN_DOCUMENT, query)
 
         if (nameDocuments.isNotEmpty()) {

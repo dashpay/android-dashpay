@@ -4,6 +4,7 @@ plugins {
     id 'maven'
     id 'signing'
     id 'java'
+    id 'com.google.protobuf'
 }
 
 version dashpay_version
@@ -32,6 +33,37 @@ dependencies {
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.7"
     implementation 'org.slf4j:slf4j-api:1.7.30'
+}
+
+protobuf {
+    protoc {
+        if (osdetector.os == "osx") {
+            artifact = 'com.google.protobuf:protoc:3.14.0:osx-x86_64'
+        } else {
+            artifact = 'com.google.protobuf:protoc:3.14.0'
+        }
+    }
+    generateProtoTasks {
+        all().configureEach { task ->
+            task.builtins {
+                java { option 'lite' }
+            }
+        }
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += 'build/generated/source/proto/main/java'
+        }
+        kotlin {
+            srcDirs += 'build/generated/source/proto/main/java'
+        }
+        proto {
+            srcDirs += 'src/main/proto' // default value
+        }
+    }
 }
 
 compileKotlin {
