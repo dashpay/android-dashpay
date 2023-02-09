@@ -8,7 +8,6 @@ package org.dashj.platform.sdk
 
 import org.bitcoinj.params.BinTangDevNetParams
 import org.bitcoinj.params.JackDanielsDevNetParams
-import org.bitcoinj.params.OuzoDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.DeterministicKeyChain

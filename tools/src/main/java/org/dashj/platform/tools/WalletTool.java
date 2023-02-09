@@ -1528,11 +1528,7 @@ public class WalletTool {
 
                 }
             }
-            //if (blockchainIdentity != null && blockchainIdentity.registrationStatus == BlockchainIdentity.RegistrationStatus.REGISTERED) {
-            //    blockchainIdentity.recoverUsernames();
-            //}
         }
-        //dashPayWalletExtension.validate(wallet);
 
         if (blockchainIdentity != null && blockchainIdentity.getCurrentUsername() == null && blockchainIdentity.registrationStatus == BlockchainIdentity.RegistrationStatus.REGISTERED) {
             blockchainIdentity.recoverUsernames();
@@ -1541,7 +1537,7 @@ public class WalletTool {
         if (blockchainIdentity != null && blockchainIdentity.getCurrentUsername() != null) {
             // synchronize the Platform data here
             dashPayWallet = new DashPayWallet(blockchainIdentity, peerGroup, null);
-            //dashPayWallet.updateContactRequests();
+            dashPayWallet.updateContactRequests();
         } else {
             //throw new RuntimeException("blockchainIdentity is null");
             // there is no identity
@@ -1780,21 +1776,6 @@ public class WalletTool {
         } else {
             System.out.println(wallet.toString(dumpLookahead, dumpPrivkeys, null, true, true, chain));
         }
-    }
-
-    private static void setCreationTime() {
-        long creationTime = getCreationTimeSeconds();
-        for (DeterministicKeyChain chain : wallet.getActiveKeyChains()) {
-            DeterministicSeed seed = chain.getSeed();
-            if (seed == null)
-                System.out.println("Active chain does not have a seed: " + chain);
-            else
-                seed.setCreationTimeSeconds(creationTime);
-        }
-        if (creationTime > 0)
-            System.out.println("Setting creation time to: " + Utils.dateTimeFormat(creationTime * 1000));
-        else
-            System.out.println("Clearing creation time.");
     }
 
     private static void mix(OptionSpec<WaitForEnum> waitForFlag) {
@@ -2244,6 +2225,21 @@ public class WalletTool {
         System.out.println(platform.client.reportNetworkStatus());
 
         waitAndShutdownFuture.set(waitForFlag);
+    }
+
+    private static void setCreationTime() {
+        long creationTime = getCreationTimeSeconds();
+        for (DeterministicKeyChain chain : wallet.getActiveKeyChains()) {
+            DeterministicSeed seed = chain.getSeed();
+            if (seed == null)
+                System.out.println("Active chain does not have a seed: " + chain);
+            else
+                seed.setCreationTimeSeconds(creationTime);
+        }
+        if (creationTime > 0)
+            System.out.println("Setting creation time to: " + Utils.dateTimeFormat(creationTime * 1000));
+        else
+            System.out.println("Clearing creation time.");
     }
 
     static synchronized void onChange(final CountDownLatch latch) {
