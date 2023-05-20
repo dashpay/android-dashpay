@@ -19,6 +19,7 @@ import org.dashj.platform.dpp.util.Cbor
  * @property currencyCode
  * @property taxCategory
  * @property service
+ * @property customIconUrl
  * @constructor Create empty Tx metadata item
  */
 
@@ -30,6 +31,7 @@ class TxMetadataItem(
     val currencyCode: String? = null,
     val taxCategory: String? = null,
     val service: String? = null,
+    val customIconUrl: String? = null,
     val version: Int = 0
 ) {
     val data = hashMapOf<String, Any?>()
@@ -43,6 +45,7 @@ class TxMetadataItem(
         rawObject["currencyCode"] as? String,
         rawObject["taxCategory"] as? String,
         rawObject["service"] as? String,
+        rawObject["customIconUrl"] as? String,
         rawObject["version"] as Int
     ) {
         data.putAll(rawObject)
@@ -75,6 +78,10 @@ class TxMetadataItem(
             map["service"] = it
         }
 
+        customIconUrl?.let {
+            map["customIconUrl"] = it
+        }
+
         return map
     }
     fun getSize(): Int {
@@ -91,7 +98,8 @@ class TxMetadataItem(
                 exchangeRate == other.exchangeRate &&
                 currencyCode == other.currencyCode &&
                 taxCategory == other.taxCategory &&
-                service == other.service
+                service == other.service &&
+                customIconUrl == other.customIconUrl
         }
         return false
     }
@@ -106,10 +114,10 @@ class TxMetadataItem(
     }
 
     override fun toString(): String {
-        return "TxMetadataItem(ver=$version, ${txId.toHex()}, memo=$memo, rate=$exchangeRate, code=$currencyCode, taxCategory=$taxCategory, service=$service}"
+        return "TxMetadataItem(ver=$version, ${txId.toHex()}, memo=$memo, rate=$exchangeRate, code=$currencyCode, taxCategory=$taxCategory, service=$service, customIconUrl=$customIconUrl}"
     }
 
     fun isNotEmpty(): Boolean {
-        return (timestamp != null && timestamp != 0L) || taxCategory != null || memo != null || currencyCode != null || exchangeRate != null || service != null
+        return (timestamp != null && timestamp != 0L) || taxCategory != null || memo != null || currencyCode != null || exchangeRate != null || service != null || customIconUrl != null
     }
 }
