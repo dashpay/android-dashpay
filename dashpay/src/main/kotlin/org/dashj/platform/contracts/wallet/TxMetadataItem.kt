@@ -173,15 +173,15 @@ class TxMetadataItem(
 
     override fun toString(): String {
         return "TxMetadataItem(ver=$version, ${txId.toHex()}, memo=$memo, rate=$exchangeRate, " +
-                "code=$currencyCode, taxCategory=$taxCategory, service=$service, customIconUrl=$customIconUrl, " +
-                "giftCardNumber=$giftCardNumber, giftCardPin=$giftCardPin, merchantName=$merchantName, " +
-                "originalPrice=$originalPrice, barcodeValue=$barcodeValue, barcodeFormat=$barcodeFormat, merchantUrl=$merchantUrl)"
+            "code=$currencyCode, taxCategory=$taxCategory, service=$service, customIconUrl=$customIconUrl, " +
+            "giftCardNumber=$giftCardNumber, giftCardPin=$giftCardPin, merchantName=$merchantName, " +
+            "originalPrice=$originalPrice, barcodeValue=$barcodeValue, barcodeFormat=$barcodeFormat, merchantUrl=$merchantUrl)"
     }
 
     fun isNotEmpty(): Boolean {
         return (timestamp != null && timestamp != 0L) || taxCategory != null || memo != null ||
-                currencyCode != null || exchangeRate != null || service != null || customIconUrl != null ||
-                giftCardNumber != null || giftCardPin != null || merchantName != null || originalPrice != null ||
-                barcodeValue != null || barcodeFormat != null || merchantUrl != null
+            currencyCode != null || exchangeRate != null || service != null || customIconUrl != null ||
+            giftCardNumber != null || giftCardPin != null || merchantName != null || originalPrice != null ||
+            barcodeValue != null || barcodeFormat != null || merchantUrl != null
     }
 }
