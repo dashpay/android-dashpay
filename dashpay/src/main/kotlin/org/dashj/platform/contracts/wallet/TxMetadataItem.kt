@@ -19,13 +19,14 @@ import org.dashj.platform.dpp.util.Cbor
  * @property currencyCode
  * @property taxCategory
  * @property service
+ * @property customIconUrl
  * @property giftCardNumber
  * @property giftCardPin
  * @property merchantName
  * @property originalPrice
  * @property barcodeValue
  * @property barcodeFormat
- * @property giftCardUrl
+ * @property merchantUrl
  * @constructor Create empty Tx metadata item
  */
 
@@ -37,19 +38,19 @@ class TxMetadataItem(
     val currencyCode: String? = null,
     val taxCategory: String? = null,
     val service: String? = null,
+    val customIconUrl: String? = null,
     val giftCardNumber: String? = null,
     val giftCardPin: String? = null,
     val merchantName: String? = null,
-    val originalPrice: Long? = null,
+    val originalPrice: Double? = null,
     val barcodeValue: String? = null,
     val barcodeFormat: String? = null,
-    val giftCardUrl: String? = null,
+    val merchantUrl: String? = null,
     val version: Int = 0
 ) {
     val data = hashMapOf<String, Any?>()
 
-    constructor(rawObject: Map<String, Any?>) :
-    this(
+    constructor(rawObject: Map<String, Any?>) : this(
         rawObject["txId"] as ByteArray,
         rawObject["timestamp"] as? Long,
         rawObject["memo"] as? String,
@@ -57,15 +58,17 @@ class TxMetadataItem(
         rawObject["currencyCode"] as? String,
         rawObject["taxCategory"] as? String,
         rawObject["service"] as? String,
+        rawObject["customIconUrl"] as? String,
 
         // Gift Cards
         rawObject["giftCardNumber"] as? String,
         rawObject["giftCardPin"] as? String,
         rawObject["merchantName"] as? String,
-        rawObject["originalPrice"] as? Long,
+        rawObject["originalPrice"] as? Double,
         rawObject["barcodeValue"] as? String,
         rawObject["barcodeFormat"] as? String,
-        rawObject["giftCardUrl"] as? String,
+        rawObject["merchantUrl"] as? String,
+
         rawObject["version"] as Int
     ) {
         data.putAll(rawObject)
@@ -98,6 +101,10 @@ class TxMetadataItem(
             map["service"] = it
         }
 
+        customIconUrl?.let {
+            map["customIconUrl"] = it
+        }
+
         giftCardNumber?.let {
             map["giftCardNumber"] = it
         }
@@ -122,8 +129,8 @@ class TxMetadataItem(
             map["barcodeFormat"] = it
         }
 
-        giftCardUrl?.let {
-            map["giftCardUrl"] = it
+        merchantUrl?.let {
+            map["merchantUrl"] = it
         }
 
         return map
@@ -143,13 +150,14 @@ class TxMetadataItem(
                 currencyCode == other.currencyCode &&
                 taxCategory == other.taxCategory &&
                 service == other.service &&
+                customIconUrl == other.customIconUrl &&
                 giftCardNumber == other.giftCardNumber &&
                 giftCardPin == other.giftCardPin &&
                 merchantName == other.merchantName &&
                 originalPrice == other.originalPrice &&
                 barcodeValue == other.barcodeValue &&
                 barcodeFormat == other.barcodeFormat &&
-                giftCardUrl == other.giftCardUrl
+                merchantUrl == other.merchantUrl
         }
         return false
     }
@@ -165,15 +173,15 @@ class TxMetadataItem(
 
     override fun toString(): String {
         return "TxMetadataItem(ver=$version, ${txId.toHex()}, memo=$memo, rate=$exchangeRate, " +
-                "code=$currencyCode, taxCategory=$taxCategory, service=$service, giftCardNumber=$giftCardNumber, " +
-                "giftCardPin=$giftCardPin, merchantName=$merchantName, originalPrice=$originalPrice, " +
-                "barcodeValue=$barcodeValue, barcodeFormat=$barcodeFormat, giftCardUrl=$giftCardUrl)"
+                "code=$currencyCode, taxCategory=$taxCategory, service=$service, customIconUrl=$customIconUrl, " +
+                "giftCardNumber=$giftCardNumber, giftCardPin=$giftCardPin, merchantName=$merchantName, " +
+                "originalPrice=$originalPrice, barcodeValue=$barcodeValue, barcodeFormat=$barcodeFormat, merchantUrl=$merchantUrl)"
     }
 
     fun isNotEmpty(): Boolean {
         return (timestamp != null && timestamp != 0L) || taxCategory != null || memo != null ||
-                currencyCode != null || exchangeRate != null || service != null || giftCardNumber != null ||
-                giftCardPin != null || merchantName != null || originalPrice != null || barcodeValue != null ||
-                barcodeFormat != null || giftCardUrl != null
+                currencyCode != null || exchangeRate != null || service != null || customIconUrl != null ||
+                giftCardNumber != null || giftCardPin != null || merchantName != null || originalPrice != null ||
+                barcodeValue != null || barcodeFormat != null || merchantUrl != null
     }
 }
