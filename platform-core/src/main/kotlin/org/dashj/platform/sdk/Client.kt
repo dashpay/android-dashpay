@@ -7,7 +7,6 @@
 package org.dashj.platform.sdk
 
 import org.bitcoinj.params.BinTangDevNetParams
-import org.bitcoinj.params.JackDanielsDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.wallet.AuthenticationKeyChain
 import org.bitcoinj.wallet.authentication.AuthenticationGroupExtension
@@ -25,7 +24,6 @@ import java.util.EnumSet
 class Client(private val clientOptions: ClientOptions) {
     val params = when (clientOptions.network) {
         "testnet" -> TestNet3Params.get()
-        "jack-daniels" -> JackDanielsDevNetParams.get()
         "bintang" -> BinTangDevNetParams.get()
         else -> throw IllegalArgumentException("network ${clientOptions.network} is not valid")
     }
@@ -87,7 +85,7 @@ class Client(private val clientOptions: ClientOptions) {
                 DapiClient(clientOptions.dapiAddresses, platform.dpp, clientOptions.timeout, clientOptions.retries, clientOptions.banBaseTime)
             }
             else -> {
-                DapiClient(params.defaultMasternodeList.toList(), platform.dpp, clientOptions.timeout, clientOptions.retries, clientOptions.banBaseTime)
+                DapiClient(params.defaultHPMasternodeList.toList(), platform.dpp, clientOptions.timeout, clientOptions.retries, clientOptions.banBaseTime)
             }
         }
 

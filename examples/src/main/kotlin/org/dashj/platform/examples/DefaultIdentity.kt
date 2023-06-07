@@ -5,8 +5,6 @@ import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.core.Utils
 import org.bitcoinj.params.BinTangDevNetParams
-import org.bitcoinj.params.JackDanielsDevNetParams
-import org.bitcoinj.params.OuzoDevNetParams
 import org.bitcoinj.params.TestNet3Params
 
 /*
@@ -55,9 +53,7 @@ class DefaultIdentity(val params: NetworkParameters) {
 
     constructor(network: String) : this (
         when (network) {
-            "jack-daniels" -> JackDanielsDevNetParams.get()
             "testnet" -> TestNet3Params.get()
-            "ouzo" -> OuzoDevNetParams.get()
             "bintang" -> BinTangDevNetParams.get()
             else -> throw IllegalArgumentException("network $network is not valid")
         }

@@ -34,7 +34,7 @@ class GetStatus {
         private fun getStatus() {
             val results = hashMapOf<DAPIAddress, GetStatusResponse?>()
 
-            val nodeList = sdk.platform.params.defaultMasternodeList.toMutableList()
+            val nodeList = sdk.platform.params.defaultHPMasternodeList.toMutableList()
             val total = nodeList.size
             var success = 0
             var successFallback = 0
