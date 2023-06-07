@@ -34,7 +34,7 @@ class DeleteDocuments {
         }
 
         private fun deleteDocuments(scanner: Scanner) {
-            val blockchainIdentity = BlockchainIdentity(client.platform, 0, client.wallet!!)
+            val blockchainIdentity = BlockchainIdentity(client.platform, 0, client.wallet!!, client.authenticationExtension)
             blockchainIdentity.recoverIdentity()
             val identity = blockchainIdentity.identity!!
 

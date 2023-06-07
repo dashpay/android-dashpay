@@ -6,6 +6,7 @@
  */
 package org.dashj.platform.examples
 
+import org.bitcoinj.wallet.AuthenticationKeyChain
 import java.util.Date
 import kotlin.random.Random
 import org.bitcoinj.wallet.DerivationPathFactory
@@ -13,11 +14,13 @@ import org.bitcoinj.wallet.DeterministicKeyChain
 import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.KeyChainGroup
 import org.bitcoinj.wallet.Wallet
+import org.bitcoinj.wallet.authentication.AuthenticationGroupExtension
 import org.dashj.platform.dashpay.BlockchainIdentity
 import org.dashj.platform.dpp.toHex
 import org.dashj.platform.sdk.Client
 import org.dashj.platform.sdk.client.ClientOptions
 import org.json.JSONObject
+import java.util.EnumSet
 
 /**
  * This example will update the profile for the identity that is defined in
@@ -56,12 +59,19 @@ class UpdateProfile {
                     )
                     .build()
             )
+            val authenticationExtension = AuthenticationGroupExtension(wallet.params)
+            authenticationExtension.addKeyChains(wallet.params, wallet.keyChainSeed, EnumSet.of(
+                AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY,
+                AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING,
+                AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_TOPUP,
+                AuthenticationKeyChain.KeyChainType.INVITATION_FUNDING)
+            )
+            wallet.addExtension(authenticationExtension)
 
-            wallet.initializeAuthenticationKeyChains(wallet.keyChainSeed, null)
-            println("pkh = ${wallet.blockchainIdentityKeyChain.getKey(1).pubKeyHash.toHex()}")
+            println("pkh = ${authenticationExtension.identityFundingKeyChain.getKey(1).pubKeyHash.toHex()}")
 
-            val blockchainIdentity = BlockchainIdentity(platform, 0, wallet)
-            blockchainIdentity.recoverIdentity(wallet.blockchainIdentityKeyChain.getKey(1).pubKeyHash)
+            val blockchainIdentity = BlockchainIdentity(platform, 0, wallet, authenticationExtension)
+            blockchainIdentity.recoverIdentity(authenticationExtension.identityFundingKeyChain.getKey(1).pubKeyHash)
 
             val currentProfile = blockchainIdentity.getProfileFromPlatform()!!
 

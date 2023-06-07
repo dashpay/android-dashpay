@@ -88,7 +88,7 @@ class TxMetaDataTests : PlatformNetwork() {
 
     @Test
     fun roundTripTest() {
-        val blockchainIdentity = BlockchainIdentity(platform, 0, wallet)
+        val blockchainIdentity = BlockchainIdentity(platform, 0, wallet, authenticationGroupExtension)
 
         val privateKey = blockchainIdentity.privateKeyAtPath(1, TxMetadataDocument.childNumber, 0, IdentityPublicKey.Type.ECDSA_SECP256K1, null)
 
@@ -117,7 +117,7 @@ class TxMetaDataTests : PlatformNetwork() {
 
     @Test
     fun emptyListTest() {
-        val blockchainIdentity = BlockchainIdentity(platform, 0, wallet)
+        val blockchainIdentity = BlockchainIdentity(platform, 0, wallet, authenticationGroupExtension)
 
         val privateKey = blockchainIdentity.privateKeyAtPath(1, TxMetadataDocument.childNumber, 0, IdentityPublicKey.Type.ECDSA_SECP256K1, null)
 

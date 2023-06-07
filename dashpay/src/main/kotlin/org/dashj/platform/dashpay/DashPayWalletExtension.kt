@@ -10,6 +10,7 @@ package org.dashj.platform.dashpay
 import com.google.protobuf.ByteString
 import org.bitcoinj.wallet.Wallet
 import org.bitcoinj.wallet.WalletExtension
+import org.bitcoinj.wallet.authentication.AuthenticationGroupExtension
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
 import org.dashj.platform.dpp.identity.IdentityPublicKey
@@ -18,7 +19,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class DashPayWalletExtension(
-    val platform: Platform
+    val platform: Platform,
+    val authenticationGroupExtension: AuthenticationGroupExtension
 ) : WalletExtension {
     companion object {
         const val NAME = "org.dashj.dashpay.DashPayWalletExtension"
@@ -33,7 +35,7 @@ class DashPayWalletExtension(
 
         if (dashpay.hasIdentity()) {
             if (blockchainIdentity == null) {
-                blockchainIdentity = BlockchainIdentity(platform, 0, containingWallet!!)
+                blockchainIdentity = BlockchainIdentity(platform, 0, containingWallet!!, authenticationGroupExtension)
             }
 
             blockchainIdentity?.let {
@@ -78,10 +80,11 @@ class DashPayWalletExtension(
     }
 
     fun validate(containingWallet: Wallet): Boolean {
+        val authExtension = containingWallet.addOrGetExistingExtension(AuthenticationGroupExtension(containingWallet.params)) as AuthenticationGroupExtension
         // validate
-        val list = containingWallet.creditFundingTransactions
+        val list = authExtension.creditFundingTransactions
         for (cftx in list) {
-            val tx = containingWallet.getCreditFundingTransaction(cftx)
+            val tx = authExtension.getCreditFundingTransaction(cftx)
             if (tx.creditBurnIdentityIdentifier.toString() != blockchainIdentity?.uniqueId.toString()) {
                 log.error("Error: ${tx.creditBurnIdentityIdentifier} != ${blockchainIdentity?.uniqueId}")
                 return false

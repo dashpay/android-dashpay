@@ -31,7 +31,7 @@ class CreateTxMetadata {
         }
 
         private fun createDocument(showOnly: Boolean) {
-            val blockchainIdentity = BlockchainIdentity(client.platform, 0, client.wallet!!)
+            val blockchainIdentity = BlockchainIdentity(client.platform, 0, client.wallet!!, client.authenticationExtension)
             blockchainIdentity.recoverIdentity()
             val identity = blockchainIdentity.identity!! // client.platform.identities.getByPublicKeyHash(client.wallet!!.blockchainIdentityKeyChain.getKey(0, true).pubKeyHash)!!
 

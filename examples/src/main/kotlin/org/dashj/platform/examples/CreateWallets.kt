@@ -14,6 +14,7 @@ import java.util.Scanner
 import java.util.concurrent.TimeUnit
 import org.bitcoinj.core.Address
 import org.bitcoinj.core.Coin
+import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Transaction
 import org.bitcoinj.core.TransactionOutput
 import org.bitcoinj.evolution.CreditFundingTransaction
@@ -29,6 +30,7 @@ import org.bitcoinj.wallet.KeyChainGroup
 import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
 import org.bitcoinj.wallet.WalletTransaction
+import org.bitcoinj.wallet.authentication.AuthenticationGroupExtension
 import org.dashj.platform.dashpay.BlockchainIdentity
 import org.dashj.platform.dashpay.ContactRequests
 import org.dashj.platform.dashpay.RetryDelayType
@@ -45,6 +47,7 @@ import org.dashj.platform.sdk.Client
 import org.dashj.platform.sdk.client.ClientOptions
 import org.dashj.platform.sdk.platform.DomainDocument
 import org.json.JSONObject
+import java.util.EnumSet
 
 fun String.runCommand(workingDir: File): String? {
     return try {
@@ -157,14 +160,23 @@ class CreateWallets {
 
                 // create the wallet
                 val keyChainGroup = KeyChainGroup.builder(PARAMS).addChain(chain).build()
+                val authenticationExtension = AuthenticationGroupExtension(PARAMS)
                 val wallet = Wallet(PARAMS, keyChainGroup)
-                wallet.initializeAuthenticationKeyChains(wallet.keyChainSeed, null)
+                wallet.addExtension(authenticationExtension)
+                authenticationExtension.addKeyChains(PARAMS, wallet.keyChainSeed,
+                    EnumSet.of(
+                        AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY,
+                        AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING,
+                        AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_TOPUP,
+                        AuthenticationKeyChain.KeyChainType.INVITATION_FUNDING
+                    )
+                )
                 wallet.addWalletTransaction(WalletTransaction(WalletTransaction.Pool.UNSPENT, walletTx))
 
                 // send the credit funding transaction
                 val sendRequest = SendRequest.creditFundingTransaction(
                     PARAMS,
-                    wallet.currentAuthenticationKey(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING),
+                    authenticationExtension.currentKey(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING) as ECKey,
                     Coin.valueOf(1000000)
                 )
                 sendRequest.coinSelector = CoinSelector { target, candidates ->
@@ -202,7 +214,7 @@ class CreateWallets {
 
                 cftx.confidence.appearedAtChainHeight = block!!["height"] as Int
 
-                val blockchainIdentity = BlockchainIdentity(platform, cftx, wallet)
+                val blockchainIdentity = BlockchainIdentity(platform, cftx, wallet, authenticationExtension)
 
                 blockchainIdentity.registerIdentity(null)
 
@@ -210,7 +222,7 @@ class CreateWallets {
                     10, 5000, RetryDelayType.SLOW20,
                     object : RegisterIdentityCallback {
                         override fun onComplete(uniqueId: String) {
-                            val identity = platform.client.getIdentityByFirstPublicKey(wallet.currentAuthenticationKey(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY).pubKeyHash)
+                            val identity = platform.client.getIdentityByFirstPublicKey((authenticationExtension.currentKey(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING) as ECKey).pubKeyHash)
                             val identityId = platform.dpp.identity.createFromBuffer(identity!!)
                             println("identity found using getIdentityIdByFirstPublicKey: $identityId")
 
