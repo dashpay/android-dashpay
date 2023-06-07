@@ -493,8 +493,7 @@ public class WalletTool {
             if (options.has("ignore-mandatory-extensions"))
                 loader.setRequireMandatoryExtensions(false);
             walletInputStream = new BufferedInputStream(new FileInputStream(walletFile));
-            WalletExtension [] extensions = new WalletExtension[1];
-            extensions[0] = dashPayWalletExtension;
+            WalletExtension [] extensions = new WalletExtension[] { authenticationGroupExtension, dashPayWalletExtension };
             wallet = (WalletEx) loader.readWallet(walletInputStream, forceReset, extensions);
             if (!wallet.getParams().equals(params)) {
                 System.err.println("Wallet does not match requested network parameters: " +
@@ -1531,19 +1530,19 @@ public class WalletTool {
         // Determine our blockchain identity
         blockchainIdentity = dashPayWalletExtension.getBlockchainIdentity();
         if (blockchainIdentity == null) {
-            List<CreditFundingTransaction> cftxs = wallet.getIdentityFundingTransactions();
+            List<CreditFundingTransaction> cftxs = authenticationGroupExtension.getIdentityFundingTransactions();
             if (!cftxs.isEmpty()) {
                 CreditFundingTransaction cftx = cftxs.get(0);
-                blockchainIdentity = new BlockchainIdentity(platform, 0, wallet);
+                blockchainIdentity = new BlockchainIdentity(platform, 0, wallet, authenticationGroupExtension);
                 dashPayWalletExtension.setBlockchainIdentity(blockchainIdentity);
                 if (!blockchainIdentity.recoverIdentity(cftx)) {
                     blockchainIdentity.initializeCreditFundingTransaction(cftxs.get(0));
                 }
             } else {
-                byte [] pubKeyHash = wallet.getBlockchainIdentityKeyChain().getWatchingKey().getPubKeyHash();
+                byte [] pubKeyHash = authenticationGroupExtension.getIdentityKeyChain().getKey(0, true).getPubKeyHash();
                 Identity identity = platform.getIdentities().getByPublicKeyHash(pubKeyHash);
                 if (identity != null) {
-                    blockchainIdentity = new BlockchainIdentity(platform, 0, wallet);
+                    blockchainIdentity = new BlockchainIdentity(platform, 0, wallet, authenticationGroupExtension);
                     dashPayWalletExtension.setBlockchainIdentity(blockchainIdentity);
                     blockchainIdentity.recoverIdentity(pubKeyHash);
 
@@ -1631,7 +1630,18 @@ public class WalletTool {
                 .accountPath(DerivationPathFactory.get(params).bip44DerivationPath(0))
                 .build();
         wallet.addAndActivateHDChain(bip44);
-        wallet.initializeAuthenticationKeyChains(wallet.getKeyChainSeed(), null);
+        authenticationGroupExtension.addKeyChains(
+                params,
+                wallet.getKeyChainSeed(),
+                EnumSet.of(
+                        AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY,
+                        AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING,
+                        AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_TOPUP,
+                        AuthenticationKeyChain.KeyChainType.INVITATION_FUNDING
+                )
+        );
+        wallet.addExtension(authenticationGroupExtension);
+        authenticationGroupExtension.setWallet(wallet);
         if (password != null)
             wallet.encrypt(password);
         wallet.saveToFile(walletFile);
@@ -1932,8 +1942,8 @@ public class WalletTool {
             outputToCSV(displayName, csvFile);
 
             DateFormat dateFormat = DateFormat.getDateTimeInstance();
-            if (wallet.getCreditFundingTransactions().size() > 0) {
-                CreditFundingTransaction cftx = wallet.getCreditFundingTransactions().get(0);
+            if (authenticationGroupExtension.getCreditFundingTransactions().size() > 0) {
+                CreditFundingTransaction cftx = authenticationGroupExtension.getCreditFundingTransactions().get(0);
                 Transaction tx = wallet.getTransaction(cftx.getTxId());
                 String date = "\"" + dateFormat.format(tx.getUpdateTime()) + "\"";
                 outputStream.println("Username Created:                 " + date);
@@ -2032,7 +2042,7 @@ public class WalletTool {
                     mix(waitForFlag);
                 }
 
-                blockchainIdentity = new BlockchainIdentity(platform, 0, wallet);
+                blockchainIdentity = new BlockchainIdentity(platform, 0, wallet, authenticationGroupExtension);
 
                 CreditFundingTransaction cftx = blockchainIdentity.createCreditFundingTransaction(credits, null, useCoinJoin);
                 boolean wait = true;
