@@ -59,7 +59,9 @@ class GetNetworkStatus {
 
         private fun start() {
             // Get full masternode list
-            val mnList = getMnList()
+            val mnList = getMnList().filter {
+                (it["nType"] as Double).toInt() == 1
+            }
             val invalidNodes = mnList.filter { it["isValid"] == false }
             val validNodes = mnList.filter { it["isValid"] == true }
 

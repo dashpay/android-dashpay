@@ -14,10 +14,6 @@ import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.evolution.SimplifiedMasternodeListManager
-import org.bitcoinj.params.BinTangDevNetParams
-import org.bitcoinj.params.JackDanielsDevNetParams
-import org.bitcoinj.params.OuzoDevNetParams
-import org.bitcoinj.params.TestNet3Params
 import org.dashj.platform.dapiclient.DapiClient
 import org.dashj.platform.dapiclient.MaxRetriesReachedException
 import org.dashj.platform.dapiclient.NoAvailableAddressesForRetryException
@@ -82,22 +78,13 @@ class Platform(val params: NetworkParameters) {
         apps["dashpay"] = ClientAppDefinition(SystemIds.dashpayDataContractId)
         when {
             params.id.contains("test") -> {
-                client = DapiClient(TestNet3Params.MASTERNODES.toList(), dpp)
                 useWhiteList = true
             }
-            params.id.contains("jack-daniels") -> {
-                client = DapiClient(JackDanielsDevNetParams.get().defaultMasternodeList.toList(), dpp)
-                apps["dashwallet"] = ClientAppDefinition("GbJzjKDe64qbSBn9vCpCSAdaAdZgQZAv3C3P7zaMywTL")
-            }
-            params.id.contains("ouzo") -> {
-                client = DapiClient(OuzoDevNetParams.get().defaultMasternodeList.toList(), dpp)
-                apps["dashwallet"] = ClientAppDefinition("6jMXAcaB66jdanaVCSnfZV5CUiE998d1C5YQ9TEDBGSS")
-            }
             params.id.contains("bintang") -> {
-                client = DapiClient(BinTangDevNetParams.get().defaultMasternodeList.toList(), dpp)
                 apps["dashwallet"] = ClientAppDefinition("2Yf43cVQ6bwxzFMTmmsuD6RM4c5XBzdB21tMbyQWg1gv")
             }
         }
+        client = DapiClient(params.defaultHPMasternodeList.toList(), dpp)
     }
 
     fun getAppList(): List<Identifier> {
@@ -153,8 +140,8 @@ class Platform(val params: NetworkParameters) {
      * @param masternodeListManager SimplifiedMasternodeListManager
      */
     fun setMasternodeListManager(masternodeListManager: SimplifiedMasternodeListManager) {
-        client.setSimplifiedMasternodeListManager(masternodeListManager, params.defaultMasternodeList.toList())
-        appendWhiteList(params.defaultMasternodeList.toList())
+        client.setSimplifiedMasternodeListManager(masternodeListManager, params.defaultHPMasternodeList.toList())
+        appendWhiteList(params.defaultHPMasternodeList.toList())
     }
 
     /**
