@@ -31,8 +31,8 @@ cd android-dashpay`
 dependencies {
     implementation "org.dashj.platform:dpp:0.23-SNAPSHOT"
     implementation "org.dashj.platform:dapi-client:0.23-SNAPSHOT"
-    implementation "org.dashj:dashj-core:0.18-RC11-SNAPSHOT"
-    implementation "org.dashj:dashj-bls:0.18-RC11-SNAPSHOT"
+    implementation "org.dashj:dashj-core:0.19.1-SNAPSHOT"
+    implementation "org.dashj:dashj-bls:1.0.0"
     implementation "org.dashj.platform:platform-core:0.23-SNAPSHOT"
     implementation "org.dashj.platform:dashpay:0.23-SNAPSHOT" # if dashpay contract is required
 }
