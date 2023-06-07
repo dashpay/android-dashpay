@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test
 class DashPayWalletExtensionTest : PlatformNetwork() {
     @Test
     fun roundTripTest() {
-        val extension = DashPayWalletExtension(platform) // (platform, wallet)
-        extension.blockchainIdentity = BlockchainIdentity(platform, 0, wallet)
+        val extension = DashPayWalletExtension(platform, authenticationGroupExtension) // (platform, wallet)
+        extension.blockchainIdentity = BlockchainIdentity(platform, 0, wallet, authenticationGroupExtension)
 
         val expectedIdentity = Identity(
             Identifier.Companion.from(Sha256Hash.ZERO_HASH),
@@ -38,8 +38,8 @@ class DashPayWalletExtensionTest : PlatformNetwork() {
 
         assertEquals(94, bytes.size)
 
-        val extensionTwo = DashPayWalletExtension(platform)
-        extensionTwo.blockchainIdentity = BlockchainIdentity(platform, 0, wallet)
+        val extensionTwo = DashPayWalletExtension(platform, authenticationGroupExtension)
+        extensionTwo.blockchainIdentity = BlockchainIdentity(platform, 0, wallet, authenticationGroupExtension)
         extensionTwo.deserializeWalletExtension(wallet, bytes)
 
         assertEquals(expectedIdentity, extensionTwo.blockchainIdentity!!.identity)
@@ -47,14 +47,14 @@ class DashPayWalletExtensionTest : PlatformNetwork() {
 
     @Test
     fun roundTripWithoutIdentityTest() {
-        val extension = DashPayWalletExtension(platform)
-        extension.blockchainIdentity = BlockchainIdentity(platform, 0, wallet)
+        val extension = DashPayWalletExtension(platform, authenticationGroupExtension)
+        extension.blockchainIdentity = BlockchainIdentity(platform, 0, wallet, authenticationGroupExtension)
         val bytes = extension.serializeWalletExtension()
 
         assertEquals(0, bytes.size)
 
-        val extensionTwo = DashPayWalletExtension(platform)
-        extensionTwo.blockchainIdentity = BlockchainIdentity(platform, 0, wallet)
+        val extensionTwo = DashPayWalletExtension(platform, authenticationGroupExtension)
+        extensionTwo.blockchainIdentity = BlockchainIdentity(platform, 0, wallet, authenticationGroupExtension)
         extensionTwo.deserializeWalletExtension(wallet, bytes)
     }
 }

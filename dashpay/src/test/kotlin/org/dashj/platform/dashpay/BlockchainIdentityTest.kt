@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 
 class BlockchainIdentityTest : PlatformNetwork() {
 
-    val blockchainIdentity = BlockchainIdentity(platform, 0, wallet)
+    val blockchainIdentity = BlockchainIdentity(platform, 0, wallet, authenticationGroupExtension)
 
     @Test
     fun checkWalletSeedTest() {
@@ -18,7 +18,7 @@ class BlockchainIdentityTest : PlatformNetwork() {
     fun updateProfileTest() {
         val displayName = "Hello " + Random.nextInt()
 
-        blockchainIdentity.recoverIdentity(wallet.blockchainIdentityKeyChain.watchingKey.pubKeyHash)
+        blockchainIdentity.recoverIdentity(authenticationGroupExtension.identityKeyChain.getKey(0, true).pubKeyHash)
 
         val currentProfile = blockchainIdentity.getProfileFromPlatform()!!
 

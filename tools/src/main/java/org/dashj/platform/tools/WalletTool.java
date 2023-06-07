@@ -107,6 +107,7 @@ import org.bitcoinj.uri.BitcoinURIParseException;
 import org.bitcoinj.utils.BriefLogFormatter;
 import org.bitcoinj.utils.BtcAutoFormat;
 import org.bitcoinj.utils.Threading;
+import org.bitcoinj.wallet.AuthenticationKeyChain;
 import org.bitcoinj.wallet.DerivationPathFactory;
 import org.bitcoinj.wallet.DeterministicKeyChain;
 import org.bitcoinj.wallet.DeterministicSeed;
@@ -118,11 +119,13 @@ import org.bitcoinj.wallet.WalletEx;
 import org.bitcoinj.wallet.Wallet.BalanceType;
 import org.bitcoinj.wallet.WalletExtension;
 import org.bitcoinj.wallet.WalletProtobufSerializer;
+import org.bitcoinj.wallet.authentication.AuthenticationGroupExtension;
 import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
 import org.bitcoinj.wallet.listeners.WalletReorganizeEventListener;
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.dashj.bls.BLSJniLibrary;
 import org.dashj.platform.dapiclient.model.GetStatusResponse;
 import org.dashj.platform.dapiclient.provider.DAPIAddress;
 import org.dashj.platform.dashpay.BlockchainIdentity;
@@ -215,6 +218,7 @@ public class WalletTool {
     private static File outputFile;
 
     private static DashPayWalletExtension dashPayWalletExtension;
+    private static AuthenticationGroupExtension authenticationGroupExtension;
     private static Platform platform;
     private static BlockchainIdentity blockchainIdentity = null;
     private static DashPayWallet dashPayWallet = null;
@@ -316,6 +320,7 @@ public class WalletTool {
     }
 
     public static void main(String[] args) throws Exception {
+        BLSJniLibrary.init();
         OptionParser parser = new OptionParser();
         parser.accepts("help");
         parser.accepts("force");
@@ -427,7 +432,8 @@ public class WalletTool {
         Context.propagate(context);
 
         platform = new Platform(params);
-        dashPayWalletExtension = new DashPayWalletExtension(platform);
+        authenticationGroupExtension = new AuthenticationGroupExtension(params);
+        dashPayWalletExtension = new DashPayWalletExtension(platform, authenticationGroupExtension);
 
         platform.setMasternodeListManager(context.masternodeListManager);
 
@@ -498,9 +504,24 @@ public class WalletTool {
 
             if (!wallet.getExtensions().containsKey(DashPayWalletExtension.NAME)) {
                 wallet.addExtension(dashPayWalletExtension);
-                dashPayWalletExtension = (DashPayWalletExtension)wallet.getExtensions().get(DashPayWalletExtension.NAME);
+                dashPayWalletExtension = (DashPayWalletExtension) wallet.getExtensions().get(DashPayWalletExtension.NAME);
+
                 //TODO: load the info
             }
+            if (!wallet.getKeyChainExtensions().containsKey("org.dashj.wallet.authentication")) {
+                authenticationGroupExtension = (AuthenticationGroupExtension) wallet.addOrGetExistingExtension(authenticationGroupExtension);
+            }
+            authenticationGroupExtension.addKeyChains(
+                    params, wallet.getKeyChainSeed(),
+                    EnumSet.of(
+                        AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY,
+                        AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING,
+                        AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_TOPUP,
+                        AuthenticationKeyChain.KeyChainType.INVITATION_FUNDING
+                    )
+            );
+            authenticationGroupExtension.setWallet(wallet);
+            wallet.saveToFile(walletFile);
         } catch (Exception e) {
             System.err.println("Failed to load wallet '" + walletFile + "': " + e.getMessage());
             e.printStackTrace();

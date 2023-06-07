@@ -9,6 +9,8 @@ package org.dashj.platform.sdk
 import org.bitcoinj.params.BinTangDevNetParams
 import org.bitcoinj.params.JackDanielsDevNetParams
 import org.bitcoinj.params.TestNet3Params
+import org.bitcoinj.wallet.AuthenticationKeyChain
+import org.bitcoinj.wallet.authentication.AuthenticationGroupExtension
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.DeterministicKeyChain
 import org.bitcoinj.wallet.DeterministicSeed
@@ -18,6 +20,7 @@ import org.dashj.platform.dapiclient.DapiClient
 import org.dashj.platform.sdk.client.ClientApps
 import org.dashj.platform.sdk.client.ClientOptions
 import org.dashj.platform.sdk.platform.Platform
+import java.util.EnumSet
 
 class Client(private val clientOptions: ClientOptions) {
     val params = when (clientOptions.network) {
@@ -35,6 +38,7 @@ class Client(private val clientOptions: ClientOptions) {
         get() = ClientApps(platform.apps)
 
     var wallet: Wallet? = null
+    val authenticationExtension = AuthenticationGroupExtension(params)
 
     init {
         val needWallet = clientOptions.walletOptions != null
@@ -60,7 +64,17 @@ class Client(private val clientOptions: ClientOptions) {
                     .addChain(chainBuilder.build())
                     .build()
             ).apply {
-                initializeAuthenticationKeyChains(keyChainSeed, null)
+                authenticationExtension.addKeyChains(
+                    params,
+                    keyChainSeed,
+                    EnumSet.of(
+                        AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING,
+                        AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_TOPUP,
+                        AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING,
+                        AuthenticationKeyChain.KeyChainType.INVITATION_FUNDING
+                    )
+                )
+                addExtension(authenticationExtension)
             }
         }
 
