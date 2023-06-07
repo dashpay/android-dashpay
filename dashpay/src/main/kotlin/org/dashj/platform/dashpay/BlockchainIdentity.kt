@@ -15,7 +15,7 @@ import java.util.Date
 import java.util.Timer
 import kotlin.concurrent.timerTask
 import kotlinx.coroutines.delay
-import org.bitcoinj.coinjoin.CoinJoinCoinSelector
+//import org.bitcoinj.coinjoin.CoinJoinCoinSelector
 import org.bitcoinj.core.Address
 import org.bitcoinj.core.Coin
 import org.bitcoinj.core.ECKey
@@ -356,9 +356,9 @@ class BlockchainIdentity {
         val request = SendRequest.creditFundingTransaction(wallet!!.params, privateKey as ECKey, credits)
         if (useCoinJoin) {
             // these are the settings for coinjoin
-            request.coinSelector = CoinJoinCoinSelector(wallet!!)
-            request.returnChange = false
-            request.emptyWallet = true // spend all coinjoin balance
+//            request.coinSelector = CoinJoinCoinSelector(wallet!!)
+//            request.returnChange = false
+//            request.emptyWallet = true // spend all coinjoin balance
         } else {
             request.coinSelector = ZeroConfCoinSelector.get()
         }
