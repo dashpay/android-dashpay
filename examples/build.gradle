@@ -22,7 +22,7 @@ dependencies {
     implementation "org.dashj.platform:dpp:$dpp_version"
     implementation "org.dashj.platform:dapi-client:$dapi_client_version"
     implementation "org.dashj:dashj-core:$dashj_version"
-    implementation "org.dashj:dashj-bls:0.18-SNAPSHOT"
+    implementation "org.dashj:dashj-bls:1.0.0"
     implementation "org.dashj:dashj-merk:0.22-SNAPSHOT"
     implementation 'org.slf4j:slf4j-jdk14:1.7.28'
     implementation 'io.grpc:grpc-okhttp:1.28.0' // CURRENT_GRPC_VERSION

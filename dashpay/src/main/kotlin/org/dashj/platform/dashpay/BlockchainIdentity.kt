@@ -15,7 +15,7 @@ import java.util.Date
 import java.util.Timer
 import kotlin.concurrent.timerTask
 import kotlinx.coroutines.delay
-import org.bitcoinj.coinjoin.CoinJoinCoinSelector
+//import org.bitcoinj.coinjoin.CoinJoinCoinSelector
 import org.bitcoinj.core.Address
 import org.bitcoinj.core.Coin
 import org.bitcoinj.core.ECKey
@@ -41,6 +41,7 @@ import org.bitcoinj.wallet.FriendKeyChain
 import org.bitcoinj.wallet.SendRequest
 import org.bitcoinj.wallet.Wallet
 import org.bitcoinj.wallet.ZeroConfCoinSelector
+import org.bitcoinj.wallet.authentication.AuthenticationGroupExtension
 import org.bouncycastle.crypto.params.KeyParameter
 import org.dashj.platform.contracts.wallet.TxMetadata
 import org.dashj.platform.contracts.wallet.TxMetadataDocument
@@ -149,6 +150,7 @@ class BlockchainIdentity {
     var isLocal: Boolean = false
 
     var wallet: Wallet? = null
+    var authenticationGroup: AuthenticationGroupExtension? = null
 
     lateinit var lockedOutpoint: TransactionOutPoint
     val lockedOutpointData: ByteArray?
@@ -201,12 +203,13 @@ class BlockchainIdentity {
         this.registrationStatus = RegistrationStatus.REGISTERED
     }
 
-    constructor(platform: Platform, index: Int, wallet: Wallet) : this(
+    constructor(platform: Platform, index: Int, wallet: Wallet, authenticationGroupExtension: AuthenticationGroupExtension) : this(
         platform
     ) {
         Preconditions.checkArgument(index != Int.MAX_VALUE && index != Int.MIN_VALUE, "index must be found")
 
         this.wallet = wallet
+        this.authenticationGroup = authenticationGroupExtension
         this.isLocal = true
         this.keysCreated = 0
         this.currentMainKeyIndex = 0
@@ -222,9 +225,10 @@ class BlockchainIdentity {
         platform: Platform,
         index: Int,
         lockedOutpoint: TransactionOutPoint,
-        wallet: Wallet
+        wallet: Wallet,
+        authenticationGroupExtension: AuthenticationGroupExtension
     ) :
-    this(platform, index, wallet) {
+    this(platform, index, wallet, authenticationGroupExtension) {
         Preconditions.checkArgument(lockedOutpoint.hash != Sha256Hash.ZERO_HASH, "utxo must not be null")
         this.lockedOutpoint = lockedOutpoint
         this.uniqueId = Sha256Hash.twiceOf(lockedOutpoint.bitcoinSerialize())
@@ -234,8 +238,9 @@ class BlockchainIdentity {
         platform: Platform,
         transaction: CreditFundingTransaction,
         wallet: Wallet,
+        authenticationGroupExtension: AuthenticationGroupExtension,
         registeredIdentity: Identity? = null
-    ) : this(platform, transaction.usedDerivationPathIndex, transaction.lockedOutpoint, wallet) {
+    ) : this(platform, transaction.usedDerivationPathIndex, transaction.lockedOutpoint, wallet, authenticationGroupExtension) {
         Preconditions.checkArgument(!transaction.creditBurnPublicKey.isPubKeyOnly || transaction.creditBurnPublicKey.isEncrypted)
         creditFundingTransaction = transaction
         registrationFundingPrivateKey = transaction.creditBurnPublicKey
@@ -285,8 +290,9 @@ class BlockchainIdentity {
         platform: Platform,
         transaction: CreditFundingTransaction,
         usernameStatus: MutableMap<String, Any>,
-        wallet: Wallet
-    ) : this(platform, transaction, wallet) {
+        wallet: Wallet,
+        authenticationGroupExtension: AuthenticationGroupExtension
+    ) : this(platform, transaction, wallet, authenticationGroupExtension) {
         if (getUsernames().isNotEmpty()) {
             val usernameSalts = HashMap<String, ByteArray>()
             for (username in usernameStatus.keys) {
@@ -312,9 +318,10 @@ class BlockchainIdentity {
         usernameStatus: MutableMap<String, Any>,
         credits: Coin,
         registrationStatus: RegistrationStatus,
-        wallet: Wallet
+        wallet: Wallet,
+        authenticationGroupExtension: AuthenticationGroupExtension
     ) :
-    this(platform, transaction, usernameStatus, wallet) {
+    this(platform, transaction, usernameStatus, wallet, authenticationGroupExtension) {
         creditBalance = credits
         this.registrationStatus = registrationStatus
     }
@@ -345,13 +352,13 @@ class BlockchainIdentity {
         useCoinJoin: Boolean
     ): CreditFundingTransaction {
         Preconditions.checkArgument(if (wallet!!.isEncrypted) keyParameter != null else true)
-        val privateKey = wallet!!.currentAuthenticationKey(type)
-        val request = SendRequest.creditFundingTransaction(wallet!!.params, privateKey, credits)
+        val privateKey = authenticationGroup!!.currentKey(type)
+        val request = SendRequest.creditFundingTransaction(wallet!!.params, privateKey as ECKey, credits)
         if (useCoinJoin) {
             // these are the settings for coinjoin
-            request.coinSelector = CoinJoinCoinSelector(wallet!!)
-            request.returnChange = false
-            request.emptyWallet = true // spend all coinjoin balance
+//            request.coinSelector = CoinJoinCoinSelector(wallet!!)
+//            request.returnChange = false
+//            request.emptyWallet = true // spend all coinjoin balance
         } else {
             request.coinSelector = ZeroConfCoinSelector.get()
         }
@@ -422,7 +429,10 @@ class BlockchainIdentity {
         val (privateKeyList, identityPublicKeys) = createIdentityPublicKeys(keyParameter)
 
         val signingKey = maybeDecryptKey(creditFundingTransaction!!.creditBurnPublicKey, keyParameter)
-        val privateKeys = privateKeyList.map { maybeDecryptKey(it, keyParameter)?.privKeyBytes!! }
+        val privateKeys = privateKeyList.map {
+            println(it)
+            maybeDecryptKey(it, keyParameter)?.privKeyBytes!!
+        }
 
         var instantLock: InstantSendLock? =
             wallet!!.context.instantSendManager?.getInstantSendLockByTxId(creditFundingTransaction!!.txId)
@@ -548,7 +558,7 @@ class BlockchainIdentity {
 
     private fun finalizeIdentityRegistration(identityId: Identifier) {
         this.registrationFundingPrivateKey =
-            wallet!!.currentAuthenticationKey(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING)
+            authenticationGroup!!.currentKey(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING) as ECKey
         val creditBurnIdentifier = Sha256Hash.wrap(identityId.toBuffer())
         finalizeIdentityRegistration(creditBurnIdentifier)
     }
@@ -948,7 +958,7 @@ class BlockchainIdentity {
 
         when (type) {
             IdentityPublicKey.Type.ECDSA_SECP256K1 -> {
-                val authenticationChain = wallet!!.blockchainIdentityKeyChain
+                val authenticationChain = authenticationGroup!!.getKeyChain(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY)
                 // decrypt keychain
                 val decryptedChain = if (wallet!!.isEncrypted) {
                     authenticationChain.toDecrypted(keyParameter)
@@ -957,7 +967,7 @@ class BlockchainIdentity {
                 }
                 val key = decryptedChain.getKey(index) // watchingKey
                 checkState(key.path.last().isHardened)
-                return key
+                return key as ECKey?
             }
             else -> throw IllegalArgumentException("$type is not supported")
         }
@@ -975,7 +985,7 @@ class BlockchainIdentity {
 
         when (type) {
             IdentityPublicKey.Type.ECDSA_SECP256K1 -> {
-                val authenticationChain = wallet!!.blockchainIdentityKeyChain
+                val authenticationChain = authenticationGroup!!.getKeyChain(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY)
                 // decrypt keychain
                 val decryptedChain = if (wallet!!.isEncrypted) {
                     authenticationChain.toDecrypted(keyParameter)
@@ -989,7 +999,7 @@ class BlockchainIdentity {
                     .build()
                 val key = decryptedChain.getKeyByPath(fullPath, true) // watchingKey
                 checkState(key.path.last().isHardened)
-                return key
+                return key as ECKey?
             }
             else -> throw IllegalArgumentException("$type is not supported")
         }
@@ -1905,7 +1915,7 @@ class BlockchainIdentity {
     }
 
     fun getInvitationHistory(): Map<Identifier, Identity?> {
-        val inviteTxs = wallet!!.invitationFundingTransactions
+        val inviteTxs = authenticationGroup!!.invitationFundingTransactions
         val listIds = inviteTxs.map { Identifier.from(it.creditBurnIdentityIdentifier) }
 
         return listIds.associateBy({ it }, { platform.identities.get(it) })
