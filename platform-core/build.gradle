@@ -20,9 +20,9 @@ dependencies {
     implementation "org.dashj.platform:dapi-client:$dapi_client_version"
     implementation "org.dashj:dashj-core:$dashj_version"
 
-    implementation 'io.grpc:grpc-okhttp:1.28.0' // CURRENT_GRPC_VERSION
-    implementation 'io.grpc:grpc-protobuf-lite:1.28.0' // CURRENT_GRPC_VERSION
-    implementation 'io.grpc:grpc-stub:1.28.0' // CURRENT_GRPC_VERSION
+    implementation 'io.grpc:grpc-okhttp:1.54.0' // CURRENT_GRPC_VERSION
+    implementation 'io.grpc:grpc-protobuf-lite:1.54.0' // CURRENT_GRPC_VERSION
+    implementation 'io.grpc:grpc-stub:1.54.0' // CURRENT_GRPC_VERSION
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.1.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.1.0'
