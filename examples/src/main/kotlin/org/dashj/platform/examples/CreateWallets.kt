@@ -10,6 +10,7 @@ import java.io.File
 import java.io.IOException
 import java.security.SecureRandom
 import java.util.Date
+import java.util.EnumSet
 import java.util.Scanner
 import java.util.concurrent.TimeUnit
 import org.bitcoinj.core.Address
@@ -47,7 +48,6 @@ import org.dashj.platform.sdk.Client
 import org.dashj.platform.sdk.client.ClientOptions
 import org.dashj.platform.sdk.platform.DomainDocument
 import org.json.JSONObject
-import java.util.EnumSet
 
 fun String.runCommand(workingDir: File): String? {
     return try {
@@ -163,7 +163,8 @@ class CreateWallets {
                 val authenticationExtension = AuthenticationGroupExtension(PARAMS)
                 val wallet = Wallet(PARAMS, keyChainGroup)
                 wallet.addExtension(authenticationExtension)
-                authenticationExtension.addKeyChains(PARAMS, wallet.keyChainSeed,
+                authenticationExtension.addKeyChains(
+                    PARAMS, wallet.keyChainSeed,
                     EnumSet.of(
                         AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY,
                         AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING,

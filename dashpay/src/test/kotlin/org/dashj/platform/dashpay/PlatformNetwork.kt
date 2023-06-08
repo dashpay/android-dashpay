@@ -7,6 +7,8 @@
 
 package org.dashj.platform.dashpay
 
+import java.util.Date
+import java.util.EnumSet
 import org.bitcoinj.params.BinTangDevNetParams
 import org.bitcoinj.wallet.AuthenticationKeyChain
 import org.bitcoinj.wallet.DerivationPathFactory
@@ -17,8 +19,6 @@ import org.bitcoinj.wallet.Wallet
 import org.bitcoinj.wallet.authentication.AuthenticationGroupExtension
 import org.dashj.platform.sdk.platform.Platform
 import org.junit.jupiter.api.AfterEach
-import java.util.Date
-import java.util.EnumSet
 
 open class PlatformNetwork {
 
