@@ -9,6 +9,7 @@ package org.dashj.platform.examples
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import org.bitcoinj.core.ECKey
+import org.bitcoinj.utils.BriefLogFormatter
 import org.dashj.platform.dapiclient.DapiClient
 import org.dashj.platform.dapiclient.model.DocumentQuery
 import org.dashj.platform.dpp.identifier.Identifier
@@ -30,6 +31,7 @@ class GetNetworkStatus {
 
         @JvmStatic
         fun main(args: Array<String>) {
+            BriefLogFormatter.init()
             if (args.isEmpty()) {
                 println("Usage: GetStatus network")
                 return

@@ -6,20 +6,20 @@
  */
 package org.dashj.platform.sdk
 
+import java.util.EnumSet
 import org.bitcoinj.params.BinTangDevNetParams
 import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.wallet.AuthenticationKeyChain
-import org.bitcoinj.wallet.authentication.AuthenticationGroupExtension
 import org.bitcoinj.wallet.DerivationPathFactory
 import org.bitcoinj.wallet.DeterministicKeyChain
 import org.bitcoinj.wallet.DeterministicSeed
 import org.bitcoinj.wallet.KeyChainGroup
 import org.bitcoinj.wallet.Wallet
+import org.bitcoinj.wallet.authentication.AuthenticationGroupExtension
 import org.dashj.platform.dapiclient.DapiClient
 import org.dashj.platform.sdk.client.ClientApps
 import org.dashj.platform.sdk.client.ClientOptions
 import org.dashj.platform.sdk.platform.Platform
-import java.util.EnumSet
 
 class Client(private val clientOptions: ClientOptions) {
     val params = when (clientOptions.network) {

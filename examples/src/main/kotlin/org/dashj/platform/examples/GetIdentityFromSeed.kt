@@ -6,6 +6,7 @@
  */
 package org.dashj.platform.examples
 
+import java.util.EnumSet
 import org.bitcoinj.script.Script
 import org.bitcoinj.wallet.AuthenticationKeyChain
 import org.bitcoinj.wallet.DeterministicSeed
@@ -15,7 +16,6 @@ import org.bitcoinj.wallet.authentication.AuthenticationGroupExtension
 import org.dashj.platform.dpp.toHex
 import org.dashj.platform.sdk.Client
 import org.dashj.platform.sdk.client.ClientOptions
-import java.util.EnumSet
 
 class GetIdentityFromSeed {
     companion object {
@@ -44,11 +44,14 @@ class GetIdentityFromSeed {
             val kcg = KeyChainGroup.builder(platform.params).fromSeed(seed, Script.ScriptType.P2PKH).build()
             val wallet = Wallet(platform.params, kcg)
             val authenticationExtension = AuthenticationGroupExtension(wallet.params)
-            authenticationExtension.addKeyChains(wallet.params, wallet.keyChainSeed, EnumSet.of(
-                AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY,
-                AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING,
-                AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_TOPUP,
-                AuthenticationKeyChain.KeyChainType.INVITATION_FUNDING)
+            authenticationExtension.addKeyChains(
+                wallet.params, wallet.keyChainSeed,
+                EnumSet.of(
+                    AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY,
+                    AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING,
+                    AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_TOPUP,
+                    AuthenticationKeyChain.KeyChainType.INVITATION_FUNDING
+                )
             )
             wallet.addExtension(authenticationExtension)
 
