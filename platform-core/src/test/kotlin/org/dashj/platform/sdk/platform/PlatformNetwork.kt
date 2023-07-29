@@ -1,12 +1,9 @@
 package org.dashj.platform.sdk.platform
-import java.util.Date
 import org.bitcoinj.params.OuzoDevNetParams
-import org.bitcoinj.wallet.DerivationPathFactory
-import org.bitcoinj.wallet.DeterministicKeyChain
-import org.bitcoinj.wallet.DeterministicSeed
-import org.bitcoinj.wallet.KeyChainGroup
-import org.bitcoinj.wallet.Wallet
+import org.bitcoinj.wallet.*
+import org.bitcoinj.wallet.authentication.AuthenticationGroupExtension
 import org.junit.jupiter.api.AfterEach
+import java.util.*
 
 open class PlatformNetwork {
 
@@ -16,6 +13,7 @@ open class PlatformNetwork {
     val seed: String
 
     val wallet: Wallet
+    val authenticationGroupExtension: AuthenticationGroupExtension
 
     init {
         when {
@@ -48,7 +46,9 @@ open class PlatformNetwork {
                 )
                 .build()
         )
-        wallet.initializeAuthenticationKeyChains(wallet.keyChainSeed, null)
+        authenticationGroupExtension = AuthenticationGroupExtension(wallet)
+        authenticationGroupExtension.addKeyChains(wallet.params, wallet.keyChainSeed, EnumSet.of(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING))
+        wallet.addExtension(authenticationGroupExtension)
     }
 
     @AfterEach
