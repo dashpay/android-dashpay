@@ -10,12 +10,14 @@ import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Transaction
 import org.bitcoinj.evolution.CreditFundingTransaction
 import org.bitcoinj.quorums.InstantSendLock
+import org.dashj.dpp.DPP
 import org.dashj.platform.dapiclient.errors.NotFoundException
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.ChainAssetLockProof
 import org.dashj.platform.dpp.identity.Identity
 import org.dashj.platform.dpp.identity.IdentityPublicKey
 import org.dashj.platform.dpp.identity.InstantAssetLockProof
+import org.dashj.platform.dpp.toHex
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -93,6 +95,10 @@ class Identities(val platform: Platform) {
             }
 
             identityCreateTransition.signByPrivateKey(assetLockPrivateKey)
+
+            println("ST valid: ${DPP.validateIdentityCreateTransition(identityCreateTransition.toObject())}")
+            println("ST serialized ${DPP.serializeIdentityCreateTransition(identityCreateTransition.toObject()).toHex()}")
+            println("ST signable ${DPP.signableBytesIdentityCreateTransition(identityCreateTransition.toObject()).toHex()}}")
 
             platform.broadcastStateTransition(identityCreateTransition)
 

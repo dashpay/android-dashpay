@@ -86,6 +86,7 @@ import org.bitcoinj.evolution.CreditFundingTransaction;
 import org.bitcoinj.evolution.SimplifiedMasternodeList;
 import org.bitcoinj.evolution.SimplifiedMasternodeListEntry;
 import org.bitcoinj.net.discovery.ThreeMethodPeerDiscovery;
+import org.bitcoinj.params.AbsintheDevNetParams;
 import org.bitcoinj.params.BinTangDevNetParams;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
@@ -408,8 +409,8 @@ public class WalletTool {
                 chainFileName = new File("mainnet.spvchain");
                 break;
             case DEVNET:
-                params = BinTangDevNetParams.get();
-                chainFileName = new File("bintang-devnet.spvchain");
+                params = AbsintheDevNetParams.get();
+                chainFileName = new File("absinthe.spvchain");
                 break;
             case TEST:
                 params = TestNet3Params.get();
