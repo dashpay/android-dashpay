@@ -64,7 +64,7 @@ class DefaultIdentity(val params: NetworkParameters) {
     init {
         when {
             params.id.contains("test") -> {
-                seed = "horn welcome exact penalty beauty marble current leave arrest chunk emotion upset"
+                seed = "also negative confirm imitate balance foam edit under mule indoor cream huge"
             }
             params.id.contains("jack-daniels") -> {
                 seed = "print shuffle enlist object actress allow quality convince believe gauge tree laundry"

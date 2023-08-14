@@ -23,7 +23,6 @@ import org.dashj.platform.dapiclient.grpc.DefaultGetDataContractWithContractIdRe
 import org.dashj.platform.dapiclient.grpc.DefaultGetDocumentsWithContractIdRetryCallback
 import org.dashj.platform.dapiclient.grpc.DefaultGetIdentityWithIdentitiesRetryCallback
 import org.dashj.platform.dapiclient.model.DocumentQuery
-import org.dashj.platform.dapiclient.model.MerkLibVerifyProof
 import org.dashj.platform.dpp.DashPlatformProtocol
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.Identity
@@ -38,9 +37,15 @@ class Platform(val params: NetworkParameters) {
 
     companion object {
         private val log: Logger = LoggerFactory.getLogger(Platform::class.java)
+        private const val MOCK_DAPI = true
+        fun mockDAPI() = MOCK_DAPI
     }
 
-    var stateRepository = PlatformStateRepository(this)
+    var stateRepository = if (mockDAPI()) {
+        MockPlatformStateRepository(this)
+    }  else {
+        PlatformStateRepository(this)
+    }
 
     val dpp = DashPlatformProtocol(stateRepository, params)
     val apps = HashMap<String, ClientAppDefinition>()
@@ -53,16 +58,6 @@ class Platform(val params: NetworkParameters) {
     val documentsRetryCallback = object : DefaultGetDocumentsWithContractIdRetryCallback(apps.map { it.value.contractId }) {
         override val retryContractIds
             get() = getAppList() // always use the latest app list
-    }
-    val broadcastRetryCallback = object : BroadcastRetryCallback(stateRepository) {
-        override val retryContractIds
-            get() = getAppList() // always use the latest app list
-        override val retryIdentityIds: List<Identifier>
-            get() = stateRepository.validIdentityIdList()
-        override val retryDocumentIds: List<Identifier>
-            get() = stateRepository.validDocumentIdList()
-        override val retryPreorderSalts: Map<Sha256Hash, Sha256Hash>
-            get() = stateRepository.validPreorderSalts()
     }
     val identitiesRetryCallback = object : DefaultGetIdentityWithIdentitiesRetryCallback() {
         override val retryIdentityIds: List<Identifier>
@@ -79,9 +74,10 @@ class Platform(val params: NetworkParameters) {
         when {
             params.id.contains("test") -> {
                 useWhiteList = true
+                apps["dashwallet"] = ClientAppDefinition("Fds5DDfXoLwpUZ71AAVYZP1uod8S7Ze2bR28JExBvZKR")
             }
             params.id.contains("bintang") -> {
-                apps["dashwallet"] = ClientAppDefinition("2Yf43cVQ6bwxzFMTmmsuD6RM4c5XBzdB21tMbyQWg1gv")
+                apps["dashwallet"] = ClientAppDefinition("Fds5DDfXoLwpUZ71AAVYZP1uod8S7Ze2bR28JExBvZKR")
             }
         }
         client = DapiClient(params.defaultHPMasternodeList.toList(), dpp)
@@ -104,7 +100,7 @@ class Platform(val params: NetworkParameters) {
 
     fun broadcastStateTransition(signedStateTransition: StateTransitionIdentitySigned) {
         // TODO: validate transition structure here
-        client.broadcastStateTransitionAndWait(signedStateTransition, retryCallback = broadcastRetryCallback, verifyProof = MerkLibVerifyProof(signedStateTransition))
+        stateRepository.broadcastStateTransition(signedStateTransition)
     }
 
     fun hasApp(appName: String): Boolean {

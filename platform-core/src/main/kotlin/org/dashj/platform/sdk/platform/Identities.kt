@@ -111,20 +111,11 @@ class Identities(val platform: Platform) {
     }
 
     fun get(id: Identifier): Identity? {
-        return try {
-            val identityResponse =
-                platform.client.getIdentity(id.toBuffer(), Features.proveIdentities, platform.identitiesRetryCallback)
-            val identity = platform.dpp.identity.createFromBuffer(identityResponse.identity)
-            identity.metadata = identityResponse.metadata.getMetadata()
-            identity
-        } catch (e: NotFoundException) {
-            null
-        }
+        return platform.stateRepository.fetchIdentity(id)
     }
 
     fun getByPublicKeyHash(pubKeyHash: ByteArray): Identity? {
-        val identityBuffer = platform.client.getIdentityByFirstPublicKey(pubKeyHash, true) ?: return null
-        return platform.dpp.identity.createFromBuffer(identityBuffer)
+        return platform.stateRepository.fetchIdentityFromPubKeyHash(pubKeyHash)
     }
 
     fun topUp(

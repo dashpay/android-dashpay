@@ -2,7 +2,7 @@ import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 buildscript {
     ext.kotlin_version = '1.4.32'
-    ext.dashpay_version = '0.24-SNAPSHOT'
+    ext.dashpay_version = '0.24-MOCK-SNAPSHOT'
     ext.dpp_version = '0.24-SNAPSHOT'
     ext.dapi_client_version = '0.24-SNAPSHOT'
     ext.dashj_version = '19.1-CJ-SNAPSHOT'

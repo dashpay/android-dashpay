@@ -167,18 +167,7 @@ class Documents(val platform: Platform) {
         callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.FIRST
     ): List<Document> {
         try {
-            val documentResponse = platform.client.getDocuments(
-                dataContractId.toBuffer(),
-                documentType,
-                opts,
-                Features.proveDocuments,
-                platform.documentsRetryCallback
-            )
-            return documentResponse.documents.map {
-                val document = platform.dpp.document.createFromBuffer(it, Factory.Options(true))
-                document.metadata = documentResponse.metadata.getMetadata()
-                document
-            }
+            return platform.stateRepository.fetchDocuments(dataContractId, documentType, opts)
         } catch (e: StatusRuntimeException) {
             log.error(
                 "Document query: unable to get documents of $dataContractId: " +
