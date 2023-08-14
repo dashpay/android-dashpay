@@ -68,7 +68,7 @@ class Client(private val clientOptions: ClientOptions) {
                     EnumSet.of(
                         AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING,
                         AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_TOPUP,
-                        AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING,
+                        AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY,
                         AuthenticationKeyChain.KeyChainType.INVITATION_FUNDING
                     )
                 )
