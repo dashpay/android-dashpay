@@ -328,28 +328,29 @@ class BlockchainIdentity {
 
     // MARK: - Full Registration agglomerate
 
-    fun createCreditFundingTransaction(credits: Coin, keyParameter: KeyParameter?, useCoinJoin: Boolean = false): CreditFundingTransaction {
+    fun createCreditFundingTransaction(credits: Coin, keyParameter: KeyParameter?, useCoinJoin: Boolean, returnChange: Boolean): CreditFundingTransaction {
         checkState(creditFundingTransaction == null, "The credit funding transaction must not exist")
         checkState(
             registrationStatus == RegistrationStatus.UNKNOWN,
             "The identity must not be registered"
         )
-        return createFundingTransaction(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING, credits, keyParameter, useCoinJoin)
+        return createFundingTransaction(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING, credits, keyParameter, useCoinJoin, returnChange)
     }
 
-    fun createTopupFundingTransaction(credits: Coin, keyParameter: KeyParameter?, useCoinJoin: Boolean): CreditFundingTransaction {
-        return createFundingTransaction(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_TOPUP, credits, keyParameter, useCoinJoin)
+    fun createTopupFundingTransaction(credits: Coin, keyParameter: KeyParameter?, useCoinJoin: Boolean, returnChange: Boolean): CreditFundingTransaction {
+        return createFundingTransaction(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_TOPUP, credits, keyParameter, useCoinJoin, returnChange)
     }
 
-    fun createInviteFundingTransaction(credits: Coin, keyParameter: KeyParameter?, useCoinJoin: Boolean): CreditFundingTransaction {
-        return createFundingTransaction(AuthenticationKeyChain.KeyChainType.INVITATION_FUNDING, credits, keyParameter, useCoinJoin)
+    fun createInviteFundingTransaction(credits: Coin, keyParameter: KeyParameter?, useCoinJoin: Boolean, returnChange: Boolean): CreditFundingTransaction {
+        return createFundingTransaction(AuthenticationKeyChain.KeyChainType.INVITATION_FUNDING, credits, keyParameter, useCoinJoin, returnChange)
     }
 
     private fun createFundingTransaction(
         type: AuthenticationKeyChain.KeyChainType,
         credits: Coin,
         keyParameter: KeyParameter?,
-        useCoinJoin: Boolean
+        useCoinJoin: Boolean,
+        returnChange: Boolean
     ): CreditFundingTransaction {
         Preconditions.checkArgument(if (wallet!!.isEncrypted) keyParameter != null else true)
         val privateKey = authenticationGroup!!.currentKey(type)
@@ -357,8 +358,7 @@ class BlockchainIdentity {
         if (useCoinJoin) {
             // these are the settings for coinjoin
             request.coinSelector = CoinJoinCoinSelector(wallet!!)
-            request.returnChange = false
-            request.emptyWallet = true // spend all coinjoin balance
+            request.returnChange = returnChange
         } else {
             request.coinSelector = ZeroConfCoinSelector.get()
         }
