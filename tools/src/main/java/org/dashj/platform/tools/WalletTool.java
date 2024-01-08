@@ -45,7 +45,6 @@ import org.bitcoinj.coinjoin.CoinJoinClientOptions;
 import org.bitcoinj.coinjoin.CoinJoinSendRequest;
 import org.bitcoinj.coinjoin.UnmixedZeroConfCoinSelector;
 import org.bitcoinj.coinjoin.utils.CoinJoinReporter;
-import org.bitcoinj.coinjoin.utils.ProTxToOutpoint;
 import org.bitcoinj.core.AbstractBlockChain;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -355,6 +354,7 @@ public class WalletTool {
         parser.accepts("locktime").withRequiredArg();
         parser.accepts("allow-unconfirmed");
         parser.accepts("coinjoin");
+        parser.accepts("return-change");
         parser.accepts("offline");
         parser.accepts("ignore-mandatory-extensions");
         OptionSpec<String> passwordFlag = parser.accepts("password").withRequiredArg();
@@ -561,7 +561,8 @@ public class WalletTool {
                     }
                     boolean allowUnconfirmed = options.has("allow-unconfirmed");
                     boolean isCoinJoin = options.has("coinjoin");
-                    send(outputFlag.values(options), feePerKb, lockTime, allowUnconfirmed, isCoinJoin);
+                    boolean returnChange = options.has("return-change");
+                    send(outputFlag.values(options), feePerKb, lockTime, allowUnconfirmed, isCoinJoin, returnChange);
                 } else if (options.has(paymentRequestLocation)) {
                     sendPaymentRequest(paymentRequestLocation.value(options), !options.has("no-pki"));
                 } else {
@@ -654,7 +655,7 @@ public class WalletTool {
                 if (options.hasArgument("amount")) {
                     credits = parseCoin(options.valueOf(mixAmountFlag));
                 }
-                createUsername(waitForFlag, usernameFlag.value(options), credits, isCoinJoin);
+                createUsername(waitForFlag, usernameFlag.value(options), credits, isCoinJoin, true);
             } break;
             case MIX: mix(waitForFlag); break;
         }
@@ -826,7 +827,7 @@ public class WalletTool {
         }
     }
 
-    private static void send(List<String> outputs, Coin feePerKb, String lockTimeStr, boolean allowUnconfirmed, boolean isCoinJoin) throws VerificationException {
+    private static void send(List<String> outputs, Coin feePerKb, String lockTimeStr, boolean allowUnconfirmed, boolean isCoinJoin, boolean returnChange) throws VerificationException {
         try {
             // Convert the input strings to outputs.
             Transaction t = new Transaction(params);
@@ -852,7 +853,7 @@ public class WalletTool {
                     return;
                 }
             }
-            SendRequest req = isCoinJoin ? CoinJoinSendRequest.forTx(wallet, t) : SendRequest.forTx(t);
+            SendRequest req = isCoinJoin ? CoinJoinSendRequest.forTx(wallet, t, returnChange) : SendRequest.forTx(t);
             if (isCoinJoin)
                 req.coinSelector = UnmixedZeroConfCoinSelector.get();
             if (t.getOutputs().size() == 1 && t.getOutput(0).getValue().equals(isCoinJoin ? wallet.getBalance(BalanceType.COINJOIN) :wallet.getBalance())) {
@@ -1810,10 +1811,10 @@ public class WalletTool {
     }
 
     private static void mix(OptionSpec<WaitForEnum> waitForFlag) {
-        wallet.getCoinJoin().addKeyChain(wallet.getKeyChainSeed(), DerivationPathFactory.get(wallet.getParams()).coinJoinDerivationPath());
+        wallet.getCoinJoin().addKeyChain(wallet.getKeyChainSeed(), DerivationPathFactory.get(wallet.getParams()).coinJoinDerivationPath(0));
         syncChain(waitForFlag);
         // set defaults
-        CoinJoinReporter reporter = new CoinJoinReporter();
+        CoinJoinReporter reporter = new CoinJoinReporter(params);
         CoinJoinClientOptions.setEnabled(true);
         CoinJoinClientOptions.setRounds(4);
         CoinJoinClientOptions.setSessions(1);
@@ -1838,7 +1839,6 @@ public class WalletTool {
             CoinJoinClientOptions.setMultiSessionEnabled(options.valueOf(multiSessionFlag));
         }
 
-        ProTxToOutpoint.initialize(params);
         wallet.getContext().coinJoinManager.coinJoinClientManagers.put(wallet.getDescription(), new CoinJoinClientManager(wallet));
         wallet.getContext().coinJoinManager.addSessionStartedListener(Threading.SAME_THREAD, reporter);
         wallet.getContext().coinJoinManager.addSessionCompleteListener(Threading.SAME_THREAD, reporter);
@@ -2031,7 +2031,7 @@ public class WalletTool {
         }
     }
 
-    private static void createUsername(OptionSpec<WaitForEnum> waitForFlag, String username, Coin credits, boolean useCoinJoin) {
+    private static void createUsername(OptionSpec<WaitForEnum> waitForFlag, String username, Coin credits, boolean useCoinJoin, boolean returnChange) {
         initializeIdentity();
 
         if (blockchainIdentity == null) {
@@ -2044,7 +2044,7 @@ public class WalletTool {
 
                 blockchainIdentity = new BlockchainIdentity(platform, 0, wallet, authenticationGroupExtension);
 
-                CreditFundingTransaction cftx = blockchainIdentity.createCreditFundingTransaction(credits, null, useCoinJoin);
+                CreditFundingTransaction cftx = blockchainIdentity.createCreditFundingTransaction(credits, null, useCoinJoin, returnChange);
                 boolean wait = true;
                 cftx.getConfidence().addEventListener(new TransactionConfidence.Listener() {
                     @Override
