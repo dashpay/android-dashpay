@@ -27,7 +27,7 @@ class CreateIdentity {
             val platform = sdk.platform
 
             val cftx = AssetLockTransaction(platform.params, DefaultIdentity.creditBurnTx)
-            cftx.setAssetLockPublicKeyAndIndex(DefaultIdentity.identityPrivateKey, 0)
+            cftx.setAssetLockPublicKey(DefaultIdentity.identityPrivateKey)
             val islock = InstantSendLock(platform.params, DefaultIdentity.islock, InstantSendLock.ISLOCK_VERSION)
 
             try {

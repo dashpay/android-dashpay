@@ -240,7 +240,7 @@ class BlockchainIdentity {
         wallet: Wallet,
         authenticationGroupExtension: AuthenticationGroupExtension,
         registeredIdentity: Identity? = null
-    ) : this(platform, transaction.usedDerivationPathIndex, transaction.lockedOutpoint, wallet, authenticationGroupExtension) {
+    ) : this(platform, transaction.getUsedDerivationPathIndex(0), transaction.lockedOutpoint, wallet, authenticationGroupExtension) {
         Preconditions.checkArgument(!transaction.assetLockPublicKey.isPubKeyOnly || transaction.assetLockPublicKey.isEncrypted)
         assetLockTransaction = transaction
         registrationFundingPrivateKey = transaction.assetLockPublicKey
@@ -404,7 +404,7 @@ class BlockchainIdentity {
         }.toLong()
 
         identity = platform.identities.register(
-            assetLockTransaction!!.outputIndex,
+            0,
             assetLockTransaction!!,
             coreHeight,
             signingKey!!,
@@ -448,7 +448,7 @@ class BlockchainIdentity {
 
             if (instantLock == null && coreHeight > 0) {
                 identity = platform.identities.register(
-                    assetLockTransaction!!.outputIndex,
+                    0,
                     assetLockTransaction!!,
                     coreHeight,
                     signingKey!!,
@@ -457,7 +457,7 @@ class BlockchainIdentity {
                 )
             } else if (instantLock != null) {
                 identity = platform.identities.register(
-                    assetLockTransaction!!.outputIndex,
+                    0,
                     assetLockTransaction!!,
                     instantLock,
                     signingKey!!,
@@ -467,7 +467,7 @@ class BlockchainIdentity {
             } else throw InvalidInstantAssetLockProofException("instantLock == null")
         } else {
             identity = platform.identities.register(
-                assetLockTransaction!!.outputIndex,
+                0,
                 assetLockTransaction!!,
                 instantLock,
                 signingKey!!,

@@ -31,7 +31,7 @@ class Identities(val platform: Platform) {
         identityPublicKeys: List<IdentityPublicKey>
     ): Identity {
         return register(
-            signedLockTransaction.outputIndex,
+            0,
             signedLockTransaction,
             instantLock,
             signedLockTransaction.assetLockPublicKey,
@@ -124,7 +124,7 @@ class Identities(val platform: Platform) {
     ): Boolean {
         return topUp(
             identityId,
-            signedLockTransaction.outputIndex,
+            0,
             signedLockTransaction,
             instantLock,
             signedLockTransaction.assetLockPublicKey

@@ -30,7 +30,7 @@ class RegisterNames {
             val platform = sdk.platform
 
             val cftx = AssetLockTransaction(platform.params, DefaultIdentity.creditBurnTx)
-            cftx.setAssetLockPublicKeyAndIndex(DefaultIdentity.identityPrivateKey, 0)
+            cftx.setAssetLockPublicKey(DefaultIdentity.identityPrivateKey)
 
             try {
                 val identityPrivateKey = DefaultIdentity.identityPrivateKey
