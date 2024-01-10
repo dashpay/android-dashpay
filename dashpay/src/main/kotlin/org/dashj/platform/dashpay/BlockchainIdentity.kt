@@ -31,7 +31,7 @@ import org.bitcoinj.crypto.HDUtils
 import org.bitcoinj.crypto.KeyCrypterAESCBC
 import org.bitcoinj.crypto.KeyCrypterECDH
 import org.bitcoinj.crypto.KeyCrypterException
-import org.bitcoinj.evolution.CreditFundingTransaction
+import org.bitcoinj.evolution.AssetLockTransaction
 import org.bitcoinj.evolution.EvolutionContact
 import org.bitcoinj.quorums.InstantSendLock
 import org.bitcoinj.wallet.AuthenticationKeyChain
@@ -185,7 +185,7 @@ class BlockchainIdentity {
     lateinit var keyInfo: MutableMap<Long, MutableMap<String, Any>>
     var currentMainKeyIndex: Int = 0
     var currentMainKeyType: IdentityPublicKey.Type = IdentityPublicKey.Type.ECDSA_SECP256K1
-    var creditFundingTransaction: CreditFundingTransaction? = null
+    var assetLockTransaction: AssetLockTransaction? = null
     lateinit var registrationFundingPrivateKey: ECKey
 
     // profile
@@ -236,14 +236,14 @@ class BlockchainIdentity {
 
     constructor(
         platform: Platform,
-        transaction: CreditFundingTransaction,
+        transaction: AssetLockTransaction,
         wallet: Wallet,
         authenticationGroupExtension: AuthenticationGroupExtension,
         registeredIdentity: Identity? = null
     ) : this(platform, transaction.usedDerivationPathIndex, transaction.lockedOutpoint, wallet, authenticationGroupExtension) {
-        Preconditions.checkArgument(!transaction.creditBurnPublicKey.isPubKeyOnly || transaction.creditBurnPublicKey.isEncrypted)
-        creditFundingTransaction = transaction
-        registrationFundingPrivateKey = transaction.creditBurnPublicKey
+        Preconditions.checkArgument(!transaction.assetLockPublicKey.isPubKeyOnly || transaction.assetLockPublicKey.isEncrypted)
+        assetLockTransaction = transaction
+        registrationFundingPrivateKey = transaction.assetLockPublicKey
 
         // see if the identity is registered.
         initializeIdentity(registeredIdentity, false)
@@ -288,7 +288,7 @@ class BlockchainIdentity {
 
     constructor(
         platform: Platform,
-        transaction: CreditFundingTransaction,
+        transaction: AssetLockTransaction,
         usernameStatus: MutableMap<String, Any>,
         wallet: Wallet,
         authenticationGroupExtension: AuthenticationGroupExtension
@@ -314,7 +314,7 @@ class BlockchainIdentity {
     constructor(
         platform: Platform,
         index: Int,
-        transaction: CreditFundingTransaction,
+        transaction: AssetLockTransaction,
         usernameStatus: MutableMap<String, Any>,
         credits: Coin,
         registrationStatus: RegistrationStatus,
@@ -328,8 +328,8 @@ class BlockchainIdentity {
 
     // MARK: - Full Registration agglomerate
 
-    fun createCreditFundingTransaction(credits: Coin, keyParameter: KeyParameter?, useCoinJoin: Boolean, returnChange: Boolean): CreditFundingTransaction {
-        checkState(creditFundingTransaction == null, "The credit funding transaction must not exist")
+    fun createAssetLockTransaction(credits: Coin, keyParameter: KeyParameter?, useCoinJoin: Boolean, returnChange: Boolean): AssetLockTransaction {
+        checkState(assetLockTransaction == null, "The credit funding transaction must not exist")
         checkState(
             registrationStatus == RegistrationStatus.UNKNOWN,
             "The identity must not be registered"
@@ -337,11 +337,11 @@ class BlockchainIdentity {
         return createFundingTransaction(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_FUNDING, credits, keyParameter, useCoinJoin, returnChange)
     }
 
-    fun createTopupFundingTransaction(credits: Coin, keyParameter: KeyParameter?, useCoinJoin: Boolean, returnChange: Boolean): CreditFundingTransaction {
+    fun createTopupFundingTransaction(credits: Coin, keyParameter: KeyParameter?, useCoinJoin: Boolean, returnChange: Boolean): AssetLockTransaction {
         return createFundingTransaction(AuthenticationKeyChain.KeyChainType.BLOCKCHAIN_IDENTITY_TOPUP, credits, keyParameter, useCoinJoin, returnChange)
     }
 
-    fun createInviteFundingTransaction(credits: Coin, keyParameter: KeyParameter?, useCoinJoin: Boolean, returnChange: Boolean): CreditFundingTransaction {
+    fun createInviteFundingTransaction(credits: Coin, keyParameter: KeyParameter?, useCoinJoin: Boolean, returnChange: Boolean): AssetLockTransaction {
         return createFundingTransaction(AuthenticationKeyChain.KeyChainType.INVITATION_FUNDING, credits, keyParameter, useCoinJoin, returnChange)
     }
 
@@ -351,7 +351,7 @@ class BlockchainIdentity {
         keyParameter: KeyParameter?,
         useCoinJoin: Boolean,
         returnChange: Boolean
-    ): CreditFundingTransaction {
+    ): AssetLockTransaction {
         Preconditions.checkArgument(if (wallet!!.isEncrypted) keyParameter != null else true)
         val privateKey = authenticationGroup!!.currentKey(type)
         val request = SendRequest.creditFundingTransaction(wallet!!.params, privateKey as ECKey, credits)
@@ -364,11 +364,11 @@ class BlockchainIdentity {
         }
         request.aesKey = keyParameter
 
-        return wallet!!.sendCoinsOffline(request) as CreditFundingTransaction
+        return wallet!!.sendCoinsOffline(request) as AssetLockTransaction
     }
 
-    fun initializeCreditFundingTransaction(creditFundingTransaction: CreditFundingTransaction) {
-        this.creditFundingTransaction = creditFundingTransaction
+    fun initializeAssetLockTransaction(creditFundingTransaction: AssetLockTransaction) {
+        this.assetLockTransaction = creditFundingTransaction
         registrationStatus = RegistrationStatus.NOT_REGISTERED
     }
 
@@ -389,23 +389,23 @@ class BlockchainIdentity {
             registrationStatus != RegistrationStatus.REGISTERED,
             "The identity must not be registered"
         )
-        checkState(creditFundingTransaction != null, "The credit funding transaction must exist")
+        checkState(assetLockTransaction != null, "The credit funding transaction must exist")
 
         val (privateKeyList, identityPublicKeys) = createIdentityPublicKeys(keyParameter)
         val privateKeys = privateKeyList.map { maybeDecryptKey(it, keyParameter)?.privKeyBytes!! }
 
-        val signingKey = maybeDecryptKey(creditFundingTransaction!!.creditBurnPublicKey, keyParameter)
+        val signingKey = maybeDecryptKey(assetLockTransaction!!.assetLockPublicKey, keyParameter)
 
-        val coreHeight = if (creditFundingTransaction!!.confidence.confidenceType == TransactionConfidence.ConfidenceType.BUILDING) {
-            creditFundingTransaction!!.confidence.appearedAtChainHeight
+        val coreHeight = if (assetLockTransaction!!.confidence.confidenceType == TransactionConfidence.ConfidenceType.BUILDING) {
+            assetLockTransaction!!.confidence.appearedAtChainHeight
         } else {
-            val txInfo = platform.client.getTransaction(creditFundingTransaction!!.txId.toString())
+            val txInfo = platform.client.getTransaction(assetLockTransaction!!.txId.toString())
             txInfo?.height ?: -1
         }.toLong()
 
         identity = platform.identities.register(
-            creditFundingTransaction!!.outputIndex,
-            creditFundingTransaction!!,
+            assetLockTransaction!!.outputIndex,
+            assetLockTransaction!!,
             coreHeight,
             signingKey!!,
             privateKeys,
@@ -414,7 +414,7 @@ class BlockchainIdentity {
 
         registrationStatus = RegistrationStatus.REGISTERED
 
-        finalizeIdentityRegistration(creditFundingTransaction!!)
+        finalizeIdentityRegistration(assetLockTransaction!!)
 
         registrationStatus = RegistrationStatus.REGISTERED
     }
@@ -424,32 +424,32 @@ class BlockchainIdentity {
             registrationStatus != RegistrationStatus.REGISTERED,
             "The identity must not be registered"
         )
-        checkState(creditFundingTransaction != null, "The credit funding transaction must exist")
+        checkState(assetLockTransaction != null, "The credit funding transaction must exist")
 
         val (privateKeyList, identityPublicKeys) = createIdentityPublicKeys(keyParameter)
 
-        val signingKey = maybeDecryptKey(creditFundingTransaction!!.creditBurnPublicKey, keyParameter)
+        val signingKey = maybeDecryptKey(assetLockTransaction!!.assetLockPublicKey, keyParameter)
         val privateKeys = privateKeyList.map {
             println(it)
             maybeDecryptKey(it, keyParameter)?.privKeyBytes!!
         }
 
         var instantLock: InstantSendLock? =
-            wallet!!.context.instantSendManager?.getInstantSendLockByTxId(creditFundingTransaction!!.txId)
+            wallet!!.context.instantSendManager?.getInstantSendLockByTxId(assetLockTransaction!!.txId)
 
         if (instantLock == null) {
-            instantLock = creditFundingTransaction!!.confidence?.instantSendlock
+            instantLock = assetLockTransaction!!.confidence?.instantSendlock
 
-            val coreHeight = if (creditFundingTransaction!!.confidence.confidenceType == TransactionConfidence.ConfidenceType.BUILDING) {
-                creditFundingTransaction!!.confidence.appearedAtChainHeight.toLong()
+            val coreHeight = if (assetLockTransaction!!.confidence.confidenceType == TransactionConfidence.ConfidenceType.BUILDING) {
+                assetLockTransaction!!.confidence.appearedAtChainHeight.toLong()
             } else {
                 -1L
             }
 
             if (instantLock == null && coreHeight > 0) {
                 identity = platform.identities.register(
-                    creditFundingTransaction!!.outputIndex,
-                    creditFundingTransaction!!,
+                    assetLockTransaction!!.outputIndex,
+                    assetLockTransaction!!,
                     coreHeight,
                     signingKey!!,
                     privateKeys,
@@ -457,8 +457,8 @@ class BlockchainIdentity {
                 )
             } else if (instantLock != null) {
                 identity = platform.identities.register(
-                    creditFundingTransaction!!.outputIndex,
-                    creditFundingTransaction!!,
+                    assetLockTransaction!!.outputIndex,
+                    assetLockTransaction!!,
                     instantLock,
                     signingKey!!,
                     privateKeys,
@@ -467,8 +467,8 @@ class BlockchainIdentity {
             } else throw InvalidInstantAssetLockProofException("instantLock == null")
         } else {
             identity = platform.identities.register(
-                creditFundingTransaction!!.outputIndex,
-                creditFundingTransaction!!,
+                assetLockTransaction!!.outputIndex,
+                assetLockTransaction!!,
                 instantLock,
                 signingKey!!,
                 privateKeys,
@@ -478,7 +478,7 @@ class BlockchainIdentity {
 
         registrationStatus = RegistrationStatus.REGISTERED
 
-        finalizeIdentityRegistration(creditFundingTransaction!!)
+        finalizeIdentityRegistration(assetLockTransaction!!)
     }
 
     private fun createIdentityPublicKeys(keyParameter: KeyParameter?): Pair<List<ECKey>, List<IdentityPublicKey>> {
@@ -519,14 +519,14 @@ class BlockchainIdentity {
         return Pair(listOf(identityPrivateKey, identityPrivateKey2), listOf(masterKey, highKey))
     }
 
-    fun recoverIdentity(creditFundingTransaction: CreditFundingTransaction): Boolean {
+    fun recoverIdentity(creditFundingTransaction: AssetLockTransaction): Boolean {
         checkState(
             registrationStatus == RegistrationStatus.UNKNOWN,
             "The identity must not be registered"
         )
 
         identity =
-            platform.identities.get(creditFundingTransaction.creditBurnIdentityIdentifier.toStringBase58())
+            platform.identities.get(creditFundingTransaction.identityId.toStringBase58())
             ?: return false
 
         registrationStatus = RegistrationStatus.REGISTERED
@@ -563,11 +563,11 @@ class BlockchainIdentity {
         finalizeIdentityRegistration(creditBurnIdentifier)
     }
 
-    private fun finalizeIdentityRegistration(fundingTransaction: CreditFundingTransaction) {
-        this.creditFundingTransaction = fundingTransaction
-        this.registrationFundingPrivateKey = fundingTransaction.creditBurnPublicKey
+    private fun finalizeIdentityRegistration(fundingTransaction: AssetLockTransaction) {
+        this.assetLockTransaction = fundingTransaction
+        this.registrationFundingPrivateKey = fundingTransaction.assetLockPublicKey
         this.lockedOutpoint = fundingTransaction.lockedOutpoint
-        finalizeIdentityRegistration(fundingTransaction.creditBurnIdentityIdentifier)
+        finalizeIdentityRegistration(fundingTransaction.identityId)
     }
 
     private fun finalizeIdentityRegistration(uniqueId: Sha256Hash) {
@@ -1916,15 +1916,15 @@ class BlockchainIdentity {
 
     fun getInvitationHistory(): Map<Identifier, Identity?> {
         val inviteTxs = authenticationGroup!!.invitationFundingTransactions
-        val listIds = inviteTxs.map { Identifier.from(it.creditBurnIdentityIdentifier) }
+        val listIds = inviteTxs.map { Identifier.from(it.identityId) }
 
         return listIds.associateBy({ it }, { platform.identities.get(it) })
     }
 
-    fun getInvitationString(cftx: CreditFundingTransaction, encryptionKey: KeyParameter?): String {
+    fun getInvitationString(cftx: AssetLockTransaction, encryptionKey: KeyParameter?): String {
         val txid = cftx.txId
 
-        val privateKey = maybeDecryptKey(cftx.creditBurnPublicKey, encryptionKey)
+        val privateKey = maybeDecryptKey(cftx.assetLockPublicKey, encryptionKey)
         val wif = privateKey?.getPrivateKeyEncoded(wallet!!.params)
         return "assetlocktx=$txid&pk=$wif&du=${currentUsername!!}&islock=${cftx.confidence.instantSendlock.toStringHex()}"
     }

@@ -7,7 +7,7 @@
 package org.dashj.platform.examples
 
 import java.lang.Thread.sleep
-import org.bitcoinj.evolution.CreditFundingTransaction
+import org.bitcoinj.evolution.AssetLockTransaction
 import org.bitcoinj.quorums.InstantSendLock
 import org.dashj.platform.dpp.identity.IdentityPublicKey
 import org.dashj.platform.sdk.Client
@@ -26,12 +26,12 @@ class CreateIdentity {
         fun createIdentity() {
             val platform = sdk.platform
 
-            val cftx = CreditFundingTransaction(platform.params, DefaultIdentity.creditBurnTx)
-            cftx.setCreditBurnPublicKeyAndIndex(DefaultIdentity.identityPrivateKey, 0)
+            val cftx = AssetLockTransaction(platform.params, DefaultIdentity.creditBurnTx)
+            cftx.setAssetLockPublicKeyAndIndex(DefaultIdentity.identityPrivateKey, 0)
             val islock = InstantSendLock(platform.params, DefaultIdentity.islock, InstantSendLock.ISLOCK_VERSION)
 
             try {
-                var identity = platform.identities.get(cftx.creditBurnIdentityIdentifier.toStringBase58())
+                var identity = platform.identities.get(cftx.identityId.toStringBase58())
 
                 if (identity == null) {
                     // only create the identity if it does not exist
@@ -48,7 +48,7 @@ class CreateIdentity {
                         )
                     )
                     sleep(10000)
-                    identity = platform.identities.get(cftx.creditBurnIdentityIdentifier.toString())
+                    identity = platform.identities.get(cftx.identityId.toString())
                 }
 
                 // check that the identity public key matches our public key information
@@ -57,7 +57,7 @@ class CreateIdentity {
                 }
 
                 // display information
-                println("Identity Created: ${cftx.creditBurnIdentityIdentifier.toStringBase58()}")
+                println("Identity Created: ${cftx.identityId.toStringBase58()}")
                 println(JSONObject(identity!!.toJSON()).toString(2))
                 println("Private Key: ${DefaultIdentity.privateKeyHex} (hex)")
             } catch (e: Exception) {

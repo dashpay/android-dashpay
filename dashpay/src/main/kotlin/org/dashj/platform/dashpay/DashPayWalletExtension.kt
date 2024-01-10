@@ -82,11 +82,11 @@ class DashPayWalletExtension(
     fun validate(containingWallet: Wallet): Boolean {
         val authExtension = containingWallet.addOrGetExistingExtension(AuthenticationGroupExtension(containingWallet.params)) as AuthenticationGroupExtension
         // validate
-        val list = authExtension.creditFundingTransactions
+        val list = authExtension.assetLockTransactions
         for (cftx in list) {
-            val tx = authExtension.getCreditFundingTransaction(cftx)
-            if (tx.creditBurnIdentityIdentifier.toString() != blockchainIdentity?.uniqueId.toString()) {
-                log.error("Error: ${tx.creditBurnIdentityIdentifier} != ${blockchainIdentity?.uniqueId}")
+            val tx = authExtension.getAssetLockTransaction(cftx)
+            if (tx.identityId.toString() != blockchainIdentity?.uniqueId.toString()) {
+                log.error("Error: ${tx.identityId} != ${blockchainIdentity?.uniqueId}")
                 return false
             }
         }

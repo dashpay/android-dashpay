@@ -81,7 +81,7 @@ import org.bitcoinj.crypto.KeyCrypterException;
 import org.bitcoinj.crypto.MnemonicCode;
 import org.bitcoinj.crypto.MnemonicException;
 import org.bitcoinj.crypto.TransactionSignature;
-import org.bitcoinj.evolution.CreditFundingTransaction;
+import org.bitcoinj.evolution.AssetLockTransaction;
 import org.bitcoinj.evolution.SimplifiedMasternodeList;
 import org.bitcoinj.evolution.SimplifiedMasternodeListEntry;
 import org.bitcoinj.net.discovery.ThreeMethodPeerDiscovery;
@@ -1531,13 +1531,13 @@ public class WalletTool {
         // Determine our blockchain identity
         blockchainIdentity = dashPayWalletExtension.getBlockchainIdentity();
         if (blockchainIdentity == null) {
-            List<CreditFundingTransaction> cftxs = authenticationGroupExtension.getIdentityFundingTransactions();
+            List<AssetLockTransaction> cftxs = authenticationGroupExtension.getIdentityFundingTransactions();
             if (!cftxs.isEmpty()) {
-                CreditFundingTransaction cftx = cftxs.get(0);
+                AssetLockTransaction cftx = cftxs.get(0);
                 blockchainIdentity = new BlockchainIdentity(platform, 0, wallet, authenticationGroupExtension);
                 dashPayWalletExtension.setBlockchainIdentity(blockchainIdentity);
                 if (!blockchainIdentity.recoverIdentity(cftx)) {
-                    blockchainIdentity.initializeCreditFundingTransaction(cftxs.get(0));
+                    blockchainIdentity.initializeAssetLockTransaction(cftxs.get(0));
                 }
             } else {
                 byte [] pubKeyHash = authenticationGroupExtension.getIdentityKeyChain().getKey(0, true).getPubKeyHash();
@@ -1942,8 +1942,8 @@ public class WalletTool {
             outputToCSV(displayName, csvFile);
 
             DateFormat dateFormat = DateFormat.getDateTimeInstance();
-            if (authenticationGroupExtension.getCreditFundingTransactions().size() > 0) {
-                CreditFundingTransaction cftx = authenticationGroupExtension.getCreditFundingTransactions().get(0);
+            if (authenticationGroupExtension.getAssetLockTransactions().size() > 0) {
+                AssetLockTransaction cftx = authenticationGroupExtension.getAssetLockTransactions().get(0);
                 Transaction tx = wallet.getTransaction(cftx.getTxId());
                 String date = "\"" + dateFormat.format(tx.getUpdateTime()) + "\"";
                 outputStream.println("Username Created:                 " + date);
@@ -2044,7 +2044,7 @@ public class WalletTool {
 
                 blockchainIdentity = new BlockchainIdentity(platform, 0, wallet, authenticationGroupExtension);
 
-                CreditFundingTransaction cftx = blockchainIdentity.createCreditFundingTransaction(credits, null, useCoinJoin, returnChange);
+                AssetLockTransaction cftx = blockchainIdentity.createAssetLockTransaction(credits, null, useCoinJoin, returnChange);
                 boolean wait = true;
                 cftx.getConfidence().addEventListener(new TransactionConfidence.Listener() {
                     @Override
@@ -2056,7 +2056,7 @@ public class WalletTool {
                                 // until the bug related to instantsend lock verification is fixed.
                                 if (confidence.isTransactionLocked() || confidence.getIXType() == TransactionConfidence.IXType.IX_REQUEST) {
                                     confidence.removeEventListener(this);
-                                    blockchainIdentity.setCreditFundingTransaction(cftx);
+                                    blockchainIdentity.setAssetLockTransaction(cftx);
                                     System.out.println("Asset Lock Transaction has been sent: " + cftx.getTxId());
                                     createIdentity(waitForFlag, username);
                                 }
