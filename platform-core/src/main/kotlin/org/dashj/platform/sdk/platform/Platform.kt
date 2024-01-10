@@ -12,13 +12,11 @@ import io.grpc.StatusRuntimeException
 import kotlin.collections.HashMap
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.NetworkParameters
-import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.evolution.SimplifiedMasternodeListManager
 import org.dashj.platform.dapiclient.DapiClient
 import org.dashj.platform.dapiclient.MaxRetriesReachedException
 import org.dashj.platform.dapiclient.NoAvailableAddressesForRetryException
 import org.dashj.platform.dapiclient.SystemIds
-import org.dashj.platform.dapiclient.grpc.BroadcastRetryCallback
 import org.dashj.platform.dapiclient.grpc.DefaultGetDataContractWithContractIdRetryCallback
 import org.dashj.platform.dapiclient.grpc.DefaultGetDocumentsWithContractIdRetryCallback
 import org.dashj.platform.dapiclient.grpc.DefaultGetIdentityWithIdentitiesRetryCallback
@@ -43,7 +41,7 @@ class Platform(val params: NetworkParameters) {
 
     var stateRepository = if (mockDAPI()) {
         MockPlatformStateRepository(this)
-    }  else {
+    } else {
         PlatformStateRepository(this)
     }
 

@@ -71,7 +71,6 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
         } else null
     }
 
-
     override fun fetchDocuments(contractId: Identifier, documentType: String, where: Any): List<Document> {
         where as DocumentQuery
 
@@ -122,13 +121,16 @@ open class PlatformStateRepository(val platform: Platform) : StateRepository {
         if (!identityMap.containsKey(identity.id)) {
             identityMap[identity.id] = identity
         }
-        storeIdentityPublicKeyHashes(identity.id, identity.publicKeys.map {
-            when (it.type) {
-                IdentityPublicKey.Type.ECDSA_HASH160, IdentityPublicKey.Type.BIP13_SCRIPT_HASH -> it.data
-                IdentityPublicKey.Type.ECDSA_SECP256K1 -> ECKey.fromPublicOnly(it.data).pubKeyHash
-                else -> Sha256Hash.twiceOf(it.data).bytes
+        storeIdentityPublicKeyHashes(
+            identity.id,
+            identity.publicKeys.map {
+                when (it.type) {
+                    IdentityPublicKey.Type.ECDSA_HASH160, IdentityPublicKey.Type.BIP13_SCRIPT_HASH -> it.data
+                    IdentityPublicKey.Type.ECDSA_SECP256K1 -> ECKey.fromPublicOnly(it.data).pubKeyHash
+                    else -> Sha256Hash.twiceOf(it.data).bytes
+                }
             }
-        })
+        )
         log.info("store identity: {}", identity.toBuffer().toHex())
     }
 

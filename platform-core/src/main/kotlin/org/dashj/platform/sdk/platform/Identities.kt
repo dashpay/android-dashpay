@@ -10,7 +10,6 @@ import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Transaction
 import org.bitcoinj.evolution.AssetLockTransaction
 import org.bitcoinj.quorums.InstantSendLock
-import org.dashj.platform.dapiclient.errors.NotFoundException
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.ChainAssetLockProof
 import org.dashj.platform.dpp.identity.Identity

@@ -9,7 +9,6 @@ package org.dashj.platform.sdk.platform
 import io.grpc.StatusRuntimeException
 import org.bitcoinj.core.ECKey
 import org.dashj.platform.dapiclient.model.DocumentQuery
-import org.dashj.platform.dpp.Factory
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.errors.DriveErrorMetadata
 import org.dashj.platform.dpp.identifier.Identifier
