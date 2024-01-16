@@ -53,10 +53,7 @@ class Contracts(val platform: Platform) {
             return localContract.contract
         } else {
             try {
-                val contractResponse = platform.client.getDataContract(identifier.toBuffer(), Features.proveContracts, platform.contractsRetryCallback)
-
-                val contract = platform.dpp.dataContract.createFromBuffer(contractResponse.dataContract)
-                contract.metadata = contractResponse.metadata.getMetadata()
+                val contract = platform.stateRepository.fetchDataContract(identifier)!!
 
                 val app = ClientAppDefinition(contract.id, contract)
                 // If we do not have even the identifier in this.apps, we add it with timestamp as key

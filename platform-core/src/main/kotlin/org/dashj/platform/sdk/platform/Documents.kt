@@ -9,7 +9,6 @@ package org.dashj.platform.sdk.platform
 import io.grpc.StatusRuntimeException
 import org.bitcoinj.core.ECKey
 import org.dashj.platform.dapiclient.model.DocumentQuery
-import org.dashj.platform.dpp.Factory
 import org.dashj.platform.dpp.document.Document
 import org.dashj.platform.dpp.errors.DriveErrorMetadata
 import org.dashj.platform.dpp.identifier.Identifier
@@ -167,18 +166,7 @@ class Documents(val platform: Platform) {
         callType: MulticallQuery.Companion.CallType = MulticallQuery.Companion.CallType.FIRST
     ): List<Document> {
         try {
-            val documentResponse = platform.client.getDocuments(
-                dataContractId.toBuffer(),
-                documentType,
-                opts,
-                Features.proveDocuments,
-                platform.documentsRetryCallback
-            )
-            return documentResponse.documents.map {
-                val document = platform.dpp.document.createFromBuffer(it, Factory.Options(true))
-                document.metadata = documentResponse.metadata.getMetadata()
-                document
-            }
+            return platform.stateRepository.fetchDocuments(dataContractId, documentType, opts)
         } catch (e: StatusRuntimeException) {
             log.error(
                 "Document query: unable to get documents of $dataContractId: " +
