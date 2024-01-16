@@ -6,7 +6,7 @@
  */
 package org.dashj.platform.examples
 
-import org.bitcoinj.evolution.CreditFundingTransaction
+import org.bitcoinj.evolution.AssetLockTransaction
 import org.dashj.platform.sdk.Client
 import org.dashj.platform.sdk.client.ClientOptions
 import org.json.JSONObject
@@ -29,13 +29,13 @@ class RegisterNames {
         fun registerName(name: String) {
             val platform = sdk.platform
 
-            val cftx = CreditFundingTransaction(platform.params, DefaultIdentity.creditBurnTx)
-            cftx.setCreditBurnPublicKeyAndIndex(DefaultIdentity.identityPrivateKey, 0)
+            val cftx = AssetLockTransaction(platform.params, DefaultIdentity.creditBurnTx)
+            cftx.setAssetLockPublicKey(DefaultIdentity.identityPrivateKey)
 
             try {
                 val identityPrivateKey = DefaultIdentity.identityPrivateKey
 
-                var identity = platform.identities.get(cftx.creditBurnIdentityIdentifier.toStringBase58())
+                var identity = platform.identities.get(cftx.identityId.toStringBase58())
 
                 if (platform.names.get(name) == null) {
                     var nameDocument = platform.names.register(name, identity!!, identityPrivateKey)

@@ -18,7 +18,7 @@ import org.bitcoinj.core.Coin
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Transaction
 import org.bitcoinj.core.TransactionOutput
-import org.bitcoinj.evolution.CreditFundingTransaction
+import org.bitcoinj.evolution.AssetLockTransaction
 import org.bitcoinj.params.TestNet3Params
 import org.bitcoinj.utils.BriefLogFormatter
 import org.bitcoinj.wallet.AuthenticationKeyChain
@@ -192,12 +192,12 @@ class CreateWallets {
                     CoinSelection(Coin.valueOf(total), selected)
                 }
 
-                val cftx = wallet.sendCoinsOffline(sendRequest) as CreditFundingTransaction
+                val cftx = wallet.sendCoinsOffline(sendRequest) as AssetLockTransaction
                 val cftxid = runRpc("sendrawtransaction ${cftx.bitcoinSerialize().toHex()}")
                 println("credit funding tx: ${cftx.txId}")
                 println("credit funding tx sent via rpc: $cftxid")
-                println("identity id: ${cftx.creditBurnIdentityIdentifier.toStringBase58()}")
-                println("pubkey hash: ${cftx.creditBurnPublicKeyId}")
+                println("identity id: ${cftx.identityId.toStringBase58()}")
+                println("pubkey hash: ${cftx.assetLockPublicKeyId}")
 
                 // we need to wait until the transaction is confirmed or instantsend
                 var transaction = runRpc("getrawtransaction ${cftxid!!.trim()} true")

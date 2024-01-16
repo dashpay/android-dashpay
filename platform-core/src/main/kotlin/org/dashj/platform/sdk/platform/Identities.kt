@@ -8,9 +8,8 @@ package org.dashj.platform.sdk.platform
 
 import org.bitcoinj.core.ECKey
 import org.bitcoinj.core.Transaction
-import org.bitcoinj.evolution.CreditFundingTransaction
+import org.bitcoinj.evolution.AssetLockTransaction
 import org.bitcoinj.quorums.InstantSendLock
-import org.dashj.platform.dapiclient.errors.NotFoundException
 import org.dashj.platform.dpp.identifier.Identifier
 import org.dashj.platform.dpp.identity.ChainAssetLockProof
 import org.dashj.platform.dpp.identity.Identity
@@ -26,16 +25,16 @@ class Identities(val platform: Platform) {
     }
 
     fun register(
-        signedLockTransaction: CreditFundingTransaction,
+        signedLockTransaction: AssetLockTransaction,
         instantLock: InstantSendLock,
         privateKeys: List<ByteArray>,
         identityPublicKeys: List<IdentityPublicKey>
     ): Identity {
         return register(
-            signedLockTransaction.outputIndex,
+            0,
             signedLockTransaction,
             instantLock,
-            signedLockTransaction.creditBurnPublicKey,
+            signedLockTransaction.assetLockPublicKey,
             privateKeys,
             identityPublicKeys
         )
@@ -43,7 +42,7 @@ class Identities(val platform: Platform) {
 
     fun register(
         outputIndex: Long,
-        transaction: CreditFundingTransaction,
+        transaction: AssetLockTransaction,
         instantLock: InstantSendLock,
         assetLockPrivateKey: ECKey,
         privateKeys: List<ByteArray>,
@@ -75,7 +74,7 @@ class Identities(val platform: Platform) {
 
     fun register(
         outputIndex: Long,
-        transaction: CreditFundingTransaction,
+        transaction: AssetLockTransaction,
         coreHeight: Long,
         assetLockPrivateKey: ECKey,
         privateKeys: List<ByteArray>,
@@ -120,15 +119,15 @@ class Identities(val platform: Platform) {
 
     fun topUp(
         identityId: Identifier,
-        signedLockTransaction: CreditFundingTransaction,
+        signedLockTransaction: AssetLockTransaction,
         instantLock: InstantSendLock
     ): Boolean {
         return topUp(
             identityId,
-            signedLockTransaction.outputIndex,
+            0,
             signedLockTransaction,
             instantLock,
-            signedLockTransaction.creditBurnPublicKey
+            signedLockTransaction.assetLockPublicKey
         )
     }
 
